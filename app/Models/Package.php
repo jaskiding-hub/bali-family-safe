@@ -1,0 +1,29 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
+class Package extends Model
+{
+    const UPDATED_AT = null;
+
+    protected $fillable = ['name', 'slug', 'subtitle', 'description', 'hero_image', 'price', 'display_order'];
+    protected $casts = ['price' => 'decimal:2'];
+
+    public function highlights(): HasMany
+    {
+        return $this->hasMany(PackageHighlight::class);
+    }
+
+    public function tags(): HasMany
+    {
+        return $this->hasMany(PackageTag::class);
+    }
+
+    public function bookings(): HasMany
+    {
+        return $this->hasMany(Booking::class);
+    }
+}
