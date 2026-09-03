@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
             PackageSeeder::class,
             ServiceSeeder::class,
             SiteSettingSeeder::class,
+            DummyDataSeeder::class,
         ]);
     }
 }

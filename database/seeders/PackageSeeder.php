@@ -9,12 +9,14 @@ class PackageSeeder extends Seeder
 {
     public function run(): void
     {
-        Package::create([
-            'name' => 'Ubud Day Tour',
-            'slug' => 'ubud-day-tour',
-            'subtitle' => 'Sawah, air terjun, dan budaya Ubud',
-            'price' => 950000,
-            'display_order' => 1,
-        ]);
+        Package::firstOrCreate(
+            ['slug' => 'ubud-day-tour'],
+            [
+                'name' => 'Ubud Day Tour',
+                'subtitle' => 'Sawah, air terjun, dan budaya Ubud',
+                'price' => 950000,
+                'display_order' => 1,
+            ]
+        );
     }
 }
