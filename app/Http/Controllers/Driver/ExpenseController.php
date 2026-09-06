@@ -58,10 +58,16 @@ class ExpenseController extends Controller
             ->with('success', 'Expense saved successfully!');
     }
 
-    public function update(Request $request, $id, $expense_id)
+    public function update(Request $request, $id, $expense_id = null)
     {
-        $trip = Trip::findOrFail($id);
-        $expense = TripExpense::where('trip_id', $trip->id)->findOrFail($expense_id);
+        if ($expense_id !== null) {
+            $trip = Trip::findOrFail($id);
+            $expense = TripExpense::where('trip_id', $trip->id)->findOrFail($expense_id);
+            $tripId = $trip->id;
+        } else {
+            $expense = TripExpense::findOrFail($id);
+            $tripId = $expense->trip_id;
+        }
 
         $request->validate([
             'type' => ['required', 'string', 'max:255'],
@@ -102,14 +108,20 @@ class ExpenseController extends Controller
             ]);
         }
 
-        return redirect()->route('driver.trip.expense', ['id' => $trip->id])
+        return redirect()->route('driver.trip.expense', ['id' => $tripId])
             ->with('success', 'Expense updated successfully!');
     }
 
-    public function destroy(Request $request, $id, $expense_id)
+    public function destroy(Request $request, $id, $expense_id = null)
     {
-        $trip = Trip::findOrFail($id);
-        $expense = TripExpense::where('trip_id', $trip->id)->findOrFail($expense_id);
+        if ($expense_id !== null) {
+            $trip = Trip::findOrFail($id);
+            $expense = TripExpense::where('trip_id', $trip->id)->findOrFail($expense_id);
+            $tripId = $trip->id;
+        } else {
+            $expense = TripExpense::findOrFail($id);
+            $tripId = $expense->trip_id;
+        }
 
         if ($expense->receipt_path) {
             Storage::disk('public')->delete($expense->receipt_path);
@@ -124,7 +136,7 @@ class ExpenseController extends Controller
             ]);
         }
 
-        return redirect()->route('driver.trip.expense', ['id' => $trip->id])
+        return redirect()->route('driver.trip.expense', ['id' => $tripId])
             ->with('success', 'Expense deleted successfully!');
     }
 }

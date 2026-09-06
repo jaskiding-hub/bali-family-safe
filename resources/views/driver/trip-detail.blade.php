@@ -18,6 +18,9 @@
     } else {
         $backUrl = route('driver.home');
     }
+
+    $isTripToday = $trip->trip_date ? \Carbon\Carbon::parse($trip->trip_date)->isToday() : false;
+    $canAddExpense = $isTripToday && ($trip->status !== 'completed');
 @endphp
 
     <!-- Top App Bar Header (Full-Width Edge-to-Edge) -->
@@ -46,7 +49,7 @@
     </header>
 
     <!-- Main Container Content (Centered Max-w-6xl) -->
-    <div class="max-w-6xl mx-auto px-4 sm:px-8 lg:px-12 w-full py-4 flex flex-col gap-4 font-['Inter'] pb-48 sm:pb-52">
+    <div class="max-w-6xl mx-auto px-4 sm:px-8 lg:px-12 w-full py-4 flex flex-col gap-4 font-['Inter'] {{ ($trip->status === 'active' || $trip->status === 'up_next') ? 'pb-48 sm:pb-52' : 'pb-28 sm:pb-32' }}">
 
         @if(session('success'))
             <div class="p-3.5 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 text-xs font-semibold flex items-center gap-2 anim-ease-up shadow-2xs">
@@ -257,18 +260,17 @@
         </div>
 
         <!-- Fixed Bottom Action Panel (Responsive: Full-width on mobile, Floating centered pill on tablet & desktop) -->
-        <div class="fixed z-40 transition-all duration-200 bottom-0 left-0 right-0 w-full sm:bottom-5 sm:left-1/2 sm:-translate-x-1/2 sm:max-w-xl md:max-w-2xl sm:rounded-2xl sm:border sm:border-slate-200/80 sm:shadow-[0_10px_30px_rgba(0,0,0,0.08)] bg-white/95 backdrop-blur-md border-t border-slate-200/80 p-4 anim-ease-up delay-4 flex flex-col gap-3">
-            
-            <!-- Tombol '+ Add Expenses' (Baris Atas di Atas Slider / Status) -->
-            <a href="{{ route('driver.trip.expense', array_merge(['id' => $trip->id], request()->only(['from', 'date', 'month']))) }}" class="w-full h-11 sm:h-12 rounded-xl sm:rounded-2xl border border-[#BDC8D1] bg-white hover:bg-slate-50 active:scale-[0.985] text-[#00658D] font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all shadow-2xs cursor-pointer" title="Add Expenses">
-                <svg class="w-4 h-4 text-[#00658D]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-                </svg>
-                <span>Add Expenses</span>
-            </a>
-
+        <div class="fixed z-40 transition-all duration-200 bottom-0 left-0 right-0 w-full sm:bottom-5 sm:left-1/2 sm:-translate-x-1/2 sm:max-w-xl md:max-w-2xl sm:rounded-2xl sm:border sm:border-slate-200/80 sm:shadow-[0_10px_30px_rgba(0,0,0,0.08)] bg-white/95 backdrop-blur-md border-t border-slate-200/80 p-4 anim-ease-up delay-4">
             @if($trip->status === 'active' || $trip->status === 'up_next')
-                <div class="w-full">
+                <div class="w-full flex flex-col gap-3">
+                    <!-- Tombol '+ Add Expenses' (Tepat di Atas Slider) -->
+                    <a href="{{ route('driver.trip.expense', array_merge(['id' => $trip->id], request()->only(['from', 'date', 'month']))) }}" class="w-full h-11 sm:h-12 rounded-xl sm:rounded-2xl border border-[#BDC8D1] bg-white hover:bg-slate-50 active:scale-[0.985] text-[#00658D] font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all shadow-2xs cursor-pointer" title="Add Expenses">
+                        <svg class="w-4 h-4 text-[#00658D]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                        </svg>
+                        <span>Add Expenses</span>
+                    </a>
+
                     <!-- Slider Bar 'Slide to Complete Trip' -->
                     <div 
                         id="slider-track" 

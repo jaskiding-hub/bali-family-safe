@@ -17,4 +17,7 @@ Route::prefix('driver')->middleware(['auth:driver'])->name('driver.')->group(fun
     Route::post('/trips/{id}/expense', [ExpenseController::class, 'store'])->name('trip.expense.store');
     Route::put('/trips/{id}/expense/{expense_id}', [ExpenseController::class, 'update'])->name('trip.expense.update');
     Route::delete('/trips/{id}/expense/{expense_id}', [ExpenseController::class, 'destroy'])->name('trip.expense.destroy');
+    Route::post('/trips/{id}/expense/{expense_id}/delete', [ExpenseController::class, 'destroy']);
+    Route::post('/expenses/{id}/update', [ExpenseController::class, 'update'])->name('expense.direct.update');
+    Route::match(['POST', 'DELETE'], '/expenses/{id}/delete', [ExpenseController::class, 'destroy'])->name('expense.direct.delete');
 });
