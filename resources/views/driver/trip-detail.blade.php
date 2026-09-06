@@ -20,9 +20,9 @@
     }
 @endphp
 
-    <!-- Top App Bar Header (Full-width edge to edge) -->
-    <div class="w-full h-[60px] bg-white border-b border-[#DEE3E8] sticky top-0 z-30 shadow-[0_1px_3px_rgba(0,0,0,0.03)] anim-ease-up">
-        <div class="max-w-6xl mx-auto px-4 sm:px-8 lg:px-12 h-full flex items-center justify-between">
+    <!-- Top App Bar Header (Full-Width Edge-to-Edge) -->
+    <header class="w-full bg-white border-b border-slate-100 shadow-[0_1px_3px_rgba(0,0,0,0.04)] sticky top-0 z-30 anim-ease-up">
+        <div class="max-w-6xl mx-auto h-[60px] px-4 sm:px-8 lg:px-12 flex items-center justify-between">
             <!-- Sisi Kiri: Tombol Back -->
             <a href="{{ $backUrl }}" id="btn-back-nav" class="inline-flex items-center gap-1.5 p-2 -ml-2 rounded-xl hover:bg-slate-100 text-[#00658D] transition-all duration-200 ease-out active:scale-95" aria-label="Back">
                 <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
@@ -43,15 +43,15 @@
                 >
             </button>
         </div>
-    </div>
+    </header>
 
-    <!-- Body Content Wrapper (max-w-6xl) -->
-    <div class="max-w-6xl mx-auto px-4 sm:px-8 lg:px-12 w-full py-4 flex flex-col gap-4 font-['Inter'] {{ ($trip->status === 'active' || $trip->status === 'up_next') ? 'pb-40 sm:pb-44' : 'pb-24 sm:pb-28' }}">
+    <!-- Main Container Content (Centered Max-w-6xl) -->
+    <div class="max-w-6xl mx-auto px-4 sm:px-8 lg:px-12 w-full py-4 flex flex-col gap-4 font-['Inter'] pb-48 sm:pb-52">
 
         @if(session('success'))
             <div class="p-3.5 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 text-xs font-semibold flex items-center gap-2 anim-ease-up shadow-2xs">
                 <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                 </svg>
                 <span>{{ session('success') }}</span>
             </div>
@@ -169,30 +169,30 @@
                     </a>
                 </div>
 
-                <!-- Info Grid: Vehicle Type & Passengers -->
-                <div class="grid grid-cols-2 gap-2.5">
-                    <div class="p-3 bg-slate-50/80 rounded-xl border border-slate-100 flex items-center gap-2.5">
-                        <div class="w-8 h-8 rounded-lg bg-sky-50 text-[#00658D] flex items-center justify-center shrink-0">
-                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <!-- Info Grid: Vehicle Type & Passengers (Neat responsive layout) -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <div class="p-3.5 bg-slate-50/80 rounded-xl border border-slate-100 flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-lg bg-sky-50 text-[#00658D] flex items-center justify-center shrink-0">
+                            <svg class="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                             </svg>
                         </div>
-                        <div>
-                            <span class="text-[9px] uppercase font-bold text-slate-400 block leading-tight">Passengers</span>
-                            <span class="text-xs sm:text-sm font-bold text-[#171C20]">{{ $trip->pax_description ?? ($trip->pax . ' Pax') }}</span>
+                        <div class="min-w-0">
+                            <span class="text-[10px] uppercase font-bold text-slate-400 block leading-tight">Passengers</span>
+                            <span class="text-xs sm:text-sm font-bold text-[#171C20] block mt-0.5">{{ $trip->pax_description ?? ($trip->pax . ' Pax') }}</span>
                         </div>
                     </div>
 
                     @if($trip->vehicle_type)
-                    <div class="p-3 bg-slate-50/80 rounded-xl border border-slate-100 flex items-center gap-2.5">
-                        <div class="w-8 h-8 rounded-lg bg-sky-50 text-[#00658D] flex items-center justify-center shrink-0">
-                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <div class="p-3.5 bg-slate-50/80 rounded-xl border border-slate-100 flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-lg bg-sky-50 text-[#00658D] flex items-center justify-center shrink-0">
+                            <svg class="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M8 17a2 2 0 100 4 2 2 0 000-4zm8 0a2 2 0 100 4 2 2 0 000-4zM3 9l2-4h10l2 4M3 9h18v7a1 1 0 01-1 1H4a1 1 0 01-1-1V9z" />
                             </svg>
                         </div>
-                        <div class="truncate">
-                            <span class="text-[9px] uppercase font-bold text-slate-400 block leading-tight">Vehicle</span>
-                            <span class="text-xs sm:text-sm font-bold text-[#171C20] truncate block">{{ $trip->vehicle_type }}</span>
+                        <div class="min-w-0">
+                            <span class="text-[10px] uppercase font-bold text-slate-400 block leading-tight">Vehicle</span>
+                            <span class="text-xs sm:text-sm font-bold text-[#171C20] block mt-0.5">{{ $trip->vehicle_type }}</span>
                         </div>
                     </div>
                     @endif
@@ -257,21 +257,22 @@
         </div>
 
         <!-- Fixed Bottom Action Panel (Responsive: Full-width on mobile, Floating centered pill on tablet & desktop) -->
-        <div class="fixed z-40 transition-all duration-200 bottom-0 left-0 right-0 w-full sm:bottom-5 sm:left-1/2 sm:-translate-x-1/2 sm:max-w-xl md:max-w-2xl sm:rounded-2xl sm:border sm:border-slate-200/80 sm:shadow-[0_10px_30px_rgba(0,0,0,0.08)] bg-white/95 backdrop-blur-md border-t border-slate-200/80 p-4 anim-ease-up delay-4">
-            @if($trip->status === 'active' || $trip->status === 'up_next')
-                <div class="flex items-center gap-3">
-                    <!-- Tombol Outline '+ Add Expense' -->
-                    <a href="{{ route('driver.trip.expense', array_merge(['id' => $trip->id], request()->only(['from', 'date', 'month']))) }}" class="h-13 px-4 sm:px-5 shrink-0 rounded-2xl border border-[#BDC8D1] text-[#00658D] font-bold text-xs flex items-center justify-center gap-2 hover:bg-slate-50 active:scale-[0.985] transition-all shadow-2xs cursor-pointer" title="Add Expense">
-                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-                        </svg>
-                        <span class="hidden sm:inline">Add Expense</span>
-                    </a>
+        <div class="fixed z-40 transition-all duration-200 bottom-0 left-0 right-0 w-full sm:bottom-5 sm:left-1/2 sm:-translate-x-1/2 sm:max-w-xl md:max-w-2xl sm:rounded-2xl sm:border sm:border-slate-200/80 sm:shadow-[0_10px_30px_rgba(0,0,0,0.08)] bg-white/95 backdrop-blur-md border-t border-slate-200/80 p-4 anim-ease-up delay-4 flex flex-col gap-3">
+            
+            <!-- Tombol '+ Add Expenses' (Baris Atas di Atas Slider / Status) -->
+            <a href="{{ route('driver.trip.expense', array_merge(['id' => $trip->id], request()->only(['from', 'date', 'month']))) }}" class="w-full h-11 sm:h-12 rounded-xl sm:rounded-2xl border border-[#BDC8D1] bg-white hover:bg-slate-50 active:scale-[0.985] text-[#00658D] font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all shadow-2xs cursor-pointer" title="Add Expenses">
+                <svg class="w-4 h-4 text-[#00658D]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                </svg>
+                <span>Add Expenses</span>
+            </a>
 
+            @if($trip->status === 'active' || $trip->status === 'up_next')
+                <div class="w-full">
                     <!-- Slider Bar 'Slide to Complete Trip' -->
                     <div 
                         id="slider-track" 
-                        class="w-full grow h-13 bg-[#EAEEF4] rounded-full relative flex items-center p-1 shadow-inner select-none overflow-hidden touch-none"
+                        class="w-full h-13 bg-[#EAEEF4] rounded-full relative flex items-center p-1 shadow-inner select-none overflow-hidden touch-none"
                     >
                         <!-- Dynamic Progress Fill Track -->
                         <div 

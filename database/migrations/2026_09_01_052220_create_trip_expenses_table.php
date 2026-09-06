@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('trip_expenses', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('booking_id')->constrained('bookings')->cascadeOnDelete();
+            $table->foreignId('booking_id')->nullable()->constrained('bookings')->nullOnDelete();
             $table->foreignId('driver_id')->constrained('drivers');
             $table->string('expense_name');
             $table->decimal('amount', 10, 2);

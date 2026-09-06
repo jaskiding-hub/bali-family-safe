@@ -9,4 +9,35 @@
 @theme {
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
+    --color-driver-primary: #00AEEF;
+    --color-driver-navy: #3E5E95;
+    --color-driver-dark: #004C6B;
+    --color-driver-accent: #EA8C21;
+}
+
+.calendar-day-btn.active-selected {
+    background-color: #00AEEF !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    box-shadow: 0 4px 14px 0 rgba(0, 174, 239, 0.35) !important;
+    transform: scale(1.05);
+}
+
+.calendar-day-btn.active-selected .day-text {
+    color: #ffffff !important;
+}
+
+.calendar-day-btn.active-selected .trip-dot {
+    background-color: #ffffff !important;
+}
+
+.calendar-day-btn.is-today:not(.active-selected) {
+    border: 2px solid #00AEEF !important;
+    color: #00658D !important;
+    background-color: #f0f9ff !important;
+    font-weight: 700 !important;
+}
+
+.calendar-day-btn .trip-dot {
+    background-color: #00AEEF;
 }
