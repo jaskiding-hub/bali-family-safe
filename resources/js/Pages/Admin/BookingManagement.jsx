@@ -3,25 +3,22 @@ import { router, useForm, usePage } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import Modal from '@/Components/Modal';
 
+const selectClass = "w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs hover:border-slate-300 transition-colors cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22%2364748b%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M5.22%208.22a.75.75%200%200%201%201.06%200L10%2011.94l3.72-3.72a.75.75%200%201%201%201.06%201.06l-4.25%204.25a.75.75%200%200%201-1.06%200L5.22%209.28a.75.75%200%200%201%200-1.06z%22%20clip-rule%3D%22evenodd%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem_1.25rem] bg-[right_0.75rem_center] bg-no-repeat pr-10";
+
 export default function BookingManagement({
     stats = {},
-    drivers = { data: [], links: [] },
     bookings = { data: [], links: [] },
     available_drivers = [],
+    vehicles = [],
+    packages = [],
     filters = {},
 }) {
     const { errors = {}, flash = {} } = usePage().props;
 
-    // Search states
-    const [driverSearch, setDriverSearch] = useState(filters.search_driver || '');
+    // Search state
     const [bookingSearch, setBookingSearch] = useState(filters.search_booking || '');
 
     // Modal states
-    const [showAddDriverModal, setShowAddDriverModal] = useState(false);
-    const [showEditDriverModal, setShowEditDriverModal] = useState(false);
-    const [showDeleteDriverModal, setShowDeleteDriverModal] = useState(false);
-    const [selectedDriver, setSelectedDriver] = useState(null);
-
     const [showAddBookingModal, setShowAddBookingModal] = useState(false);
     const [showAssignDriverModal, setShowAssignDriverModal] = useState(false);
     const [showEditBookingModal, setShowEditBookingModal] = useState(false);
@@ -33,75 +30,96 @@ export default function BookingManagement({
         driver_id: '',
     });
 
-    const driverForm = useForm({
-        full_name: '',
+    const addBookingForm = useForm({
+        auto_parse_text: '',
+        status: 'Pending',
+        booking_type_ui: 'Airport Pick-Up',
+        package_id: '',
+        guest_name: '',
         whatsapp_number: '',
-        license_number: '',
-        license_expiry_date: '',
-        status: 'Active',
+        email: '',
+        flight_number: '',
+        vehicle_id: '',
+        booking_date: '',
+        pickup_time: '09:00',
+        pickup_location: '',
+        dropoff_location: '',
+        adults: 1,
+        children: 0,
+        total_fee: '',
+        notes: '',
     });
 
-    // Handle Driver Search
-    const handleDriverSearch = (e) => {
-        e.preventDefault();
-        router.get(
-            '/admin/bookings',
-            {
-                search_driver: driverSearch,
-                search_booking: bookingSearch,
-            },
-            {
-                preserveState: true,
-                replace: true,
-            }
-        );
-    };
+    const editBookingForm = useForm({
+        _method: 'put',
+        auto_parse_text: '',
+        status: 'Pending',
+        booking_type_ui: 'Airport Pick-Up',
+        package_id: '',
+        guest_name: '',
+        whatsapp_number: '',
+        email: '',
+        flight_number: '',
+        vehicle_id: '',
+        booking_date: '',
+        pickup_time: '09:00',
+        pickup_location: '',
+        dropoff_location: '',
+        adults: 1,
+        children: 0,
+        total_fee: '',
+        notes: '',
+    });
 
     // Handle Booking Search
     const handleBookingSearch = (e) => {
         e.preventDefault();
         router.get(
             '/admin/bookings',
-            {
-                search_driver: driverSearch,
-                search_booking: bookingSearch,
-            },
-            {
-                preserveState: true,
-                replace: true,
-            }
+            { search_booking: bookingSearch },
+            { preserveState: true, replace: true }
         );
     };
 
-    // Driver Action Handlers
-    const openEditDriver = (driver) => {
-        setSelectedDriver(driver);
-        driverForm.setData({
-            full_name: driver.full_name,
-            whatsapp_number: driver.whatsapp_number || '',
-            license_number: driver.license_number || '',
-            license_expiry_date: driver.license_expiry_date || '',
-            status: driver.status || 'Active',
+    // Booking Action Handlers
+    const openAddBooking = () => {
+        addBookingForm.setData({
+            auto_parse_text: '',
+            status: 'Pending',
+            booking_type_ui: 'Airport Pick-Up',
+            package_id: packages[0]?.id ? String(packages[0].id) : '',
+            guest_name: '',
+            whatsapp_number: '',
+            email: '',
+            flight_number: '',
+            vehicle_id: vehicles[0]?.id ? String(vehicles[0].id) : '',
+            booking_date: new Date().toISOString().split('T')[0],
+            pickup_time: '09:00',
+            pickup_location: '',
+            dropoff_location: '',
+            adults: 1,
+            children: 0,
+            total_fee: '',
+            notes: '',
         });
-        setShowEditDriverModal(true);
+        setShowAddBookingModal(true);
     };
 
-    const openDeleteDriver = (driver) => {
-        setSelectedDriver(driver);
-        setShowDeleteDriverModal(true);
+    const handleGenerateClick = (e) => {
+        e.preventDefault();
+        alert('Fitur auto-parse akan segera hadir');
     };
 
-    const handleDeleteDriver = () => {
-        if (!selectedDriver) return;
-        router.delete(`/admin/drivers/${selectedDriver.raw_id}`, {
+    const handleAddBookingSubmit = (e) => {
+        e.preventDefault();
+        addBookingForm.post('/admin/bookings', {
             onSuccess: () => {
-                setShowDeleteDriverModal(false);
-                setSelectedDriver(null);
+                setShowAddBookingModal(false);
+                addBookingForm.reset();
             },
         });
     };
 
-    // Booking Action Handlers
     const openAssignDriver = (booking) => {
         setSelectedBooking(booking);
         assignDriverForm.setData('driver_id', booking.driver_id || (available_drivers[0]?.id || ''));
@@ -121,7 +139,49 @@ export default function BookingManagement({
 
     const openEditBooking = (booking) => {
         setSelectedBooking(booking);
+
+        let typeUi = 'Airport Pick-Up';
+        if (booking.booking_type === 'Airport Transfer') {
+            typeUi = booking.transfer_direction === 'Drop-Off' ? 'Airport Drop-Off' : 'Airport Pick-Up';
+        } else if (booking.booking_type === 'Hotel Transfer') {
+            typeUi = 'Hotel Transfer';
+        } else if (booking.booking_type === 'Day Tour') {
+            typeUi = 'Day Tour';
+        }
+
+        editBookingForm.setData({
+            _method: 'put',
+            auto_parse_text: '',
+            status: booking.status || 'Pending',
+            booking_type_ui: typeUi,
+            package_id: booking.package_id ? String(booking.package_id) : '',
+            guest_name: booking.guest_name || '',
+            whatsapp_number: booking.whatsapp_number || '',
+            email: booking.email || '',
+            flight_number: booking.flight_number || '',
+            vehicle_id: booking.vehicle_id ? String(booking.vehicle_id) : (vehicles[0]?.id ? String(vehicles[0].id) : ''),
+            booking_date: booking.raw_booking_date || '',
+            pickup_time: booking.raw_pickup_time || '09:00',
+            pickup_location: booking.pickup_location || '',
+            dropoff_location: booking.dropoff_location || '',
+            adults: booking.adults ?? 1,
+            children: booking.children ?? 0,
+            total_fee: booking.total_fee ? String(Number(booking.total_fee)) : '',
+            notes: booking.notes || '',
+        });
         setShowEditBookingModal(true);
+    };
+
+    const handleEditBookingSubmit = (e) => {
+        e.preventDefault();
+        if (!selectedBooking) return;
+        editBookingForm.post(`/admin/bookings/${selectedBooking.raw_id}`, {
+            onSuccess: () => {
+                setShowEditBookingModal(false);
+                editBookingForm.reset();
+                setSelectedBooking(null);
+            },
+        });
     };
 
     const openDeleteBooking = (booking) => {
@@ -374,128 +434,7 @@ export default function BookingManagement({
                     </div>
                 </div>
 
-                {/* 2. PANEL DRIVER */}
-                <div className="space-y-3">
-                    {/* Search Driver */}
-                    <form onSubmit={handleDriverSearch} className="relative w-full">
-                        <input
-                            type="text"
-                            value={driverSearch}
-                            onChange={(e) => setDriverSearch(e.target.value)}
-                            placeholder="Search driver by ID or name..."
-                            className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200/90 rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all shadow-xs"
-                        />
-                        <div className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-                            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <circle cx="11" cy="11" r="8" />
-                                <line x1="21" x2="16.65" y1="21" y2="16.65" />
-                            </svg>
-                        </div>
-                    </form>
-
-                    {/* Driver Table Card */}
-                    <div className="bg-white border border-slate-200/80 shadow-xs rounded-2xl overflow-hidden">
-                        {/* Table Header / Action Bar */}
-                        <div className="flex items-center justify-between px-6 py-4.5 border-b border-slate-100">
-                            <div className="flex items-center gap-2">
-                                <h3 className="text-base font-bold text-slate-900">
-                                    Drivers List
-                                </h3>
-                                <span className="bg-slate-100 text-slate-600 text-xs font-semibold px-2 py-0.5 rounded-full">
-                                    {drivers.total || drivers.data?.length || 0} drivers
-                                </span>
-                            </div>
-
-                            <button
-                                type="button"
-                                onClick={() => setShowAddDriverModal(true)}
-                                className="inline-flex items-center gap-1.5 bg-[#00AEEF] hover:bg-[#009cd7] text-white text-xs font-semibold px-4 py-2 rounded-xl transition-all shadow-xs active:scale-[0.98] cursor-pointer"
-                            >
-                                <svg className="w-3.5 h-3.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                                    <line x1="12" x2="12" y1="5" y2="19" />
-                                    <line x1="5" x2="19" y1="12" y2="12" />
-                                </svg>
-                                <span>Add New Driver</span>
-                            </button>
-                        </div>
-
-                        {/* Driver List Table */}
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left border-collapse">
-                                <thead>
-                                    <tr className="bg-slate-50/70 border-b border-slate-100 text-slate-500 text-[11px] font-semibold uppercase tracking-wider">
-                                        <th className="w-24 px-6 py-3.5">ID</th>
-                                        <th className="px-6 py-3.5">Driver Name</th>
-                                        <th className="px-6 py-3.5 text-right">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-100 text-sm">
-                                    {drivers.data && drivers.data.length > 0 ? (
-                                        drivers.data.map((driver) => (
-                                            <tr key={driver.raw_id} className="hover:bg-slate-50/60 transition-colors">
-                                                {/* ID */}
-                                                <td className="w-24 px-6 py-4 font-mono font-medium text-slate-500 whitespace-nowrap">
-                                                    #{driver.id}
-                                                </td>
-
-                                                {/* Driver Name */}
-                                                <td className="px-6 py-4 font-semibold text-slate-900">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="w-8 h-8 rounded-full bg-sky-100 text-sky-800 flex items-center justify-center text-xs font-bold shrink-0">
-                                                            {driver.full_name?.charAt(0).toUpperCase() || 'D'}
-                                                        </div>
-                                                        <span>{driver.full_name}</span>
-                                                    </div>
-                                                </td>
-
-                                                {/* Actions */}
-                                                <td className="px-6 py-4 text-right whitespace-nowrap">
-                                                    <div className="flex items-center justify-end gap-1.5">
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => openEditDriver(driver)}
-                                                            className="p-1.5 text-slate-400 hover:text-sky-600 hover:bg-sky-50 rounded-lg transition-colors cursor-pointer"
-                                                            title="Edit Driver"
-                                                        >
-                                                            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                                                <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
-                                                                <path d="m15 5 4 4" />
-                                                            </svg>
-                                                        </button>
-
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => openDeleteDriver(driver)}
-                                                            className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
-                                                            title="Delete Driver"
-                                                        >
-                                                            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                                                <path d="M3 6h18" />
-                                                                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                                                                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-                                                            </svg>
-                                                        </button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))
-                                    ) : (
-                                        <tr>
-                                            <td colSpan={3} className="px-6 py-8 text-center text-slate-400 text-sm">
-                                                No drivers found.
-                                            </td>
-                                        </tr>
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
-
-                        {/* Driver Pagination */}
-                        {renderPagination(drivers)}
-                    </div>
-                </div>
-
-                {/* 3. PANEL RECENT BOOKINGS */}
+                {/* 2. PANEL RECENT BOOKINGS */}
                 <div className="space-y-3">
                     {/* Search Booking */}
                     <form onSubmit={handleBookingSearch} className="relative w-full">
@@ -529,7 +468,7 @@ export default function BookingManagement({
 
                             <button
                                 type="button"
-                                onClick={() => setShowAddBookingModal(true)}
+                                onClick={openAddBooking}
                                 className="inline-flex items-center gap-1.5 bg-[#00AEEF] hover:bg-[#009cd7] text-white text-xs font-semibold px-4 py-2 rounded-xl transition-all shadow-xs active:scale-[0.98] cursor-pointer"
                             >
                                 <svg className="w-3.5 h-3.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
@@ -662,105 +601,38 @@ export default function BookingManagement({
             </div>
 
             {/* ========================================================================= */}
-            {/* MODALS SECTION                                                            */}
+            {/* BOOKING MODALS SECTION                                                    */}
             {/* ========================================================================= */}
 
-            {/* 1. Modal: Add New Driver */}
-            <Modal
-                show={showAddDriverModal}
-                onClose={() => setShowAddDriverModal(false)}
-                title="Add New Driver"
-                maxWidth="lg"
-            >
-                {/* // TODO: isi form sesuai Figma popup yang menyusul */}
-                <div className="space-y-4">
-                    <p className="text-sm text-slate-600">
-                        Form pendaftaran driver baru akan dimuat sesuai desain popup Figma yang menyusul.
-                    </p>
-                    <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
-                        <button
-                            type="button"
-                            onClick={() => setShowAddDriverModal(false)}
-                            className="px-5 py-2 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition"
-                        >
-                            Close
-                        </button>
-                    </div>
-                </div>
-            </Modal>
-
-            {/* 2. Modal: Edit Driver */}
-            <Modal
-                show={showEditDriverModal}
-                onClose={() => setShowEditDriverModal(false)}
-                title={`Edit Driver ${selectedDriver ? `(${selectedDriver.full_name})` : ''}`}
-                maxWidth="lg"
-            >
-                {/* // TODO: isi form edit driver sesuai Figma popup yang menyusul */}
-                <div className="space-y-4">
-                    <p className="text-sm text-slate-600">
-                        Form edit driver akan dimuat sesuai desain popup Figma yang menyusul.
-                    </p>
-                    <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
-                        <button
-                            type="button"
-                            onClick={() => setShowEditDriverModal(false)}
-                            className="px-5 py-2 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition"
-                        >
-                            Close
-                        </button>
-                    </div>
-                </div>
-            </Modal>
-
-            {/* 3. Modal: Delete Driver */}
-            <Modal
-                show={showDeleteDriverModal}
-                onClose={() => setShowDeleteDriverModal(false)}
-                title="Delete Driver"
-                maxWidth="md"
-            >
-                {/* // TODO: isi konfirmasi delete driver sesuai Figma popup yang menyusul */}
-                <div className="space-y-4">
-                    <p className="text-sm text-slate-600">
-                        Apakah Anda yakin ingin menghapus driver <strong>{selectedDriver?.full_name}</strong>?
-                    </p>
-                    <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
-                        <button
-                            type="button"
-                            onClick={() => setShowDeleteDriverModal(false)}
-                            className="px-4 py-2 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition"
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            type="button"
-                            onClick={handleDeleteDriver}
-                            className="px-4 py-2 bg-red-600 text-white rounded-xl text-sm font-semibold hover:bg-red-700 transition"
-                        >
-                            Delete
-                        </button>
-                    </div>
-                </div>
-            </Modal>
-
-            {/* 4. Modal: Assign Driver */}
+            {/* 1. Modal: Assign Driver */}
             <Modal
                 show={showAssignDriverModal}
                 onClose={() => setShowAssignDriverModal(false)}
-                title="Assign Driver"
+                title={`Assign Driver ${selectedBooking ? `(${selectedBooking.booking_code})` : ''}`}
                 maxWidth="md"
             >
-                {/* // TODO: isi dropdown assign driver sesuai Figma popup yang menyusul */}
                 <form onSubmit={handleAssignDriverSubmit} className="space-y-4">
+                    {selectedBooking && (
+                        <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl flex flex-col gap-1 text-xs text-slate-600">
+                            <div className="flex justify-between items-center">
+                                <span className="font-semibold text-slate-900">{selectedBooking.guest_name}</span>
+                                <span className="text-slate-500">{selectedBooking.date}</span>
+                            </div>
+                            <div className="text-slate-500 font-medium">
+                                {selectedBooking.booking_type} &bull; {selectedBooking.detail}
+                            </div>
+                        </div>
+                    )}
+
                     <div>
-                        <label className="block text-sm font-semibold text-slate-800 mb-2">
-                            Select Available Driver:
+                        <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                            Select Available Driver <span className="text-red-500">*</span>
                         </label>
                         <select
                             value={assignDriverForm.data.driver_id}
                             onChange={(e) => assignDriverForm.setData('driver_id', e.target.value)}
-                            className="w-full border border-slate-200 rounded-xl p-3 text-sm text-slate-800 bg-slate-50 focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
+                            required
+                            className={selectClass}
                         >
                             <option value="">-- Pilih Driver --</option>
                             {available_drivers.map((d) => (
@@ -769,88 +641,854 @@ export default function BookingManagement({
                                 </option>
                             ))}
                         </select>
+                        {assignDriverForm.errors.driver_id && (
+                            <p className="text-xs text-red-600 mt-1 font-medium">{assignDriverForm.errors.driver_id}</p>
+                        )}
                     </div>
 
-                    <div className="flex items-center gap-2 text-sm text-sky-600 font-medium">
-                        <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                        <span>Driver Status: Ready for assignment</span>
-                    </div>
+                    {/* Dynamic Driver Status */}
+                    {(() => {
+                        const selectedAssignedDriver = available_drivers.find(
+                            (d) => String(d.id) === String(assignDriverForm.data.driver_id)
+                        );
+
+                        if (selectedAssignedDriver) {
+                            return (
+                                <div className="flex items-center gap-2 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200/60 rounded-xl px-3.5 py-2.5">
+                                    <svg className="w-4 h-4 text-emerald-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                        <polyline points="20 6 9 17 4 12" />
+                                    </svg>
+                                    <span>Driver Status: {selectedAssignedDriver.status || 'Available'}</span>
+                                </div>
+                            );
+                        }
+
+                        return (
+                            <div className="flex items-center gap-2 text-xs text-slate-400 px-1 py-0.5">
+                                <span className="w-2 h-2 rounded-full bg-slate-300"></span>
+                                <span>Pilih driver untuk melihat ketersediaan status.</span>
+                            </div>
+                        );
+                    })()}
 
                     <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
                         <button
                             type="button"
                             onClick={() => setShowAssignDriverModal(false)}
-                            className="px-5 py-2 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition"
+                            className="px-5 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition cursor-pointer"
                         >
                             Cancel
                         </button>
                         <button
                             type="submit"
                             disabled={assignDriverForm.processing || !assignDriverForm.data.driver_id}
-                            className="px-5 py-2 bg-[#00AEEF] text-white rounded-xl text-sm font-semibold hover:bg-[#009cd7] transition disabled:opacity-50"
+                            className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#00AEEF] hover:bg-[#009cd7] text-white rounded-xl text-sm font-semibold transition shadow-xs disabled:opacity-50 cursor-pointer"
                         >
-                            Confirm Assignment
+                            {assignDriverForm.processing && (
+                                <svg className="w-4 h-4 animate-spin text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <circle cx="12" cy="12" r="10" strokeWidth="4" className="opacity-25" />
+                                    <path fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" className="opacity-75" />
+                                </svg>
+                            )}
+                            <span>Confirm Assignment</span>
                         </button>
                     </div>
                 </form>
             </Modal>
 
-            {/* 5. Modal: Add New Booking */}
+            {/* 2. Modal: Add New Booking */}
             <Modal
                 show={showAddBookingModal}
                 onClose={() => setShowAddBookingModal(false)}
                 title="Add New Booking"
-                maxWidth="lg"
+                maxWidth="2xl"
             >
-                {/* // TODO: isi form add new booking sesuai Figma popup yang menyusul */}
-                <div className="space-y-4">
-                    <p className="text-sm text-slate-600">
-                        Form tambah booking baru akan dimuat sesuai desain popup Figma yang menyusul.
-                    </p>
+                <form onSubmit={handleAddBookingSubmit} className="space-y-5">
+                    {/* Auto-Parse Section */}
+                    <div className="bg-gradient-to-r from-sky-50 to-indigo-50/50 border border-sky-100 rounded-2xl p-4">
+                        <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                                <div className="w-6 h-6 rounded-lg bg-[#00AEEF] text-white flex items-center justify-center text-xs shadow-xs">
+                                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                        <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+                                    </svg>
+                                </div>
+                                <span className="text-xs font-bold uppercase tracking-wider text-slate-800">
+                                    Isi Otomatis (Auto-Parse)
+                                </span>
+                            </div>
+                            <span className="text-[11px] font-semibold text-sky-600 bg-white/90 px-2.5 py-0.5 rounded-full border border-sky-200/60 shadow-2xs">
+                                AI Assistant
+                            </span>
+                        </div>
+                        <p className="text-xs text-slate-600 mb-2">
+                            Tempel teks pemesanan dari chat WhatsApp pelanggan untuk pengisian otomatis.
+                        </p>
+                        <textarea
+                            rows="2"
+                            value={addBookingForm.data.auto_parse_text}
+                            onChange={(e) => addBookingForm.setData('auto_parse_text', e.target.value)}
+                            placeholder="Contoh: Nama: John Doe, Tgl: 25 Des 2026, Penjemputan: Airport ke Seminyak, Pesawat GA-401..."
+                            className="w-full bg-white border border-slate-200 rounded-xl p-3 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 resize-none font-sans shadow-2xs"
+                        />
+                        <div className="flex justify-end mt-2">
+                            <button
+                                type="button"
+                                onClick={handleGenerateClick}
+                                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-[#00AEEF] hover:bg-[#009cd7] text-white rounded-xl text-xs font-semibold shadow-xs transition-all cursor-pointer active:scale-95"
+                            >
+                                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                                </svg>
+                                <span>Generate</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Form Fields Grid */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {/* Status */}
+                        <div>
+                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                                Status <span className="text-red-500">*</span>
+                            </label>
+                            <select
+                                value={addBookingForm.data.status}
+                                onChange={(e) => addBookingForm.setData('status', e.target.value)}
+                                required
+                                className={selectClass}
+                            >
+                                <option value="Pending">Pending</option>
+                                <option value="Confirmed">Confirmed</option>
+                                <option value="Assigned">Assigned</option>
+                                <option value="On Going">On Going</option>
+                                <option value="Completed">Completed</option>
+                                <option value="Cancelled">Cancelled</option>
+                            </select>
+                            {addBookingForm.errors.status && (
+                                <p className="text-xs text-red-600 mt-1 font-medium">{addBookingForm.errors.status}</p>
+                            )}
+                        </div>
+
+                        {/* Booking Type */}
+                        <div>
+                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                                Booking Type <span className="text-red-500">*</span>
+                            </label>
+                            <select
+                                value={addBookingForm.data.booking_type_ui}
+                                onChange={(e) => {
+                                    const val = e.target.value;
+                                    addBookingForm.setData((prev) => ({
+                                        ...prev,
+                                        booking_type_ui: val,
+                                        package_id: val === 'Day Tour' ? (prev.package_id || (packages[0]?.id ? String(packages[0].id) : '')) : '',
+                                        flight_number: (val === 'Airport Pick-Up' || val === 'Airport Drop-Off') ? prev.flight_number : '',
+                                    }));
+                                }}
+                                required
+                                className={selectClass}
+                            >
+                                <option value="Airport Pick-Up">Airport Pick-Up</option>
+                                <option value="Airport Drop-Off">Airport Drop-Off</option>
+                                <option value="Hotel Transfer">Hotel Transfer</option>
+                                <option value="Day Tour">Day Tour</option>
+                            </select>
+                            {addBookingForm.errors.booking_type && (
+                                <p className="text-xs text-red-600 mt-1 font-medium">{addBookingForm.errors.booking_type}</p>
+                            )}
+                        </div>
+
+                        {/* Conditional: Package for Day Tour */}
+                        {addBookingForm.data.booking_type_ui === 'Day Tour' && (
+                            <div className="sm:col-span-2">
+                                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                                    Pilih Package <span className="text-red-500">*</span>
+                                </label>
+                                <select
+                                    value={addBookingForm.data.package_id}
+                                    onChange={(e) => addBookingForm.setData('package_id', e.target.value)}
+                                    required
+                                    className={selectClass}
+                                >
+                                    <option value="">-- Pilih Tour Package --</option>
+                                    {packages.map((pkg) => (
+                                        <option key={pkg.id} value={pkg.id}>
+                                            {pkg.name} {pkg.price ? `(Rp ${Number(pkg.price).toLocaleString('id-ID')})` : ''}
+                                        </option>
+                                    ))}
+                                </select>
+                                {addBookingForm.errors.package_id && (
+                                    <p className="text-xs text-red-600 mt-1 font-medium">{addBookingForm.errors.package_id}</p>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Date */}
+                        <div>
+                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                                Date <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                                type="date"
+                                required
+                                value={addBookingForm.data.booking_date}
+                                onChange={(e) => addBookingForm.setData('booking_date', e.target.value)}
+                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
+                            />
+                            {addBookingForm.errors.booking_date && (
+                                <p className="text-xs text-red-600 mt-1 font-medium">{addBookingForm.errors.booking_date}</p>
+                            )}
+                        </div>
+
+                        {/* Pickup Time */}
+                        <div>
+                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                                Pickup Time <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                                type="time"
+                                required
+                                value={addBookingForm.data.pickup_time}
+                                onChange={(e) => addBookingForm.setData('pickup_time', e.target.value)}
+                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
+                            />
+                            {addBookingForm.errors.pickup_time && (
+                                <p className="text-xs text-red-600 mt-1 font-medium">{addBookingForm.errors.pickup_time}</p>
+                            )}
+                        </div>
+
+                        {/* Guest Name */}
+                        <div>
+                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                                Guest Name <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                                type="text"
+                                required
+                                value={addBookingForm.data.guest_name}
+                                onChange={(e) => addBookingForm.setData('guest_name', e.target.value)}
+                                placeholder="e.g. John Doe"
+                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
+                            />
+                            {addBookingForm.errors.guest_name && (
+                                <p className="text-xs text-red-600 mt-1 font-medium">{addBookingForm.errors.guest_name}</p>
+                            )}
+                        </div>
+
+                        {/* WhatsApp Number */}
+                        <div>
+                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                                Phone / WhatsApp <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                                type="text"
+                                required
+                                value={addBookingForm.data.whatsapp_number}
+                                onChange={(e) => addBookingForm.setData('whatsapp_number', e.target.value)}
+                                placeholder="+62 812-3456-7890"
+                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
+                            />
+                            {addBookingForm.errors.whatsapp_number && (
+                                <p className="text-xs text-red-600 mt-1 font-medium">{addBookingForm.errors.whatsapp_number}</p>
+                            )}
+                        </div>
+
+                        {/* Email */}
+                        <div>
+                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                                Email Address
+                            </label>
+                            <input
+                                type="email"
+                                value={addBookingForm.data.email}
+                                onChange={(e) => addBookingForm.setData('email', e.target.value)}
+                                placeholder="guest@example.com"
+                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
+                            />
+                            {addBookingForm.errors.email && (
+                                <p className="text-xs text-red-600 mt-1 font-medium">{addBookingForm.errors.email}</p>
+                            )}
+                        </div>
+
+                        {/* Vehicle Selection */}
+                        <div>
+                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                                Vehicle Type <span className="text-red-500">*</span>
+                            </label>
+                            <select
+                                value={addBookingForm.data.vehicle_id}
+                                onChange={(e) => addBookingForm.setData('vehicle_id', e.target.value)}
+                                required
+                                className={selectClass}
+                            >
+                                <option value="">-- Pilih Kendaraan --</option>
+                                {vehicles.map((v) => (
+                                    <option key={v.id} value={v.id}>
+                                        {v.label}
+                                    </option>
+                                ))}
+                            </select>
+                            {addBookingForm.errors.vehicle_id && (
+                                <p className="text-xs text-red-600 mt-1 font-medium">{addBookingForm.errors.vehicle_id}</p>
+                            )}
+                        </div>
+
+                        {/* Conditional: Flight Number */}
+                        {(addBookingForm.data.booking_type_ui === 'Airport Pick-Up' || addBookingForm.data.booking_type_ui === 'Airport Drop-Off') && (
+                            <div className="sm:col-span-2">
+                                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                                    Flight Number
+                                </label>
+                                <input
+                                    type="text"
+                                    value={addBookingForm.data.flight_number}
+                                    onChange={(e) => addBookingForm.setData('flight_number', e.target.value)}
+                                    placeholder="e.g. GA-401 / SQ-942"
+                                    className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
+                                />
+                                {addBookingForm.errors.flight_number && (
+                                    <p className="text-xs text-red-600 mt-1 font-medium">{addBookingForm.errors.flight_number}</p>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Pickup Location */}
+                        <div>
+                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                                Pickup Location <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                                type="text"
+                                required
+                                value={addBookingForm.data.pickup_location}
+                                onChange={(e) => addBookingForm.setData('pickup_location', e.target.value)}
+                                placeholder="e.g. I Gusti Ngurah Rai Airport / Hotel Lobby"
+                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
+                            />
+                            {addBookingForm.errors.pickup_location && (
+                                <p className="text-xs text-red-600 mt-1 font-medium">{addBookingForm.errors.pickup_location}</p>
+                            )}
+                        </div>
+
+                        {/* Dropoff Location */}
+                        <div>
+                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                                Drop-off Location <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                                type="text"
+                                required
+                                value={addBookingForm.data.dropoff_location}
+                                onChange={(e) => addBookingForm.setData('dropoff_location', e.target.value)}
+                                placeholder="e.g. Maya Sanur Resort & Spa"
+                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
+                            />
+                            {addBookingForm.errors.dropoff_location && (
+                                <p className="text-xs text-red-600 mt-1 font-medium">{addBookingForm.errors.dropoff_location}</p>
+                            )}
+                        </div>
+
+                        {/* Adults */}
+                        <div>
+                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                                Adults <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                                type="number"
+                                min="1"
+                                max="100"
+                                required
+                                value={addBookingForm.data.adults}
+                                onChange={(e) => addBookingForm.setData('adults', e.target.value)}
+                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
+                            />
+                            {addBookingForm.errors.adults && (
+                                <p className="text-xs text-red-600 mt-1 font-medium">{addBookingForm.errors.adults}</p>
+                            )}
+                        </div>
+
+                        {/* Children */}
+                        <div>
+                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                                Children
+                            </label>
+                            <input
+                                type="number"
+                                min="0"
+                                max="100"
+                                value={addBookingForm.data.children}
+                                onChange={(e) => addBookingForm.setData('children', e.target.value)}
+                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
+                            />
+                            {addBookingForm.errors.children && (
+                                <p className="text-xs text-red-600 mt-1 font-medium">{addBookingForm.errors.children}</p>
+                            )}
+                        </div>
+
+                        {/* Total Fee */}
+                        <div className="sm:col-span-2">
+                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                                Total Fee (Rp)
+                            </label>
+                            <input
+                                type="number"
+                                min="0"
+                                max="9999999999"
+                                value={addBookingForm.data.total_fee}
+                                onChange={(e) => addBookingForm.setData('total_fee', e.target.value)}
+                                placeholder="e.g. 450000"
+                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
+                            />
+                            {addBookingForm.errors.total_fee && (
+                                <p className="text-xs text-red-600 mt-1 font-medium">{addBookingForm.errors.total_fee}</p>
+                            )}
+                        </div>
+
+                        {/* Notes */}
+                        <div className="sm:col-span-2">
+                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                                Notes / Special Requests
+                            </label>
+                            <textarea
+                                rows="2"
+                                value={addBookingForm.data.notes}
+                                onChange={(e) => addBookingForm.setData('notes', e.target.value)}
+                                placeholder="e.g. Request 1 baby car seat, butuh driver fasih bahasa inggris..."
+                                className="w-full bg-white border border-slate-200 rounded-xl p-3 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 resize-none font-sans shadow-2xs"
+                            />
+                            {addBookingForm.errors.notes && (
+                                <p className="text-xs text-red-600 mt-1 font-medium">{addBookingForm.errors.notes}</p>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Footer Actions */}
                     <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
                         <button
                             type="button"
                             onClick={() => setShowAddBookingModal(false)}
-                            className="px-5 py-2 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition"
+                            className="px-5 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition cursor-pointer"
                         >
-                            Close
+                            Cancel
+                        </button>
+                        <button
+                            type="submit"
+                            disabled={addBookingForm.processing}
+                            className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#00AEEF] hover:bg-[#009cd7] text-white rounded-xl text-sm font-semibold transition shadow-xs disabled:opacity-50 cursor-pointer"
+                        >
+                            {addBookingForm.processing && (
+                                <svg className="w-4 h-4 animate-spin text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <circle cx="12" cy="12" r="10" strokeWidth="4" className="opacity-25" />
+                                    <path fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" className="opacity-75" />
+                                </svg>
+                            )}
+                            <span>Save Booking</span>
                         </button>
                     </div>
-                </div>
+                </form>
             </Modal>
 
-            {/* 6. Modal: Edit Booking */}
+            {/* 3. Modal: Edit Booking */}
             <Modal
                 show={showEditBookingModal}
                 onClose={() => setShowEditBookingModal(false)}
                 title={`Edit Booking ${selectedBooking ? `(${selectedBooking.booking_code})` : ''}`}
-                maxWidth="lg"
+                maxWidth="2xl"
             >
-                {/* // TODO: isi form edit booking sesuai Figma popup yang menyusul */}
-                <div className="space-y-4">
-                    <p className="text-sm text-slate-600">
-                        Form edit booking akan dimuat sesuai desain popup Figma yang menyusul.
-                    </p>
+                <form onSubmit={handleEditBookingSubmit} className="space-y-5">
+                    {/* Auto-Parse Section */}
+                    <div className="bg-gradient-to-r from-sky-50 to-indigo-50/50 border border-sky-100 rounded-2xl p-4">
+                        <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                                <div className="w-6 h-6 rounded-lg bg-[#00AEEF] text-white flex items-center justify-center text-xs shadow-xs">
+                                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                        <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+                                    </svg>
+                                </div>
+                                <span className="text-xs font-bold uppercase tracking-wider text-slate-800">
+                                    Isi Otomatis (Auto-Parse)
+                                </span>
+                            </div>
+                            <span className="text-[11px] font-semibold text-sky-600 bg-white/90 px-2.5 py-0.5 rounded-full border border-sky-200/60 shadow-2xs">
+                                AI Assistant
+                            </span>
+                        </div>
+                        <p className="text-xs text-slate-600 mb-2">
+                            Tempel teks pemesanan dari chat WhatsApp pelanggan untuk pengisian otomatis.
+                        </p>
+                        <textarea
+                            rows="2"
+                            value={editBookingForm.data.auto_parse_text}
+                            onChange={(e) => editBookingForm.setData('auto_parse_text', e.target.value)}
+                            placeholder="Contoh: Nama: John Doe, Tgl: 25 Des 2026, Penjemputan: Airport ke Seminyak, Pesawat GA-401..."
+                            className="w-full bg-white border border-slate-200 rounded-xl p-3 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 resize-none font-sans shadow-2xs"
+                        />
+                        <div className="flex justify-end mt-2">
+                            <button
+                                type="button"
+                                onClick={handleGenerateClick}
+                                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-[#00AEEF] hover:bg-[#009cd7] text-white rounded-xl text-xs font-semibold shadow-xs transition-all cursor-pointer active:scale-95"
+                            >
+                                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                                </svg>
+                                <span>Generate</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Form Fields Grid */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {/* Status */}
+                        <div>
+                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                                Status <span className="text-red-500">*</span>
+                            </label>
+                            <select
+                                value={editBookingForm.data.status}
+                                onChange={(e) => editBookingForm.setData('status', e.target.value)}
+                                required
+                                className={selectClass}
+                            >
+                                <option value="Pending">Pending</option>
+                                <option value="Confirmed">Confirmed</option>
+                                <option value="Assigned">Assigned</option>
+                                <option value="On Going">On Going</option>
+                                <option value="Completed">Completed</option>
+                                <option value="Cancelled">Cancelled</option>
+                            </select>
+                            {editBookingForm.errors.status && (
+                                <p className="text-xs text-red-600 mt-1 font-medium">{editBookingForm.errors.status}</p>
+                            )}
+                        </div>
+
+                        {/* Booking Type */}
+                        <div>
+                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                                Booking Type <span className="text-red-500">*</span>
+                            </label>
+                            <select
+                                value={editBookingForm.data.booking_type_ui}
+                                onChange={(e) => {
+                                    const val = e.target.value;
+                                    editBookingForm.setData((prev) => ({
+                                        ...prev,
+                                        booking_type_ui: val,
+                                        package_id: val === 'Day Tour' ? (prev.package_id || (packages[0]?.id ? String(packages[0].id) : '')) : '',
+                                        flight_number: (val === 'Airport Pick-Up' || val === 'Airport Drop-Off') ? prev.flight_number : '',
+                                    }));
+                                }}
+                                required
+                                className={selectClass}
+                            >
+                                <option value="Airport Pick-Up">Airport Pick-Up</option>
+                                <option value="Airport Drop-Off">Airport Drop-Off</option>
+                                <option value="Hotel Transfer">Hotel Transfer</option>
+                                <option value="Day Tour">Day Tour</option>
+                            </select>
+                            {editBookingForm.errors.booking_type && (
+                                <p className="text-xs text-red-600 mt-1 font-medium">{editBookingForm.errors.booking_type}</p>
+                            )}
+                        </div>
+
+                        {/* Conditional: Package for Day Tour */}
+                        {editBookingForm.data.booking_type_ui === 'Day Tour' && (
+                            <div className="sm:col-span-2">
+                                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                                    Pilih Package <span className="text-red-500">*</span>
+                                </label>
+                                <select
+                                    value={editBookingForm.data.package_id}
+                                    onChange={(e) => editBookingForm.setData('package_id', e.target.value)}
+                                    required
+                                    className={selectClass}
+                                >
+                                    <option value="">-- Pilih Tour Package --</option>
+                                    {packages.map((pkg) => (
+                                        <option key={pkg.id} value={pkg.id}>
+                                            {pkg.name} {pkg.price ? `(Rp ${Number(pkg.price).toLocaleString('id-ID')})` : ''}
+                                        </option>
+                                    ))}
+                                </select>
+                                {editBookingForm.errors.package_id && (
+                                    <p className="text-xs text-red-600 mt-1 font-medium">{editBookingForm.errors.package_id}</p>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Date */}
+                        <div>
+                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                                Date <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                                type="date"
+                                required
+                                value={editBookingForm.data.booking_date}
+                                onChange={(e) => editBookingForm.setData('booking_date', e.target.value)}
+                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
+                            />
+                            {editBookingForm.errors.booking_date && (
+                                <p className="text-xs text-red-600 mt-1 font-medium">{editBookingForm.errors.booking_date}</p>
+                            )}
+                        </div>
+
+                        {/* Pickup Time */}
+                        <div>
+                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                                Pickup Time <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                                type="time"
+                                required
+                                value={editBookingForm.data.pickup_time}
+                                onChange={(e) => editBookingForm.setData('pickup_time', e.target.value)}
+                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
+                            />
+                            {editBookingForm.errors.pickup_time && (
+                                <p className="text-xs text-red-600 mt-1 font-medium">{editBookingForm.errors.pickup_time}</p>
+                            )}
+                        </div>
+
+                        {/* Guest Name */}
+                        <div>
+                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                                Guest Name <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                                type="text"
+                                required
+                                value={editBookingForm.data.guest_name}
+                                onChange={(e) => editBookingForm.setData('guest_name', e.target.value)}
+                                placeholder="e.g. John Doe"
+                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
+                            />
+                            {editBookingForm.errors.guest_name && (
+                                <p className="text-xs text-red-600 mt-1 font-medium">{editBookingForm.errors.guest_name}</p>
+                            )}
+                        </div>
+
+                        {/* WhatsApp Number */}
+                        <div>
+                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                                Phone / WhatsApp <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                                type="text"
+                                required
+                                value={editBookingForm.data.whatsapp_number}
+                                onChange={(e) => editBookingForm.setData('whatsapp_number', e.target.value)}
+                                placeholder="+62 812-3456-7890"
+                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
+                            />
+                            {editBookingForm.errors.whatsapp_number && (
+                                <p className="text-xs text-red-600 mt-1 font-medium">{editBookingForm.errors.whatsapp_number}</p>
+                            )}
+                        </div>
+
+                        {/* Email */}
+                        <div>
+                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                                Email Address
+                            </label>
+                            <input
+                                type="email"
+                                value={editBookingForm.data.email}
+                                onChange={(e) => editBookingForm.setData('email', e.target.value)}
+                                placeholder="guest@example.com"
+                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
+                            />
+                            {editBookingForm.errors.email && (
+                                <p className="text-xs text-red-600 mt-1 font-medium">{editBookingForm.errors.email}</p>
+                            )}
+                        </div>
+
+                        {/* Vehicle Selection */}
+                        <div>
+                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                                Vehicle Type <span className="text-red-500">*</span>
+                            </label>
+                            <select
+                                value={editBookingForm.data.vehicle_id}
+                                onChange={(e) => editBookingForm.setData('vehicle_id', e.target.value)}
+                                required
+                                className={selectClass}
+                            >
+                                <option value="">-- Pilih Kendaraan --</option>
+                                {vehicles.map((v) => (
+                                    <option key={v.id} value={v.id}>
+                                        {v.label}
+                                    </option>
+                                ))}
+                            </select>
+                            {editBookingForm.errors.vehicle_id && (
+                                <p className="text-xs text-red-600 mt-1 font-medium">{editBookingForm.errors.vehicle_id}</p>
+                            )}
+                        </div>
+
+                        {/* Conditional: Flight Number */}
+                        {(editBookingForm.data.booking_type_ui === 'Airport Pick-Up' || editBookingForm.data.booking_type_ui === 'Airport Drop-Off') && (
+                            <div className="sm:col-span-2">
+                                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                                    Flight Number
+                                </label>
+                                <input
+                                    type="text"
+                                    value={editBookingForm.data.flight_number}
+                                    onChange={(e) => editBookingForm.setData('flight_number', e.target.value)}
+                                    placeholder="e.g. GA-401 / SQ-942"
+                                    className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
+                                />
+                                {editBookingForm.errors.flight_number && (
+                                    <p className="text-xs text-red-600 mt-1 font-medium">{editBookingForm.errors.flight_number}</p>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Pickup Location */}
+                        <div>
+                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                                Pickup Location <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                                type="text"
+                                required
+                                value={editBookingForm.data.pickup_location}
+                                onChange={(e) => editBookingForm.setData('pickup_location', e.target.value)}
+                                placeholder="e.g. I Gusti Ngurah Rai Airport / Hotel Lobby"
+                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
+                            />
+                            {editBookingForm.errors.pickup_location && (
+                                <p className="text-xs text-red-600 mt-1 font-medium">{editBookingForm.errors.pickup_location}</p>
+                            )}
+                        </div>
+
+                        {/* Dropoff Location */}
+                        <div>
+                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                                Drop-off Location <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                                type="text"
+                                required
+                                value={editBookingForm.data.dropoff_location}
+                                onChange={(e) => editBookingForm.setData('dropoff_location', e.target.value)}
+                                placeholder="e.g. Maya Sanur Resort & Spa"
+                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
+                            />
+                            {editBookingForm.errors.dropoff_location && (
+                                <p className="text-xs text-red-600 mt-1 font-medium">{editBookingForm.errors.dropoff_location}</p>
+                            )}
+                        </div>
+
+                        {/* Adults */}
+                        <div>
+                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                                Adults <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                                type="number"
+                                min="1"
+                                max="100"
+                                required
+                                value={editBookingForm.data.adults}
+                                onChange={(e) => editBookingForm.setData('adults', e.target.value)}
+                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
+                            />
+                            {editBookingForm.errors.adults && (
+                                <p className="text-xs text-red-600 mt-1 font-medium">{editBookingForm.errors.adults}</p>
+                            )}
+                        </div>
+
+                        {/* Children */}
+                        <div>
+                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                                Children
+                            </label>
+                            <input
+                                type="number"
+                                min="0"
+                                max="100"
+                                value={editBookingForm.data.children}
+                                onChange={(e) => editBookingForm.setData('children', e.target.value)}
+                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
+                            />
+                            {editBookingForm.errors.children && (
+                                <p className="text-xs text-red-600 mt-1 font-medium">{editBookingForm.errors.children}</p>
+                            )}
+                        </div>
+
+                        {/* Total Fee */}
+                        <div className="sm:col-span-2">
+                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                                Total Fee (Rp)
+                            </label>
+                            <input
+                                type="number"
+                                min="0"
+                                max="9999999999"
+                                value={editBookingForm.data.total_fee}
+                                onChange={(e) => editBookingForm.setData('total_fee', e.target.value)}
+                                placeholder="e.g. 450000"
+                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
+                            />
+                            {editBookingForm.errors.total_fee && (
+                                <p className="text-xs text-red-600 mt-1 font-medium">{editBookingForm.errors.total_fee}</p>
+                            )}
+                        </div>
+
+                        {/* Notes */}
+                        <div className="sm:col-span-2">
+                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                                Notes / Special Requests
+                            </label>
+                            <textarea
+                                rows="2"
+                                value={editBookingForm.data.notes}
+                                onChange={(e) => editBookingForm.setData('notes', e.target.value)}
+                                placeholder="e.g. Request 1 baby car seat, butuh driver fasih bahasa inggris..."
+                                className="w-full bg-white border border-slate-200 rounded-xl p-3 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 resize-none font-sans shadow-2xs"
+                            />
+                            {editBookingForm.errors.notes && (
+                                <p className="text-xs text-red-600 mt-1 font-medium">{editBookingForm.errors.notes}</p>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Footer Actions */}
                     <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
                         <button
                             type="button"
                             onClick={() => setShowEditBookingModal(false)}
-                            className="px-5 py-2 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition"
+                            className="px-5 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition cursor-pointer"
                         >
-                            Close
+                            Cancel
+                        </button>
+                        <button
+                            type="submit"
+                            disabled={editBookingForm.processing}
+                            className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#00AEEF] hover:bg-[#009cd7] text-white rounded-xl text-sm font-semibold transition shadow-xs disabled:opacity-50 cursor-pointer"
+                        >
+                            {editBookingForm.processing && (
+                                <svg className="w-4 h-4 animate-spin text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <circle cx="12" cy="12" r="10" strokeWidth="4" className="opacity-25" />
+                                    <path fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" className="opacity-75" />
+                                </svg>
+                            )}
+                            <span>Update Booking</span>
                         </button>
                     </div>
-                </div>
+                </form>
             </Modal>
 
-            {/* 7. Modal: Delete Booking */}
+            {/* 4. Modal: Delete Booking */}
             <Modal
                 show={showDeleteBookingModal}
                 onClose={() => setShowDeleteBookingModal(false)}
                 title="Delete Booking"
                 maxWidth="md"
             >
-                {/* // TODO: isi konfirmasi delete booking sesuai Figma popup yang menyusul */}
                 <div className="space-y-4">
                     <p className="text-sm text-slate-600">
                         Apakah Anda yakin ingin menghapus booking <strong>{selectedBooking?.booking_code}</strong>?
@@ -859,14 +1497,14 @@ export default function BookingManagement({
                         <button
                             type="button"
                             onClick={() => setShowDeleteBookingModal(false)}
-                            className="px-4 py-2 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition"
+                            className="px-4 py-2 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition cursor-pointer"
                         >
                             Cancel
                         </button>
                         <button
                             type="button"
                             onClick={handleDeleteBooking}
-                            className="px-4 py-2 bg-red-600 text-white rounded-xl text-sm font-semibold hover:bg-red-700 transition"
+                            className="px-4 py-2 bg-red-600 text-white rounded-xl text-sm font-semibold hover:bg-red-700 transition cursor-pointer"
                         >
                             Delete
                         </button>

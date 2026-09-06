@@ -5,7 +5,7 @@ export default function Modal({
     onClose = () => {},
     title = '',
     children,
-    maxWidth = 'md',
+    maxWidth = 'lg',
 }) {
     useEffect(() => {
         const handleKeyDown = (e) => {
@@ -35,30 +35,31 @@ export default function Modal({
         lg: 'max-w-lg',
         xl: 'max-w-xl',
         '2xl': 'max-w-2xl',
-    }[maxWidth] || 'max-w-md';
+    }[maxWidth] || 'max-w-lg';
 
     return (
-        <div className="fixed inset-0 z-50 overflow-y-auto px-4 py-6 sm:px-0 flex items-center justify-center">
+        <div className="fixed inset-0 z-50 overflow-y-auto p-4 sm:p-6 flex items-center justify-center animate-in fade-in duration-200">
             {/* Backdrop */}
             <div
-                className="fixed inset-0 bg-black/50 transition-opacity"
+                className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity"
                 onClick={onClose}
             />
 
-            {/* Modal Card */}
+            {/* Modal Card with max-height and internal scroll */}
             <div
-                className={`relative bg-white rounded-2xl shadow-xl overflow-hidden w-full ${maxWidthClass} z-10 transition-all transform`}
+                className={`relative bg-white rounded-2xl shadow-2xl w-full ${maxWidthClass} max-h-[85vh] flex flex-col z-10 transition-all transform overflow-hidden border border-slate-100`}
                 onClick={(e) => e.stopPropagation()}
             >
-                {/* Header */}
-                <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
-                    <h3 className="text-xl font-bold text-[#171C20]">
+                {/* Header (Sticky) */}
+                <div className="flex items-center justify-between px-6 py-4.5 border-b border-slate-100 bg-white shrink-0">
+                    <h3 className="text-lg font-bold text-slate-900 tracking-tight">
                         {title}
                     </h3>
                     <button
                         type="button"
                         onClick={onClose}
-                        className="text-gray-400 hover:text-gray-600 rounded-lg p-1.5 inline-flex items-center justify-center transition-colors"
+                        className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg p-1.5 inline-flex items-center justify-center transition-colors cursor-pointer"
+                        aria-label="Close modal"
                     >
                         <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                             <line x1="18" y1="6" x2="6" y2="18" />
@@ -67,8 +68,8 @@ export default function Modal({
                     </button>
                 </div>
 
-                {/* Content */}
-                <div className="p-6">
+                {/* Content Area (Scrollable) */}
+                <div className="p-6 overflow-y-auto flex-1 overscroll-contain">
                     {children}
                 </div>
             </div>

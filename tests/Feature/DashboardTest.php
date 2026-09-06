@@ -20,21 +20,22 @@ class DashboardTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_unauthenticated_admin_redirects_to_login(): void
-    {
-        $response = $this->get(route('admin.dashboard'));
-        $response->assertRedirect(route('admin.login'));
-    }
+    private AdminUser $admin;
+    private Vehicle $vehicle;
+    private VehicleUnit $unit;
+    private Driver $driver;
 
-    public function test_authenticated_admin_can_view_dashboard_with_stats_and_schedule(): void
+    protected function setUp(): void
     {
-        $admin = AdminUser::create([
+        parent::setUp();
+
+        $this->admin = AdminUser::create([
             'name' => 'Admin User',
             'email' => 'admin@bfs.test',
             'password_hash' => bcrypt('password123'),
         ]);
 
-        $vehicle = Vehicle::create([
+        $this->vehicle = Vehicle::create([
             'category' => 'Regular Family SUV',
             'name' => 'Toyota Innova Reborn',
             'model' => 'Innova Reborn 2023',
@@ -44,15 +45,15 @@ class DashboardTest extends TestCase
             'is_popular' => true,
         ]);
 
-        $unit = VehicleUnit::create([
-            'vehicle_id' => $vehicle->id,
+        $this->unit = VehicleUnit::create([
+            'vehicle_id' => $this->vehicle->id,
             'plate_number' => 'DK 1234 AB',
             'status' => 'Available',
         ]);
 
-        $driver = Driver::create([
-            'vehicle_unit_id' => $unit->id,
-            'full_name' => 'Wayan',
+        $this->driver = Driver::create([
+            'vehicle_unit_id' => $this->unit->id,
+            'full_name' => 'Wayan Sudira',
             'whatsapp_number' => '08123456789',
             'email' => 'wayan@bfs.test',
             'password_hash' => bcrypt('password123'),
@@ -60,7 +61,16 @@ class DashboardTest extends TestCase
             'license_expiry_date' => '2028-12-31',
             'status' => DriverStatus::Active->value,
         ]);
+    }
 
+    public function test_unauthenticated_admin_redirects_to_login(): void
+    {
+        $response = $this->get(route('admin.dashboard'));
+        $response->assertRedirect(route('admin.login'));
+    }
+
+    public function test_authenticated_admin_can_view_dashboard_with_stats_schedule_and_drivers(): void
+    {
         $package = Package::create([
             'name' => 'Airport Transfer (DPS)',
             'slug' => 'airport-transfer-dps',
@@ -78,8 +88,8 @@ class DashboardTest extends TestCase
             'booking_date' => Carbon::today(),
             'pickup_time' => '09:30:00',
             'total_fee' => 250000,
-            'vehicle_id' => $vehicle->id,
-            'driver_id' => $driver->id,
+            'vehicle_id' => $this->vehicle->id,
+            'driver_id' => $this->driver->id,
             'package_id' => $package->id,
         ]);
 
@@ -94,11 +104,11 @@ class DashboardTest extends TestCase
             'booking_date' => Carbon::today(),
             'pickup_time' => '11:00:00',
             'total_fee' => 750000,
-            'vehicle_id' => $vehicle->id,
-            'driver_id' => $driver->id,
+            'vehicle_id' => $this->vehicle->id,
+            'driver_id' => $this->driver->id,
         ]);
 
-        $response = $this->actingAs($admin, 'admin')->get(route('admin.dashboard'));
+        $response = $this->actingAs($this->admin, 'admin')->get(route('admin.dashboard'));
 
         $response->assertOk();
         $response->assertInertia(fn (Assert $page) => $page
@@ -109,13 +119,40 @@ class DashboardTest extends TestCase
             ->has('stats.month_revenue')
             ->has('stats.month_revenue_formatted')
             ->has('today_schedule', 2)
+            ->has('drivers.data', 1)
+            ->has('available_vehicle_units')
+            ->has('today_date')
             ->where('stats.pending_bookings', 1)
             ->where('stats.today_trips', 2)
             ->where('stats.available_drivers', 1)
             ->where('stats.month_revenue', 750000)
             ->where('today_schedule.0.guest_name', 'Sarah Jenkins')
             ->where('today_schedule.0.pickup_time', '09:30 AM')
-            ->where('today_schedule.0.driver.name', 'Wayan')
+            ->where('today_schedule.0.driver.name', 'Wayan Sudira')
+            ->where('drivers.data.0.full_name', 'Wayan Sudira')
+            ->where('drivers.data.0.email', 'wayan@bfs.test')
+        );
+    }
+
+    public function test_driver_search_on_dashboard(): void
+    {
+        Driver::create([
+            'full_name' => 'Made Kertayasa',
+            'whatsapp_number' => '081999999999',
+            'email' => 'made.k@bfs.test',
+            'password_hash' => bcrypt('password123'),
+            'license_number' => 'SIM-MADE-888',
+            'license_expiry_date' => '2029-01-01',
+            'status' => DriverStatus::Active->value,
+        ]);
+
+        $response = $this->actingAs($this->admin, 'admin')->get(route('admin.dashboard', ['search_driver' => 'Made']));
+
+        $response->assertOk();
+        $response->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/Dashboard')
+            ->has('drivers.data', 1)
+            ->where('drivers.data.0.full_name', 'Made Kertayasa')
         );
     }
 }
