@@ -37,7 +37,25 @@ class HandleInertiaRequests extends Middleware
     {
         return [
             ...parent::share($request),
-            //
+            'auth' => [
+                'admin' => $request->user('admin') ? [
+                    'id' => $request->user('admin')->id,
+                    'name' => $request->user('admin')->name,
+                    'email' => $request->user('admin')->email,
+                ] : null,
+                'driver' => $request->user('driver') ? [
+                    'id' => $request->user('driver')->id,
+                    'name' => $request->user('driver')->full_name,
+                    'email' => $request->user('driver')->email,
+                ] : null,
+            ],
+            'pending_bookings_count' => fn () => $request->user('admin')
+                ? \App\Models\Booking::where('status', \App\Enums\BookingStatus::Pending->value)->count()
+                : 0,
+            'flash' => [
+                'success' => fn () => $request->session()->get('success'),
+                'error' => fn () => $request->session()->get('error'),
+            ],
         ];
     }
 }
