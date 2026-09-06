@@ -11,7 +11,15 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        $middleware->web(append: [
+            \App\Http\Middleware\HandleInertiaRequests::class,
+        ]);
+
+        $middleware->redirectGuestsTo(function ($request) {
+            return $request->is('admin/*')
+                ? route('admin.login')
+                : route('driver.login');
+        });
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
