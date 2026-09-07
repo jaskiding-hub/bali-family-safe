@@ -6,11 +6,15 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
+use Inertia\Inertia;
+
 class DriverAuthController extends Controller
 {
     public function showLogin()
     {
-        return view('driver.login');
+        return Inertia::render('Driver/Login', [
+            'portalTitle' => 'Driver Portal',
+        ]);
     }
 
     public function login(Request $request)
