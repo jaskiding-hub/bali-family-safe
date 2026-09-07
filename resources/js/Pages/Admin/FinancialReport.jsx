@@ -416,39 +416,13 @@ export default function FinancialReport({
                                     </button>
                                 );
                             })}
-
-                            {/* Dropdown for specific historical months on desktop */}
-                            {available_months.length > 0 && (
-                                <select
-                                    value={filters.month || ''}
-                                    onChange={(e) => {
-                                        if (e.target.value) {
-                                            handleSelectPeriod('custom_month', e.target.value);
-                                        } else {
-                                            handleSelectPeriod('this_month');
-                                        }
-                                    }}
-                                    aria-label="Select custom month"
-                                    className="px-3 py-2 bg-transparent text-xs font-semibold text-slate-600 hover:text-slate-900 border-l border-slate-200 focus:outline-none cursor-pointer"
-                                >
-                                    <option value="">Select Month...</option>
-                                    {available_months.map((m) => (
-                                        <option key={m.ym} value={m.ym}>
-                                            {m.label}
-                                        </option>
-                                    ))}
-                                </select>
-                            )}
                         </div>
                     </div>
 
                     {/* Mobile Dropdown Menu (< md) */}
                     {periodDropdownOpen && (
-                        <div className="md:hidden absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 z-40 animate-in fade-in slide-in-from-top-2 duration-150 divide-y divide-slate-100">
-                            <div className="p-1.5">
-                                <div className="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                                    Standard Intervals
-                                </div>
+                        <div className="md:hidden absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-xl border border-slate-100 py-1.5 z-40 animate-in fade-in slide-in-from-top-2 duration-150">
+                            <div className="p-1.5 space-y-0.5">
                                 <button
                                     type="button"
                                     onClick={() => handleSelectPeriod('this_month')}
@@ -498,32 +472,6 @@ export default function FinancialReport({
                                     )}
                                 </button>
                             </div>
-
-                            {/* Historical Months on Mobile */}
-                            {available_months.length > 0 && (
-                                <div className="p-1.5">
-                                    <div className="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                                        Historical Months
-                                    </div>
-                                    <div className="max-h-48 overflow-y-auto space-y-0.5">
-                                        {available_months.map((m) => (
-                                            <button
-                                                key={m.ym}
-                                                type="button"
-                                                onClick={() => handleSelectPeriod('custom_month', m.ym)}
-                                                className={`w-full text-left px-3.5 py-2 rounded-xl text-xs transition-colors flex items-center justify-between ${
-                                                    filters.month === m.ym ? 'bg-[#EFF4FA] text-[#00658D] font-bold' : 'text-slate-600 hover:bg-slate-50'
-                                                }`}
-                                            >
-                                                <span>{m.label}</span>
-                                                {filters.month === m.ym && (
-                                                    <span className="w-2 h-2 rounded-full bg-[#00AEEF]"></span>
-                                                )}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
                         </div>
                     )}
                 </div>
@@ -667,11 +615,11 @@ export default function FinancialReport({
                         <table className="w-full text-left border-collapse table-fixed min-w-[720px]">
                             <thead>
                                 <tr className="bg-[#EFF4FA] border-b border-[#DEE3E8] text-[#3E4850] text-xs font-semibold uppercase tracking-[0.7px]">
-                                    <th className="w-[18%] py-4 px-6">Date</th>
-                                    <th className="w-[32%] py-4 px-6">Guest & Service</th>
-                                    <th className="w-[22%] py-4 px-6">Total Fee</th>
-                                    <th className="w-[16%] py-4 px-6 text-center sm:text-left">Status</th>
-                                    <th className="w-[12%] py-4 px-6 text-right">Action</th>
+                                    <th className="w-[18%] py-4 px-6 align-middle">Date</th>
+                                    <th className="w-[30%] py-4 px-6 align-middle">Guest & Service</th>
+                                    <th className="w-[20%] py-4 px-6 align-middle">Total Fee</th>
+                                    <th className="w-[16%] py-4 px-6 align-middle text-left">Status</th>
+                                    <th className="w-[16%] py-4 px-6 align-middle text-center">Action</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-[#DEE3E8] text-sm text-[#171C20]">
@@ -679,8 +627,8 @@ export default function FinancialReport({
                                     bookings.data.map((booking) => (
                                         <tr key={booking.id} className="hover:bg-slate-50/80 transition-colors group">
                                             {/* Date Column */}
-                                            <td className="py-4.5 px-6 whitespace-nowrap">
-                                                <div className="font-semibold text-slate-800">
+                                            <td className="py-4.5 px-6 align-middle whitespace-nowrap">
+                                                <div className="font-semibold text-slate-800 text-sm">
                                                     {booking.booking_date_formatted || 'Oct 24, 2023'}
                                                 </div>
                                                 {booking.pickup_time && (
@@ -691,7 +639,7 @@ export default function FinancialReport({
                                             </td>
 
                                             {/* Guest Name & Service */}
-                                            <td className="py-4.5 px-6">
+                                            <td className="py-4.5 px-6 align-middle">
                                                 <div className="font-bold text-[#171C20] text-base group-hover:text-[#00658D] transition-colors truncate">
                                                     {booking.guest_name}
                                                 </div>
@@ -706,14 +654,14 @@ export default function FinancialReport({
                                             </td>
 
                                             {/* Total Fee */}
-                                            <td className="py-4.5 px-6 whitespace-nowrap">
+                                            <td className="py-4.5 px-6 align-middle whitespace-nowrap">
                                                 <span className="font-bold text-slate-900 text-base tabular-nums">
                                                     {booking.total_fee_formatted}
                                                 </span>
                                             </td>
 
                                             {/* Status Badge */}
-                                            <td className="py-4.5 px-6 whitespace-nowrap text-center sm:text-left">
+                                            <td className="py-4.5 px-6 align-middle whitespace-nowrap text-left">
                                                 <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${
                                                     booking.status === 'Completed'
                                                         ? 'bg-[#E6F4EA] text-[#137333] border border-emerald-200/50'
@@ -730,15 +678,15 @@ export default function FinancialReport({
                                                 </span>
                                             </td>
 
-                                            {/* Action Link */}
-                                            <td className="py-4.5 px-6 text-right whitespace-nowrap">
+                                            {/* Action Button */}
+                                            <td className="py-4.5 px-6 align-middle text-center whitespace-nowrap">
                                                 <button
                                                     type="button"
                                                     onClick={() => openDetailModal(booking)}
-                                                    className="inline-flex items-center gap-1 text-[#171C20] hover:text-[#00AEEF] text-sm font-semibold hover:underline cursor-pointer transition-all group-hover:translate-x-0.5"
+                                                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold text-[#00658D] bg-[#EFF4FA] border border-sky-100/80 hover:border-sky-200 hover:shadow-md hover:shadow-slate-200/80 transition-all duration-200 cursor-pointer shadow-2xs active:scale-95 group/btn"
                                                 >
-                                                    <span>see detail</span>
-                                                    <svg className="w-4 h-4 text-slate-400 group-hover:text-[#00AEEF]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                                    <span>detail</span>
+                                                    <svg className="w-3.5 h-3.5 text-[#00658D] group-hover/btn:translate-x-0.5 transition-transform duration-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                                                         <polyline points="9 18 15 12 9 6" />
                                                     </svg>
                                                 </button>
