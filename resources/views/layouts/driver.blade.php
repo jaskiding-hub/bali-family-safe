@@ -63,8 +63,8 @@
     @endphp
 
     @if(request()->routeIs('driver.login'))
-        {{-- Halaman Login Khusus --}}
-        <div class="min-h-screen bg-slate-100 flex items-center justify-center p-4 sm:p-6 lg:p-8">
+        {{-- Halaman Login Khusus (Centered & Responsive Container across all devices) --}}
+        <div class="min-h-screen min-h-dvh bg-slate-100 flex flex-col items-center justify-center p-3 sm:p-6 lg:p-8 selection:bg-[#00AEEF] selection:text-white">
             @yield('content')
         </div>
     @else
