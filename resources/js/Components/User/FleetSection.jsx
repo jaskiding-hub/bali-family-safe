@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 
 const FLEET = [
     {
@@ -23,10 +24,11 @@ const FLEET = [
             ],
             features: [
                 'Smooth suspension perfect for families with babies',
-                'Fuel-efficient for cost-effective full-day tours',
-                'Easy access for loading child car seats',
-                'Well-maintained and regularly serviced',
-                'Ideal for 2 adults + 1–2 children',
+                'Foldable rear seats for extra luggage space',
+                'Rear A/C vents keep children cool throughout',
+                'Cleaned and sanitized before every trip',
+                'USB charging ports for family devices',
+                'Professional, English-speaking driver',
             ],
             bestFor: 'Small families (2 adults, 1–2 kids) for airport transfers, hotel transfers, and half-day tours.',
         },
@@ -96,248 +98,115 @@ const FLEET = [
 ];
 
 function FleetModal({ vehicle, onClose }) {
+    useEffect(() => {
+        if (vehicle) {
+            document.body.style.overflow = 'hidden';
+            return () => {
+                document.body.style.overflow = 'unset';
+                document.body.style.removeProperty('overflow');
+            };
+        } else {
+            document.body.style.overflow = 'unset';
+            document.body.style.removeProperty('overflow');
+        }
+    }, [vehicle]);
+
     if (!vehicle) return null;
     const d = vehicle.details;
 
-    return (
+    const scrollToBooking = () => {
+        onClose();
+        setTimeout(() => {
+            document.querySelector('#hero')?.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+    };
+
+    return createPortal(
         <div
-            style={{
-                position: 'fixed',
-                inset: 0,
-                background: 'rgba(0, 0, 0, 0.5)',
-                backdropFilter: 'blur(4px)',
-                WebkitBackdropFilter: 'blur(4px)',
-                zIndex: 9999,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: '24px',
-            }}
+            className="fixed inset-0 z-[999999] flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-md animate-in fade-in duration-200"
             onClick={onClose}
         >
             <div
-                style={{
-                    background: '#FFFFFF',
-                    borderRadius: '16px',
-                    maxWidth: '640px',
-                    width: '100%',
-                    maxHeight: '85vh',
-                    overflowY: 'auto',
-                    boxShadow: '0px 25px 50px -12px rgba(0, 0, 0, 0.25)',
-                }}
+                className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden text-slate-800 my-auto"
                 onClick={e => e.stopPropagation()}
             >
                 {/* Header */}
-                <div style={{
-                    padding: '32px 32px 0',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'flex-start',
-                }}>
+                <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100 bg-slate-50/80">
                     <div>
-                        <h2 style={{
-                            fontFamily: "'Inter', sans-serif",
-                            fontWeight: 700,
-                            fontSize: '24px',
-                            lineHeight: '32px',
-                            color: '#191C1D',
-                            margin: '0 0 8px 0',
-                        }}>
+                        <h3 className="font-bold text-slate-900 text-base sm:text-lg leading-snug m-0">
                             {d.heading}
-                        </h2>
-                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                            <span style={{
-                                fontFamily: "'Inter', sans-serif",
-                                fontWeight: 500,
-                                fontSize: '13px',
-                                color: '#3E4850',
-                                background: '#F3F4F5',
-                                borderRadius: '4px',
-                                padding: '2px 8px',
-                            }}>
+                        </h3>
+                        <div className="flex items-center gap-2 mt-1 flex-wrap">
+                            <span className="text-xs font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md">
                                 {vehicle.capacity}
                             </span>
-                            <span style={{
-                                fontFamily: "'Inter', sans-serif",
-                                fontWeight: 500,
-                                fontSize: '13px',
-                                color: '#00658D',
-                                background: 'rgba(0,101,141,0.08)',
-                                borderRadius: '4px',
-                                padding: '2px 8px',
-                            }}>
+                            <span className="text-xs font-semibold text-sky-800 bg-sky-50 px-2 py-0.5 rounded-md border border-sky-100">
                                 {vehicle.seats}
                             </span>
-                            <span style={{
-                                fontFamily: "'Inter', sans-serif",
-                                fontWeight: 700,
-                                fontSize: '13px',
-                                color: '#00658D',
-                                padding: '2px 0',
-                            }}>
+                            <span className="text-xs font-bold text-sky-900 ml-auto">
                                 {vehicle.price}
                             </span>
                         </div>
                     </div>
-                    {/* Close button */}
                     <button
                         type="button"
                         onClick={onClose}
-                        style={{
-                            width: '32px',
-                            height: '32px',
-                            borderRadius: '9999px',
-                            border: 'none',
-                            background: '#F3F4F5',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            flexShrink: 0,
-                            transition: 'background 0.15s',
-                        }}
-                        onMouseEnter={e => e.currentTarget.style.background = '#E1E3E4'}
-                        onMouseLeave={e => e.currentTarget.style.background = '#F3F4F5'}
+                        className="p-1.5 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors shrink-0 cursor-pointer"
                     >
-                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                            <path d="M1 1L13 13M13 1L1 13" stroke="#3E4850" strokeWidth="2" strokeLinecap="round"/>
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                         </svg>
                     </button>
                 </div>
 
                 {/* Body */}
-                <div style={{ padding: '24px 32px 32px' }}>
+                <div className="p-4 sm:p-5 space-y-3 text-xs sm:text-sm">
                     {/* Description */}
-                    <p style={{
-                        fontFamily: "'Inter', sans-serif",
-                        fontWeight: 400,
-                        fontSize: '16px',
-                        lineHeight: '26px',
-                        color: '#3E4850',
-                        margin: '0 0 24px 0',
-                    }}>
+                    <p className="text-slate-600 text-xs sm:text-sm leading-relaxed m-0">
                         {d.description}
                     </p>
 
-                    {/* Specs grid */}
-                    <div style={{
-                        display: 'grid',
-                        gridTemplateColumns: '1fr 1fr',
-                        gap: '10px',
-                        marginBottom: '24px',
-                    }}>
-                        {d.specs.map((spec, i) => (
-                            <div key={i} style={{
-                                background: '#F8F9FA',
-                                border: '1px solid rgba(189, 200, 209, 0.3)',
-                                borderRadius: '8px',
-                                padding: '10px 14px',
-                            }}>
-                                <div style={{
-                                    fontFamily: "'Inter', sans-serif",
-                                    fontWeight: 500,
-                                    fontSize: '11px',
-                                    lineHeight: '16px',
-                                    letterSpacing: '0.5px',
-                                    textTransform: 'uppercase',
-                                    color: '#6E7881',
-                                    marginBottom: '2px',
-                                }}>
-                                    {spec.label}
-                                </div>
-                                <div style={{
-                                    fontFamily: "'Inter', sans-serif",
-                                    fontWeight: 500,
-                                    fontSize: '13px',
-                                    lineHeight: '20px',
-                                    color: '#191C1D',
-                                }}>
-                                    {spec.value}
-                                </div>
+                    {/* Specs 2-column grid */}
+                    <div className="grid grid-cols-2 gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-100 text-xs">
+                        {d.specs.slice(0, 4).map((spec, i) => (
+                            <div key={i}>
+                                <span className="text-slate-400 text-[11px] block">{spec.label}</span>
+                                <span className="font-semibold text-slate-900 truncate block">{spec.value}</span>
                             </div>
                         ))}
                     </div>
 
-                    {/* Features list */}
-                    <div style={{ marginBottom: '24px' }}>
-                        <h3 style={{
-                            fontFamily: "'Inter', sans-serif",
-                            fontWeight: 600,
-                            fontSize: '16px',
-                            lineHeight: '24px',
-                            color: '#191C1D',
-                            margin: '0 0 12px 0',
-                        }}>
+                    {/* Key Features 2-column compact checklist */}
+                    <div className="space-y-1">
+                        <h4 className="font-bold text-slate-400 text-[11px] uppercase tracking-wider m-0">
                             Key Features
-                        </h3>
-                        <div style={{
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: '10px',
-                        }}>
-                            {d.features.map((item, i) => (
-                                <div key={i} style={{
-                                    display: 'flex',
-                                    alignItems: 'flex-start',
-                                    gap: '10px',
-                                }}>
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="#00658D" style={{ flexShrink: 0, marginTop: '2px' }}>
-                                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
+                        </h4>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-xs text-slate-700">
+                            {d.features.slice(0, 4).map((item, i) => (
+                                <div key={i} className="flex items-start gap-1.5">
+                                    <svg className="w-4 h-4 text-sky-600 shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                                     </svg>
-                                    <span style={{
-                                        fontFamily: "'Inter', sans-serif",
-                                        fontWeight: 400,
-                                        fontSize: '14px',
-                                        lineHeight: '22px',
-                                        color: '#3E4850',
-                                    }}>
-                                        {item}
-                                    </span>
+                                    <span className="leading-tight">{item}</span>
                                 </div>
                             ))}
                         </div>
                     </div>
 
-                    {/* Best For */}
-                    <div style={{
-                        background: 'rgba(0, 101, 141, 0.05)',
-                        border: '1px solid rgba(0, 101, 141, 0.12)',
-                        borderRadius: '8px',
-                        padding: '14px 16px',
-                        display: 'flex',
-                        alignItems: 'flex-start',
-                        gap: '10px',
-                    }}>
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="#00658D" style={{ flexShrink: 0, marginTop: '1px' }}>
-                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
-                        </svg>
-                        <div>
-                            <div style={{
-                                fontFamily: "'Inter', sans-serif",
-                                fontWeight: 600,
-                                fontSize: '12px',
-                                lineHeight: '16px',
-                                letterSpacing: '0.5px',
-                                textTransform: 'uppercase',
-                                color: '#00658D',
-                                marginBottom: '4px',
-                            }}>
-                                Best For
-                            </div>
-                            <div style={{
-                                fontFamily: "'Inter', sans-serif",
-                                fontWeight: 400,
-                                fontSize: '14px',
-                                lineHeight: '22px',
-                                color: '#3E4850',
-                            }}>
-                                {d.bestFor}
-                            </div>
-                        </div>
+                    {/* Action button */}
+                    <div className="pt-1">
+                        <button
+                            type="button"
+                            onClick={scrollToBooking}
+                            className="w-full py-2.5 bg-sky-900 hover:bg-sky-950 text-white font-bold rounded-xl shadow-md active:scale-[0.98] transition-all cursor-pointer text-xs sm:text-sm text-center"
+                        >
+                            Book This Vehicle Now
+                        </button>
                     </div>
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }
 
@@ -397,45 +266,19 @@ export default function FleetSection() {
                 </div>
 
                 {/* 3 Fleet Cards */}
-                <div className="bfs-row" style={{
-                    display: 'flex',
-                    flexDirection: 'row',
-                    justifyContent: 'center',
-                    gap: '32px',
-                    maxWidth: '1072px',
-                    marginLeft: 'auto',
-                    marginRight: 'auto',
-                    width: '100%',
-                }}>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-5xl mx-auto">
                     {FLEET.map((car, i) => (
                         <div
                             key={i}
-                            style={{
-                                flex: '1 1 0',
-                                maxWidth: '336px',
-                                background: '#FFFFFF',
-                                border: car.highlighted ? '1px solid rgba(0,101,141,0.2)' : '1px solid rgba(189,200,209,0.2)',
-                                boxShadow: '0px 10px 30px rgba(0, 45, 99, 0.04)',
-                                borderRadius: '16px',
-                                overflow: 'hidden',
-                                display: 'flex',
-                                flexDirection: 'column',
-                                position: 'relative',
-                            }}
+                            className="w-full bg-white border border-slate-200/60 shadow-sm rounded-2xl overflow-hidden relative flex flex-col"
                         >
                             {/* Badge */}
                             {car.badge && (
-                                <div style={{
-                                    position: 'absolute',
-                                    top: '17px',
-                                    right: '17px',
-                                    background: '#FEDD00',
-                                    boxShadow: '0px 1px 2px rgba(0,0,0,0.05)',
-                                    borderRadius: '9999px',
-                                    padding: '4px 12px',
-                                    zIndex: 2,
-                                }}>
-                                    <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '12px', color: '#191C1D' }}>
+                                <div className="absolute top-4 right-4 z-10 flex items-center gap-1 bg-amber-400 text-amber-950 px-3 py-1 rounded-full shadow-sm border border-amber-300">
+                                    <svg className="w-3.5 h-3.5 text-amber-950 shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                    </svg>
+                                    <span className="text-[11px] font-extrabold tracking-wider uppercase font-sans">
                                         {car.badge}
                                     </span>
                                 </div>

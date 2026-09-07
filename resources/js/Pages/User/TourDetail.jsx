@@ -161,7 +161,7 @@ export default function TourDetail({ tourId }) {
             <div style={{ position: 'relative', overflow: 'hidden' }}>
 
                 {/* HERO HEADER SECTION */}
-                <section style={{
+                <section id="tour-detail-hero" style={{
                     position: 'relative',
                     width: '100vw',
                     marginLeft: 'calc(-50vw + 50%)',
@@ -433,10 +433,11 @@ export default function TourDetail({ tourId }) {
                         {/* Right Image Frame */}
                         <div style={{
                             position: 'relative',
-                            width: '375px',
-                            height: '400px',
-                            maxWidth: '100%',
+                            width: '100%',
+                            maxWidth: '375px',
+                            height: '320px',
                             flexShrink: 0,
+                            margin: '0 auto',
                         }}>
                             {/* Accent Soft Blue Offset Frame */}
                             <div style={{

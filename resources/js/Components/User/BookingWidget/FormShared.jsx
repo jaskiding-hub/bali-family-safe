@@ -25,11 +25,11 @@ const inputStyle = {
     background: INPUT_BG,
     border: `1px solid ${INPUT_BORDER}`,
     borderRadius: '8px',
-    padding: '12px 16px 12px 40px',
+    padding: '10px 12px 10px 36px',
     fontFamily: 'Inter, sans-serif',
     fontWeight: 400,
-    fontSize: '16px',
-    lineHeight: '19px',
+    fontSize: '14px',
+    lineHeight: '20px',
     color: '#191C1D',
     outline: 'none',
     boxSizing: 'border-box',
@@ -38,7 +38,7 @@ const inputStyle = {
 
 const selectStyle = {
     ...inputStyle,
-    height: '46px',
+    height: '45px',
     appearance: 'none',
     cursor: 'pointer',
     color: '#191C1D',
@@ -46,15 +46,15 @@ const selectStyle = {
 
 const textareaStyle = {
     width: '100%',
-    height: '134px',
+    height: '110px',
     background: INPUT_BG,
     border: `1px solid ${INPUT_BORDER}`,
     borderRadius: '8px',
-    padding: '12px 16px 12px 40px',
+    padding: '10px 12px 10px 36px',
     fontFamily: 'Inter, sans-serif',
     fontWeight: 400,
-    fontSize: '16px',
-    lineHeight: '24px',
+    fontSize: '14px',
+    lineHeight: '22px',
     color: '#191C1D',
     outline: 'none',
     resize: 'vertical',
@@ -69,7 +69,7 @@ export function BookingFooter({ onWhatsApp, onBook }) {
             flexDirection: 'row',
             justifyContent: 'center',
             alignItems: 'center',
-            padding: '32px',
+            padding: '24px 16px',
             background: '#F3F4F5',
             borderTop: '1px solid #E1E3E4',
             gap: '16px',
@@ -101,6 +101,8 @@ export function BookingFooter({ onWhatsApp, onBook }) {
                         color: '#25D366',
                         whiteSpace: 'nowrap',
                         transition: 'background 0.15s',
+                        flex: '1 1 140px',
+                        maxWidth: '240px',
                     }}
                     onMouseEnter={e => e.currentTarget.style.background = 'rgba(37,211,102,0.05)'}
                     onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
@@ -134,6 +136,8 @@ export function BookingFooter({ onWhatsApp, onBook }) {
                         color: '#FFFFFF',
                         whiteSpace: 'nowrap',
                         transition: 'background 0.15s',
+                        flex: '1 1 140px',
+                        maxWidth: '240px',
                     }}
                     onMouseEnter={e => e.currentTarget.style.background = '#2e4f82'}
                     onMouseLeave={e => e.currentTarget.style.background = '#3E5E96'}
@@ -204,15 +208,7 @@ export function CarSeatsSelector({ infantSeat, setInfantSeat, toddlerSeat, setTo
             <label style={labelStyle}>
                 Child Car Seats Included (Select Types & Quantity)
             </label>
-            <div style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr 1fr',
-                gap: '12px',
-                background: '#F8F9FA',
-                padding: '12px',
-                borderRadius: '8px',
-                border: '1px solid #BDC8D1',
-            }}>
+            <div className="bfs-car-seats-grid">
                 {/* Type 1: Infant */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                     <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: '12px', color: '#00658D' }}>

@@ -55,62 +55,32 @@ export default function GallerySection() {
                     </p>
                 </div>
 
-                {/* Asymmetric Grid — Figma: 1 large left (7 cols) + 2 stacked right (5 cols) */}
-                <div className="bfs-gallery-grid" style={{
-                    display: 'grid',
-                    gridTemplateColumns: '7fr 5fr',
-                    gridTemplateRows: '1fr 1fr',
-                    gap: '16px',
-                    height: '440px',
-                    maxWidth: '1072px',
-                    marginLeft: 'auto',
-                    marginRight: 'auto',
-                }}>
-                    {/* Big Photo — spans 2 rows */}
-                    <div style={{
-                        gridColumn: '1',
-                        gridRow: '1 / 3',
-                        borderRadius: '12px',
-                        overflow: 'hidden',
-                        background: '#E1E3E4',
-                        boxShadow: '0px 4px 6px -1px rgba(0,0,0,0.1)',
-                    }}>
+                {/* Asymmetric Responsive Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-4 h-auto md:h-[440px] max-w-5xl mx-auto w-full">
+                    {/* Big Photo — Spans 7 cols on desktop, 1 col on mobile */}
+                    <div className="md:col-span-7 md:row-span-2 h-64 md:h-full rounded-2xl overflow-hidden shadow-sm bg-slate-200">
                         <img
                             src={photos[0].src}
                             alt={photos[0].alt}
-                            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                            className="w-full h-full object-cover block hover:scale-105 transition-transform duration-500"
                         />
                     </div>
 
-                    {/* Top right photo */}
-                    <div style={{
-                        gridColumn: '2',
-                        gridRow: '1',
-                        borderRadius: '12px',
-                        overflow: 'hidden',
-                        background: '#E1E3E4',
-                        boxShadow: '0px 4px 6px -1px rgba(0,0,0,0.1)',
-                    }}>
+                    {/* Top right photo — Spans 5 cols on desktop */}
+                    <div className="md:col-span-5 h-52 md:h-[212px] rounded-2xl overflow-hidden shadow-sm bg-slate-200">
                         <img
                             src={photos[1].src}
                             alt={photos[1].alt}
-                            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                            className="w-full h-full object-cover block hover:scale-105 transition-transform duration-500"
                         />
                     </div>
 
-                    {/* Bottom right photo */}
-                    <div style={{
-                        gridColumn: '2',
-                        gridRow: '2',
-                        borderRadius: '12px',
-                        overflow: 'hidden',
-                        background: '#E1E3E4',
-                        boxShadow: '0px 4px 6px -1px rgba(0,0,0,0.1)',
-                    }}>
+                    {/* Bottom right photo — Spans 5 cols on desktop */}
+                    <div className="md:col-span-5 h-52 md:h-[212px] rounded-2xl overflow-hidden shadow-sm bg-slate-200">
                         <img
                             src={photos[2].src}
                             alt={photos[2].alt}
-                            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                            className="w-full h-full object-cover block hover:scale-105 transition-transform duration-500"
                         />
                     </div>
                 </div>

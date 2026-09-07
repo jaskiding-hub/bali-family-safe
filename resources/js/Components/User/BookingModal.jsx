@@ -1,8 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, CheckCircle, WhatsappLogo, ShieldCheck, MapPin, Calendar, Users, Car } from '@phosphor-icons/react';
 
 export default function BookingModal({ isOpen, onClose, bookingData }) {
     const [isSubmitted, setIsSubmitted] = useState(false);
+
+    useEffect(() => {
+        if (isOpen && bookingData) {
+            document.body.style.overflow = 'hidden';
+            return () => {
+                document.body.style.overflow = 'unset';
+                document.body.style.removeProperty('overflow');
+            };
+        } else {
+            document.body.style.overflow = 'unset';
+            document.body.style.removeProperty('overflow');
+        }
+    }, [isOpen, bookingData]);
 
     if (!isOpen || !bookingData) return null;
 
@@ -40,9 +54,9 @@ export default function BookingModal({ isOpen, onClose, bookingData }) {
         setIsSubmitted(true);
     };
 
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs animate-in fade-in duration-200">
-            <div className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden text-slate-800">
+    return createPortal(
+        <div className="fixed inset-0 z-[999999] flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-md animate-in fade-in duration-200" onClick={onClose}>
+            <div className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden text-slate-800 my-auto" onClick={e => e.stopPropagation()}>
                 {/* Header */}
                 <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50">
                     <div className="flex items-center gap-2">
@@ -164,6 +178,7 @@ export default function BookingModal({ isOpen, onClose, bookingData }) {
                     )}
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }

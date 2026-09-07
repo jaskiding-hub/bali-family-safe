@@ -129,6 +129,24 @@ input, select, textarea, button {
     animation: shimmer 1.5s ease-in-out infinite;
 }
 
+/* Footer Grid Base (Desktop) */
+.bfs-footer-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 48px;
+}
+
+/* Car Seats Selector Grid Base */
+.bfs-car-seats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    background: #F8F9FA;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #BDC8D1;
+}
+
 /* ═══════════════════════════════════════════
    RESPONSIVE — Mobile (≤480px) + Tablet (481–1024px)
    ═══════════════════════════════════════════ */
@@ -198,20 +216,20 @@ input, select, textarea, button {
         padding: 80px 0 0 !important;
     }
     .bfs-hero-bg {
-        height: 600px !important;
+        height: 520px !important;
     }
     .bfs-hero-text {
-        padding: 98px 16px 32px !important;
+        padding: 80px 16px 24px !important;
         gap: 16px !important;
     }
     #hero h1 {
-        font-size: 33px !important;
-        line-height: 56px !important;
-        letter-spacing: -0.96px !important;
+        font-size: 30px !important;
+        line-height: 38px !important;
+        letter-spacing: -0.8px !important;
     }
     #hero p {
-        font-size: 18px !important;
-        line-height: 28px !important;
+        font-size: 16px !important;
+        line-height: 24px !important;
     }
     .bfs-hero-booking {
         position: relative !important;
@@ -220,7 +238,7 @@ input, select, textarea, button {
         top: auto !important;
         width: 100% !important;
         max-width: 358px !important;
-        margin: -64px auto 0 !important;
+        margin: -48px auto 0 !important;
         z-index: 10 !important;
     }
 
@@ -248,21 +266,29 @@ input, select, textarea, button {
         font-size: 13px !important;
         padding: 14px 16px !important;
     }
+    .bfs-car-seats-grid {
+        grid-template-columns: 1fr !important;
+        gap: 16px !important;
+    }
 
-    /* ── ALL SECTIONS — 16px horizontal padding ── */
+    /* ── ALL SECTIONS — 16px horizontal, 48px vertical padding ── */
     section {
+        padding-top: 48px !important;
+        padding-bottom: 48px !important;
         padding-left: 16px !important;
         padding-right: 16px !important;
     }
     section > div {
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
         padding-left: 0 !important;
         padding-right: 0 !important;
     }
 
     /* ── SECTION HEADINGS — center, smaller ── */
     section h2 {
-        font-size: 28px !important;
-        line-height: 36px !important;
+        font-size: 26px !important;
+        line-height: 34px !important;
         text-align: center !important;
     }
     section h3 {
@@ -298,6 +324,10 @@ input, select, textarea, button {
         gap: 32px !important;
         align-items: center !important;
     }
+    .bfs-about-flex > div:first-child {
+        height: 280px !important;
+        max-width: 100% !important;
+    }
 
     /* ── FOUNDER CARD — stack photo + text ── */
     .bfs-founder-card {
@@ -305,19 +335,30 @@ input, select, textarea, button {
         min-height: auto !important;
     }
     .bfs-founder-card > div:first-child {
-        min-height: 280px !important;
+        min-height: 260px !important;
+        height: 260px !important;
     }
     .bfs-founder-card > div:last-child {
-        padding: 32px 24px !important;
+        padding: 24px 16px !important;
     }
 
     /* ── SAFETY SECTION — stack ── */
     .bfs-safety {
-        padding: 48px 0 !important;
+        padding: 48px 16px !important;
     }
     .bfs-safety-flex {
         flex-direction: column !important;
-        gap: 40px !important;
+        gap: 32px !important;
+    }
+    .bfs-safety-flex > div:last-child {
+        height: auto !important;
+        max-width: 100% !important;
+    }
+    .bfs-safety-flex > div:last-child > div:last-child {
+        height: 240px !important;
+    }
+    .bfs-safety-grid {
+        grid-template-columns: 1fr !important;
     }
 
     /* ── DRIVERS SUB-SECTIONS (non-section divs) ── */
@@ -341,7 +382,7 @@ input, select, textarea, button {
 
     /* ── BANNER — "More Than Just a Driver" ── */
     .bfs-banner {
-        padding: 64px 16px !important;
+        padding: 48px 16px !important;
     }
     .bfs-banner h2 {
         font-size: 28px !important;
@@ -419,8 +460,8 @@ input, select, textarea, button {
 
     /* ── TOUR DETAIL HERO ── */
     #tour-detail-hero {
-        min-height: 360px !important;
-        padding: 100px 16px 80px !important;
+        min-height: 320px !important;
+        padding: 80px 16px 60px !important;
     }
     #tour-detail-hero h1 {
         font-size: 28px !important;
@@ -433,8 +474,8 @@ input, select, textarea, button {
     /* ── OUR TEAM HERO ── */
     #our-team-hero {
         height: auto !important;
-        min-height: 360px !important;
-        padding: 0 16px !important;
+        min-height: 320px !important;
+        padding: 80px 16px 40px !important;
     }
     #our-team-hero h1 {
         font-size: 28px !important;
@@ -448,11 +489,15 @@ input, select, textarea, button {
     ::-webkit-scrollbar { width: 0 !important; }
 }
 
-/* ── TABLET (481–1024px) ── */
+/* ── TABLET & SMALL DESKTOP (481–1024px) ── */
 @media (min-width: 481px) and (max-width: 1024px) {
     .navbar-desktop { display: none !important; }
     .navbar-hamburger { display: flex !important; }
-    .bfs-nav-logo { height: 60px !important; }
-    section > div { padding-left: 32px !important; padding-right: 32px !important; }
+    header { height: 80px !important; padding: 0 24px !important; }
+    header > div { padding: 0 16px !important; height: 80px !important; }
+    .bfs-nav-logo { height: 50px !important; }
+    section { padding-top: 64px !important; padding-bottom: 64px !important; }
+    section > div { padding-left: 24px !important; padding-right: 24px !important; }
 }
+
 

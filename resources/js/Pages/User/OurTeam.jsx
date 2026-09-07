@@ -144,15 +144,7 @@ function InfoRow({ icon, text }) {
 
 function SupportCard({ member }) {
     return (
-        <div style={{
-            flex: '1 1 0',
-            maxWidth: '341px',
-            background: '#FFFFFF',
-            border: '1px solid rgba(189, 200, 209, 0.2)',
-            boxShadow: '0px 1px 2px rgba(0, 0, 0, 0.05)',
-            borderRadius: '12px',
-            overflow: 'hidden',
-        }}>
+        <div className="w-full bg-white border border-slate-200/60 shadow-sm rounded-xl overflow-hidden flex flex-col">
             {/* Photo */}
             <div style={{
                 width: '100%',
@@ -201,16 +193,7 @@ function SupportCard({ member }) {
 
 function DriverCard({ member }) {
     return (
-        <div style={{
-            flex: '1 1 0',
-            maxWidth: '250px',
-            background: '#FFFFFF',
-            border: '1px solid rgba(189, 200, 209, 0.2)',
-            boxShadow: '0px 1px 2px rgba(0, 0, 0, 0.05)',
-            borderRadius: '12px',
-            overflow: 'hidden',
-            position: 'relative',
-        }}>
+        <div className="w-full bg-white border border-slate-200/60 shadow-sm rounded-xl overflow-hidden relative flex flex-col">
             {/* Photo */}
             <div style={{
                 width: '100%',
@@ -259,13 +242,7 @@ function DriverCard({ member }) {
 
 function DriverGrid({ drivers }) {
     return (
-        <div style={{
-            display: 'flex',
-            flexDirection: 'row',
-            justifyContent: 'center',
-            gap: '24px',
-            flexWrap: 'wrap',
-        }}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 w-full max-w-5xl mx-auto">
             {drivers.map((d, i) => (
                 <DriverCard key={i} member={d} />
             ))}
@@ -292,17 +269,7 @@ export default function OurTeam() {
             </Head>
 
             {/* Header Section */}
-            <section id="our-team-hero" style={{
-                position: 'relative',
-                width: '100%',
-                height: '500px',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'center',
-                alignItems: 'center',
-                padding: '0 64px',
-                overflow: 'hidden',
-            }}>
+            <section id="our-team-hero" className="relative w-full h-[380px] sm:h-[500px] flex flex-col justify-center items-center px-4 sm:px-8 overflow-hidden">
                 {/* Background image */}
                 <div style={{
                     position: 'absolute',
@@ -322,22 +289,7 @@ export default function OurTeam() {
                 {/* Back Button */}
                 <Link
                     href="/"
-                    style={{
-                        position: 'absolute',
-                        top: '32px',
-                        left: '32px',
-                        zIndex: 10,
-                        width: '48px',
-                        height: '48px',
-                        borderRadius: '9999px',
-                        background: '#FFFFFF',
-                        border: '1px solid rgba(189, 200, 209, 0.2)',
-                        boxShadow: '0px 10px 15px -3px rgba(0, 0, 0, 0.1), 0px 4px 6px -4px rgba(0, 0, 0, 0.1)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        textDecoration: 'none',
-                    }}
+                    className="absolute top-4 left-4 sm:top-8 sm:left-8 z-10 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/90 backdrop-blur-md border border-slate-200/50 shadow-md flex items-center justify-center text-slate-900"
                 >
                     <CaretLeft size={20} weight="bold" color="#191C1D" />
                 </Link>
@@ -352,26 +304,10 @@ export default function OurTeam() {
                     maxWidth: '768px',
                     gap: '16px',
                 }}>
-                    <h1 style={{
-                        fontFamily: "'Inter', sans-serif",
-                        fontWeight: 700,
-                        fontSize: '48px',
-                        lineHeight: '56px',
-                        letterSpacing: '-0.96px',
-                        color: '#FFFFFF',
-                        margin: 0,
-                    }}>
+                    <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-white m-0">
                         Meet the BFS Family
                     </h1>
-                    <p style={{
-                        fontFamily: "'Inter', sans-serif",
-                        fontWeight: 400,
-                        fontSize: '18px',
-                        lineHeight: '28px',
-                        color: '#FFFFFF',
-                        margin: 0,
-                        maxWidth: '847px',
-                    }}>
+                    <p className="text-sm sm:text-base md:text-lg font-normal text-white/90 m-0 max-w-xl">
                         A trusted local team dedicated to making your Bali family journey safe, comfortable and stress-free.
                     </p>
                 </div>
@@ -383,9 +319,7 @@ export default function OurTeam() {
                 padding: '0 0 128px',
             }}>
                 {/* Support Team Section */}
-                <section style={{
-                    padding: '96px 40px',
-                }}>
+                <section className="px-4 py-12 sm:px-8 sm:py-16 md:px-12 md:py-20">
                     <div style={{
                         maxWidth: '1200px',
                         margin: '0 auto',
@@ -432,15 +366,7 @@ export default function OurTeam() {
                         </div>
 
                         {/* Cards grid */}
-                        <div style={{
-                            display: 'flex',
-                            flexDirection: 'row',
-                            justifyContent: 'center',
-                            gap: '24px',
-                            flexWrap: 'wrap',
-                            position: 'relative',
-                            zIndex: 1,
-                        }}>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 relative z-10 max-w-5xl mx-auto w-full">
                             {SUPPORT_TEAM.map((member, i) => (
                                 <SupportCard key={i} member={member} />
                             ))}
@@ -449,10 +375,7 @@ export default function OurTeam() {
                 </section>
 
                 {/* Drivers Section */}
-                <section style={{
-                    padding: '96px 64px 112px',
-                    position: 'relative',
-                }}>
+                <section className="px-4 py-12 sm:px-8 sm:py-16 md:px-12 md:py-20 relative">
                     <div style={{
                         maxWidth: '1200px',
                         margin: '0 auto',

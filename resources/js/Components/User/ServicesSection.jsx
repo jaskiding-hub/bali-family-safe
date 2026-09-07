@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 
 const SERVICES = [
     {
@@ -85,6 +86,19 @@ const SERVICES = [
 ];
 
 function ServiceModal({ service, onClose }) {
+    useEffect(() => {
+        if (service) {
+            document.body.style.overflow = 'hidden';
+            return () => {
+                document.body.style.overflow = 'unset';
+                document.body.style.removeProperty('overflow');
+            };
+        } else {
+            document.body.style.overflow = 'unset';
+            document.body.style.removeProperty('overflow');
+        }
+    }, [service]);
+
     if (!service) return null;
     const d = service.details;
 
@@ -95,227 +109,91 @@ function ServiceModal({ service, onClose }) {
         }, 100);
     };
 
-    return (
+    return createPortal(
         <div
-            style={{
-                position: 'fixed',
-                inset: 0,
-                background: 'rgba(0, 0, 0, 0.5)',
-                backdropFilter: 'blur(4px)',
-                WebkitBackdropFilter: 'blur(4px)',
-                zIndex: 9999,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: '24px',
-            }}
+            className="fixed inset-0 z-[999999] flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-md animate-in fade-in duration-200"
             onClick={onClose}
         >
             <div
-                style={{
-                    background: '#FFFFFF',
-                    borderRadius: '16px',
-                    maxWidth: '640px',
-                    width: '100%',
-                    maxHeight: '85vh',
-                    overflowY: 'auto',
-                    boxShadow: '0px 25px 50px -12px rgba(0, 0, 0, 0.25)',
-                }}
+                className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden text-slate-800 my-auto"
                 onClick={e => e.stopPropagation()}
             >
                 {/* Header */}
-                <div style={{
-                    padding: '32px 32px 0',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'flex-start',
-                }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                        {/* Icon */}
-                        <div style={{
-                            width: '48px',
-                            height: '48px',
-                            background: 'rgba(0, 174, 239, 0.15)',
-                            borderRadius: '12px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            flexShrink: 0,
-                        }}>
+                <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100 bg-slate-50/80">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-sky-100/80 text-sky-700 rounded-xl flex items-center justify-center shrink-0">
                             {service.icon}
                         </div>
-                        <h2 style={{
-                            fontFamily: "'Inter', sans-serif",
-                            fontWeight: 700,
-                            fontSize: '24px',
-                            lineHeight: '32px',
-                            color: '#191C1D',
-                            margin: 0,
-                        }}>
-                            {d.heading}
-                        </h2>
+                        <div>
+                            <h3 className="font-bold text-slate-900 text-base sm:text-lg leading-snug m-0">
+                                {d.heading}
+                            </h3>
+                            <span className="text-xs font-semibold text-sky-800 bg-sky-50 px-2 py-0.5 rounded-full border border-sky-100 inline-block mt-0.5">
+                                {d.price}
+                            </span>
+                        </div>
                     </div>
-                    {/* Close button */}
                     <button
                         type="button"
                         onClick={onClose}
-                        style={{
-                            width: '32px',
-                            height: '32px',
-                            borderRadius: '9999px',
-                            border: 'none',
-                            background: '#F3F4F5',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            flexShrink: 0,
-                            transition: 'background 0.15s',
-                        }}
-                        onMouseEnter={e => e.currentTarget.style.background = '#E1E3E4'}
-                        onMouseLeave={e => e.currentTarget.style.background = '#F3F4F5'}
+                        className="p-1.5 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors shrink-0 cursor-pointer"
                     >
-                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                            <path d="M1 1L13 13M13 1L1 13" stroke="#3E4850" strokeWidth="2" strokeLinecap="round"/>
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                         </svg>
                     </button>
                 </div>
 
                 {/* Body */}
-                <div style={{ padding: '24px 32px 32px' }}>
-                    {/* Description */}
-                    <p style={{
-                        fontFamily: "'Inter', sans-serif",
-                        fontWeight: 400,
-                        fontSize: '16px',
-                        lineHeight: '26px',
-                        color: '#3E4850',
-                        margin: '0 0 24px 0',
-                    }}>
+                <div className="p-4 sm:p-5 space-y-3.5 text-xs sm:text-sm">
+                    {/* Short Description */}
+                    <p className="text-slate-600 text-xs sm:text-sm leading-relaxed m-0">
                         {d.description}
                     </p>
 
-                    {/* What's Included */}
-                    <div style={{ marginBottom: '24px' }}>
-                        <h3 style={{
-                            fontFamily: "'Inter', sans-serif",
-                            fontWeight: 600,
-                            fontSize: '16px',
-                            lineHeight: '24px',
-                            color: '#191C1D',
-                            margin: '0 0 12px 0',
-                        }}>
+                    {/* What's Included 2-column compact grid */}
+                    <div className="space-y-1.5">
+                        <h4 className="font-bold text-slate-400 text-[11px] uppercase tracking-wider m-0">
                             What's Included
-                        </h3>
-                        <div style={{
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: '10px',
-                        }}>
-                            {d.includes.map((item, i) => (
-                                <div key={i} style={{
-                                    display: 'flex',
-                                    alignItems: 'flex-start',
-                                    gap: '10px',
-                                }}>
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="#00AEEF" style={{ flexShrink: 0, marginTop: '2px' }}>
-                                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
+                        </h4>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 bg-slate-50/80 p-2.5 rounded-xl border border-slate-100">
+                            {d.includes.slice(0, 6).map((item, i) => (
+                                <div key={i} className="flex items-start gap-1.5 text-xs text-slate-700">
+                                    <svg className="w-4 h-4 text-sky-600 shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                                     </svg>
-                                    <span style={{
-                                        fontFamily: "'Inter', sans-serif",
-                                        fontWeight: 400,
-                                        fontSize: '14px',
-                                        lineHeight: '22px',
-                                        color: '#3E4850',
-                                    }}>
-                                        {item}
-                                    </span>
+                                    <span className="leading-tight">{item}</span>
                                 </div>
                             ))}
                         </div>
                     </div>
 
-                    {/* Info pills */}
-                    <div style={{
-                        display: 'flex',
-                        flexWrap: 'wrap',
-                        gap: '12px',
-                        marginBottom: '32px',
-                    }}>
-                        {[
-                            { label: 'Vehicles', value: d.vehicles },
-                            { label: 'Capacity', value: d.capacity },
-                            { label: 'Duration', value: d.duration },
-                            { label: 'Price', value: d.price },
-                        ].map((info, i) => (
-                            <div key={i} style={{
-                                display: 'flex',
-                                flexDirection: 'column',
-                                gap: '2px',
-                                background: '#F8F9FA',
-                                border: '1px solid rgba(189, 200, 209, 0.3)',
-                                borderRadius: '8px',
-                                padding: '10px 14px',
-                                flex: '1 1 calc(50% - 6px)',
-                                minWidth: '200px',
-                            }}>
-                                <span style={{
-                                    fontFamily: "'Inter', sans-serif",
-                                    fontWeight: 500,
-                                    fontSize: '11px',
-                                    lineHeight: '16px',
-                                    letterSpacing: '0.5px',
-                                    textTransform: 'uppercase',
-                                    color: '#6E7881',
-                                }}>
-                                    {info.label}
-                                </span>
-                                <span style={{
-                                    fontFamily: "'Inter', sans-serif",
-                                    fontWeight: 500,
-                                    fontSize: '13px',
-                                    lineHeight: '20px',
-                                    color: '#191C1D',
-                                }}>
-                                    {info.value}
-                                </span>
-                            </div>
-                        ))}
+                    {/* Meta Info Row */}
+                    <div className="grid grid-cols-2 gap-2 text-xs bg-sky-50/60 p-2.5 rounded-xl border border-sky-100/60">
+                        <div>
+                            <span className="text-slate-400 text-[11px] block">Vehicles</span>
+                            <span className="font-semibold text-slate-900 truncate block">{d.vehicles}</span>
+                        </div>
+                        <div>
+                            <span className="text-slate-400 text-[11px] block">Capacity</span>
+                            <span className="font-semibold text-slate-900 truncate block">{d.capacity}</span>
+                        </div>
                     </div>
 
-                    {/* Booking Now button */}
-                    <button
-                        type="button"
-                        onClick={scrollToBooking}
-                        style={{
-                            width: '100%',
-                            height: '48px',
-                            background: '#00AEEF',
-                            border: 'none',
-                            borderRadius: '8px',
-                            fontFamily: "'Inter', sans-serif",
-                            fontWeight: 600,
-                            fontSize: '16px',
-                            lineHeight: '24px',
-                            color: '#FFFFFF',
-                            cursor: 'pointer',
-                            transition: 'background 0.15s, transform 0.1s',
-                            boxShadow: '0px 4px 6px -1px rgba(0, 174, 239, 0.3)',
-                        }}
-                        onMouseEnter={e => {
-                            e.currentTarget.style.background = '#0095CC';
-                            e.currentTarget.style.transform = 'translateY(-1px)';
-                        }}
-                        onMouseLeave={e => {
-                            e.currentTarget.style.background = '#00AEEF';
-                            e.currentTarget.style.transform = 'translateY(0)';
-                        }}
-                    >
-                        Booking Now
-                    </button>
+                    {/* Action button */}
+                    <div className="pt-1">
+                        <button
+                            type="button"
+                            onClick={scrollToBooking}
+                            className="w-full py-2.5 bg-sky-900 hover:bg-sky-950 text-white font-bold rounded-xl shadow-md active:scale-[0.98] transition-all cursor-pointer text-xs sm:text-sm text-center"
+                        >
+                            Book This Service Now
+                        </button>
+                    </div>
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }
 

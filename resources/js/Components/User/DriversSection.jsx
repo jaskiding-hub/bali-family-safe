@@ -183,26 +183,11 @@ export default function DriversSection() {
                     </div>
 
                     {/* 3 Support Cards */}
-                    <div className="bfs-row" style={{
-                        display: 'flex',
-                        flexDirection: 'row',
-                        justifyContent: 'center',
-                        gap: '24px',
-                        width: '100%',
-                        maxWidth: '1072px',
-                    }}>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 w-full max-w-5xl mx-auto">
                         {SUPPORT_TEAM.map((driver, i) => (
                             <div
                                 key={i}
-                                style={{
-                                    flex: '1 1 0',
-                                    maxWidth: '341px',
-                                    background: '#FFFFFF',
-                                    border: '1px solid #F1F5F9',
-                                    boxShadow: '0px 1px 2px rgba(0,0,0,0.05)',
-                                    borderRadius: '16px',
-                                    overflow: 'hidden',
-                                }}
+                                className="w-full bg-white border border-slate-100 shadow-sm rounded-2xl overflow-hidden flex flex-col"
                             >
                                 <div style={{ height: '254px', overflow: 'hidden', background: '#E2E8F0' }}>
                                     <img src={driver.img} alt={driver.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -270,49 +255,19 @@ export default function DriversSection() {
                         </p>
                     </div>
 
-                    {/* 4-driver grid — Figma: 250px cards */}
-                    <div className="bfs-row" style={{
-                        display: 'flex',
-                        flexDirection: 'row',
-                        justifyContent: 'center',
-                        gap: '24px',
-                        paddingTop: '16px',
-                    }}>
+                    {/* 4-driver grid */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 w-full max-w-5xl mx-auto pt-4">
                         {DRIVERS_GRID.map((driver, i) => (
                             <div
                                 key={i}
-                                style={{
-                                    flex: '1 1 0',
-                                    maxWidth: '250px',
-                                    background: '#F8F9FA',
-                                    border: '1px solid rgba(189,200,209,0.5)',
-                                    boxShadow: '0px 1px 2px rgba(0,0,0,0.05)',
-                                    borderRadius: '16px',
-                                    overflow: 'hidden',
-                                    position: 'relative',
-                                }}
+                                className="w-full bg-[#F8F9FA] border border-slate-200/60 shadow-sm rounded-2xl overflow-hidden relative flex flex-col"
                             >
                                 {/* BFS VERIFIED badge */}
-                                <div style={{
-                                    position: 'absolute',
-                                    top: '16px',
-                                    left: '16px',
-                                    background: 'rgba(255,255,255,0.9)',
-                                    boxShadow: '0px 1px 2px rgba(0,0,0,0.05)',
-                                    backdropFilter: 'blur(2px)',
-                                    borderRadius: '4px',
-                                    padding: '4px 8px',
-                                    zIndex: 2,
-                                }}>
-                                    <span style={{
-                                        fontFamily: 'Inter, sans-serif',
-                                        fontWeight: 700,
-                                        fontSize: '10px',
-                                        lineHeight: '15px',
-                                        letterSpacing: '0.25px',
-                                        textTransform: 'uppercase',
-                                        color: '#00658D',
-                                    }}>
+                                <div className="absolute top-4 left-4 z-10 flex items-center gap-1.5 px-3 py-1 bg-white/95 backdrop-blur-md border border-sky-200/80 shadow-sm rounded-full">
+                                    <svg className="w-3.5 h-3.5 text-sky-600 shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                    </svg>
+                                    <span className="text-[10px] font-extrabold tracking-wider text-sky-900 uppercase font-sans">
                                         BFS VERIFIED
                                     </span>
                                 </div>
@@ -330,18 +285,11 @@ export default function DriversSection() {
                                     <p style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400, fontSize: '14px', lineHeight: '20px', color: '#3E4850', margin: '0 0 8px' }}>
                                         {driver.role}
                                     </p>
-                                    <div style={{
-                                        display: 'inline-flex',
-                                        alignSelf: 'flex-start',
-                                        alignItems: 'center',
-                                        gap: '6px',
-                                        background: 'rgba(0,101,141,0.05)',
-                                        border: '1px solid rgba(0,101,141,0.1)',
-                                        borderRadius: '9999px',
-                                        padding: '4px 10px',
-                                    }}>
-                                        <svg width="13" height="11" viewBox="0 0 24 24" fill="#00658D"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
-                                        <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '12px', lineHeight: '16px', color: '#00658D' }}>
+                                    <div className="inline-flex items-center gap-1.5 self-start bg-sky-50 border border-sky-200/60 rounded-full px-3 py-1">
+                                        <svg className="w-3.5 h-3.5 text-sky-700 shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                        </svg>
+                                        <span className="text-xs font-semibold text-sky-900 font-sans">
                                             Police Cleared
                                         </span>
                                     </div>
@@ -472,7 +420,7 @@ export default function DriversSection() {
                         </p>
 
                         {/* Feature pill grid — Figma: 2-column pills */}
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', position: 'relative' }}>
+                        <div className="bfs-safety-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', position: 'relative' }}>
                             {SAFETY_FEATURES.map((feat, i) => (
                                 <div
                                     key={i}
