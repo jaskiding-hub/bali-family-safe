@@ -8,8 +8,6 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
-use Inertia\Inertia;
-
 class DriverController extends Controller
 {
     public function home()
@@ -39,13 +37,7 @@ class DriverController extends Controller
             ->orderBy('trip_time', 'asc')
             ->get();
 
-        $driverFirstName = $driver && $driver->full_name ? explode(' ', $driver->full_name)[0] : 'Wayan';
-        $greeting = 'Hi, ' . $driverFirstName . '!';
-        $emptyStateText = 'All Done for Today!';
-        $upNextLabel = 'UP NEXT';
-        $laterTodayLabel = 'Later Today';
-
-        return Inertia::render('Driver/Home', compact('driver', 'activeTrip', 'laterTodayTrips', 'emptyStateText', 'upNextLabel', 'laterTodayLabel', 'greeting'));
+        return view('driver.home', compact('driver', 'activeTrip', 'laterTodayTrips'));
     }
 
     public function schedule(Request $request)
@@ -111,10 +103,8 @@ class DriverController extends Controller
             ->get();
 
         $trips = $selectedTrips;
-        $pageTitle = 'My Schedule';
-        $viewActionLabel = 'View Trip Details';
 
-        return Inertia::render('Driver/Schedule', compact(
+        return view('driver.schedule', compact(
             'calendarDays',
             'tripsByDate',
             'monthName',
@@ -123,9 +113,7 @@ class DriverController extends Controller
             'monthParam',
             'selectedDate',
             'driver',
-            'trips',
-            'pageTitle',
-            'viewActionLabel'
+            'trips'
         ));
     }
 
@@ -133,9 +121,7 @@ class DriverController extends Controller
     {
         $trip = Trip::with(['expenses'])->findOrFail($id);
         $authDriver = Auth::guard('driver')->user() ?? Driver::first();
-        $pageTitle = 'Trip Details';
-        $backLabel = 'Back';
-        return Inertia::render('Driver/TripDetail', compact('trip', 'authDriver', 'pageTitle', 'backLabel'));
+        return view('driver.trip-detail', compact('trip', 'authDriver'));
     }
 
     public function completeTrip($id)
@@ -151,10 +137,6 @@ class DriverController extends Controller
     {
         $trip = Trip::with('expenses')->findOrFail($id);
         $authDriver = Auth::guard('driver')->user() ?? Driver::first();
-        $pageTitle = 'Log Trip Expense';
-        $savedExpensesTitle = 'Saved Expenses';
-        $addNewExpenseTitle = 'Add New Expense';
-        $backLabel = 'Back';
-        return Inertia::render('Driver/Expense', compact('trip', 'authDriver', 'pageTitle', 'savedExpensesTitle', 'addNewExpenseTitle', 'backLabel'));
+        return view('driver.expense', compact('trip', 'authDriver'));
     }
 }
