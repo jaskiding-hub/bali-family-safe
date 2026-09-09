@@ -8,10 +8,14 @@ use App\Enums\DriverStatus;
 use App\Enums\TransferDirection;
 use App\Enums\VehicleCategory;
 use App\Enums\VehicleUnitStatus;
+use App\Models\Airport;
 use App\Models\Booking;
 use App\Models\BookingChildSeat;
 use App\Models\ChildSeatType;
 use App\Models\Driver;
+use App\Models\Hotel;
+use App\Models\HotelTransferPriceList;
+use App\Models\Package;
 use App\Models\TripExpense;
 use App\Models\Vehicle;
 use App\Models\VehicleUnit;
@@ -22,8 +26,8 @@ class DummyDataSeeder extends Seeder
 {
     public function run(): void
     {
-        // 1. Ensure Vehicles & Units
-        $suv = Vehicle::firstOrCreate(
+        // 1. Ensure Vehicles across all 3 tiers (Regular, Luxury, Big Van)
+        $innova = Vehicle::firstOrCreate(
             ['name' => 'Toyota Innova Zenix'],
             [
                 'category' => VehicleCategory::RegularFamilySUV->value,
@@ -35,15 +39,15 @@ class DummyDataSeeder extends Seeder
             ]
         );
 
-        $van = Vehicle::firstOrCreate(
-            ['name' => 'Toyota HiAce Commuter'],
+        $fortuner = Vehicle::firstOrCreate(
+            ['name' => 'Toyota Fortuner VRZ'],
             [
-                'category' => VehicleCategory::LuxuryTouringVan->value,
+                'category' => VehicleCategory::RegularFamilySUV->value,
                 'model' => '2023',
-                'daily_rate' => 1200000,
-                'passenger_capacity' => 10,
-                'luggage_capacity' => 8,
-                'is_popular' => true,
+                'daily_rate' => 850000,
+                'passenger_capacity' => 6,
+                'luggage_capacity' => 4,
+                'is_popular' => false,
             ]
         );
 
@@ -59,13 +63,38 @@ class DummyDataSeeder extends Seeder
             ]
         );
 
-        $unit1 = VehicleUnit::firstOrCreate(['plate_number' => 'DK 1822 AB'], ['vehicle_id' => $suv->id, 'status' => VehicleUnitStatus::Available->value]);
-        $unit2 = VehicleUnit::firstOrCreate(['plate_number' => 'DK 2455 BC'], ['vehicle_id' => $van->id, 'status' => VehicleUnitStatus::Available->value]);
-        $unit3 = VehicleUnit::firstOrCreate(['plate_number' => 'DK 3990 CD'], ['vehicle_id' => $alphard->id, 'status' => VehicleUnitStatus::Available->value]);
-        $unit4 = VehicleUnit::firstOrCreate(['plate_number' => 'DK 7781 DE'], ['vehicle_id' => $suv->id, 'status' => VehicleUnitStatus::Available->value]);
-        $unit5 = VehicleUnit::firstOrCreate(['plate_number' => 'DK 8892 EF'], ['vehicle_id' => $van->id, 'status' => VehicleUnitStatus::Available->value]);
+        $premio = Vehicle::firstOrCreate(
+            ['name' => 'Toyota HiAce Premio Luxury'],
+            [
+                'category' => VehicleCategory::LuxuryTouringVan->value,
+                'model' => '2024',
+                'daily_rate' => 1400000,
+                'passenger_capacity' => 8,
+                'luggage_capacity' => 6,
+                'is_popular' => false,
+            ]
+        );
 
-        // 2. Ensure Drivers
+        $bigVan = Vehicle::firstOrCreate(
+            ['name' => 'Toyota HiAce Commuter (Big Van)'],
+            [
+                'category' => VehicleCategory::FamilyMinibus->value,
+                'model' => '2023',
+                'daily_rate' => 1200000,
+                'passenger_capacity' => 12,
+                'luggage_capacity' => 10,
+                'is_popular' => true,
+            ]
+        );
+
+        // 2. Ensure Units
+        $unit1 = VehicleUnit::firstOrCreate(['plate_number' => 'DK 1822 AB'], ['vehicle_id' => $innova->id, 'status' => VehicleUnitStatus::Available->value]);
+        $unit2 = VehicleUnit::firstOrCreate(['plate_number' => 'DK 2455 BC'], ['vehicle_id' => $premio->id, 'status' => VehicleUnitStatus::Available->value]);
+        $unit3 = VehicleUnit::firstOrCreate(['plate_number' => 'DK 3990 CD'], ['vehicle_id' => $alphard->id, 'status' => VehicleUnitStatus::Available->value]);
+        $unit4 = VehicleUnit::firstOrCreate(['plate_number' => 'DK 7781 DE'], ['vehicle_id' => $fortuner->id, 'status' => VehicleUnitStatus::Available->value]);
+        $unit5 = VehicleUnit::firstOrCreate(['plate_number' => 'DK 8892 EF'], ['vehicle_id' => $bigVan->id, 'status' => VehicleUnitStatus::Available->value]);
+
+        // 3. Ensure Drivers
         $driversData = [
             [
                 'full_name' => 'Wayan Sudira',
@@ -122,7 +151,7 @@ class DummyDataSeeder extends Seeder
             );
         }
 
-        // 3. Child Seat Types
+        // 4. Child Seat Types
         $seatType1 = ChildSeatType::firstOrCreate(
             ['name' => 'Infant Capsule (0-1 yr)'],
             ['age_range' => '0-1 yr', 'weight_range' => '0-9 kg', 'description' => 'Rear facing capsule']
@@ -136,13 +165,154 @@ class DummyDataSeeder extends Seeder
             ['age_range' => '4-7 yrs', 'weight_range' => '15-36 kg', 'description' => 'High back booster']
         );
 
+        // 5. Destinasi / Airports (Pick-Up & Drop-Off pairs with client pricing rule)
+        $airportsData = [
+            ['destinasi' => 'Kuta / Legian', 'type' => 'Pick-Up', 'price_regular' => 200000, 'price_luxury' => 450000],
+            ['destinasi' => 'Kuta / Legian', 'type' => 'Drop-Off', 'price_regular' => 175000, 'price_luxury' => 400000],
+            ['destinasi' => 'Seminyak / Kerobokan', 'type' => 'Pick-Up', 'price_regular' => 250000, 'price_luxury' => 550000],
+            ['destinasi' => 'Seminyak / Kerobokan', 'type' => 'Drop-Off', 'price_regular' => 225000, 'price_luxury' => 500000],
+            ['destinasi' => 'Sanur', 'type' => 'Pick-Up', 'price_regular' => 250000, 'price_luxury' => 550000],
+            ['destinasi' => 'Sanur', 'type' => 'Drop-Off', 'price_regular' => 225000, 'price_luxury' => 500000],
+            ['destinasi' => 'Nusa Dua / Benoa', 'type' => 'Pick-Up', 'price_regular' => 250000, 'price_luxury' => 550000],
+            ['destinasi' => 'Nusa Dua / Benoa', 'type' => 'Drop-Off', 'price_regular' => 225000, 'price_luxury' => 500000],
+            ['destinasi' => 'Jimbaran / Uluwatu', 'type' => 'Pick-Up', 'price_regular' => 300000, 'price_luxury' => 600000],
+            ['destinasi' => 'Jimbaran / Uluwatu', 'type' => 'Drop-Off', 'price_regular' => 275000, 'price_luxury' => 550000],
+            ['destinasi' => 'Canggu / Pererenan', 'type' => 'Pick-Up', 'price_regular' => 350000, 'price_luxury' => 700000],
+            ['destinasi' => 'Canggu / Pererenan', 'type' => 'Drop-Off', 'price_regular' => 300000, 'price_luxury' => 650000],
+            ['destinasi' => 'Ubud Central', 'type' => 'Pick-Up', 'price_regular' => 450000, 'price_luxury' => 850000],
+            ['destinasi' => 'Ubud Central', 'type' => 'Drop-Off', 'price_regular' => 400000, 'price_luxury' => 800000],
+        ];
+
+        $createdAirports = [];
+        foreach ($airportsData as $ap) {
+            $createdAirports[$ap['destinasi'] . '_' . $ap['type']] = Airport::firstOrCreate(
+                ['destinasi' => $ap['destinasi'], 'type' => $ap['type']],
+                ['price_regular' => $ap['price_regular'], 'price_luxury' => $ap['price_luxury']]
+            );
+        }
+
+        // 6. Hotels & Linked Airport Destinations
+        $hotelsData = [
+            'Maya Sanur Resort & Spa' => ['Sanur'],
+            'Andaz Bali - Sanur' => ['Sanur'],
+            'W Bali - Seminyak' => ['Seminyak / Kerobokan'],
+            'The Seminyak Beach Resort & Spa' => ['Seminyak / Kerobokan'],
+            'Grand Hyatt Bali - Nusa Dua' => ['Nusa Dua / Benoa'],
+            'The Mulia Bali' => ['Nusa Dua / Benoa'],
+            'AYANA Resort Bali - Jimbaran' => ['Jimbaran / Uluwatu'],
+            'Bulgari Resort Bali - Uluwatu' => ['Jimbaran / Uluwatu'],
+            'COMO Uma Canggu' => ['Canggu / Pererenan'],
+            'Mandapa, a Ritz-Carlton Reserve - Ubud' => ['Ubud Central'],
+            'Padma Resort Ubud' => ['Ubud Central'],
+            'Alila Ubud' => ['Ubud Central'],
+        ];
+
+        $hotelModels = [];
+        foreach ($hotelsData as $hotelName => $destList) {
+            $h = Hotel::firstOrCreate(['nama_hotel' => $hotelName]);
+            $airportIdsToSync = [];
+            foreach ($destList as $destName) {
+                if (isset($createdAirports[$destName . '_Pick-Up'])) {
+                    $airportIdsToSync[] = $createdAirports[$destName . '_Pick-Up']->id;
+                }
+                if (isset($createdAirports[$destName . '_Drop-Off'])) {
+                    $airportIdsToSync[] = $createdAirports[$destName . '_Drop-Off']->id;
+                }
+            }
+            if (!empty($airportIdsToSync)) {
+                $h->airports()->syncWithoutDetaching($airportIdsToSync);
+            }
+            $hotelModels[$hotelName] = $h;
+        }
+
+        // 7. Hotel Transfer Price Lists (Pricelist antar hotel)
+        $hotelPricePairs = [
+            ['Maya Sanur Resort & Spa', 'Mandapa, a Ritz-Carlton Reserve - Ubud', 450000, 850000],
+            ['W Bali - Seminyak', 'Grand Hyatt Bali - Nusa Dua', 350000, 650000],
+            ['AYANA Resort Bali - Jimbaran', 'Mandapa, a Ritz-Carlton Reserve - Ubud', 500000, 900000],
+            ['COMO Uma Canggu', 'Mandapa, a Ritz-Carlton Reserve - Ubud', 450000, 800000],
+            ['Maya Sanur Resort & Spa', 'W Bali - Seminyak', 300000, 550000],
+            ['Grand Hyatt Bali - Nusa Dua', 'AYANA Resort Bali - Jimbaran', 250000, 500000],
+            ['Padma Resort Ubud', 'AYANA Resort Bali - Jimbaran', 500000, 900000],
+            ['The Seminyak Beach Resort & Spa', 'Bulgari Resort Bali - Uluwatu', 400000, 750000],
+        ];
+
+        foreach ($hotelPricePairs as $pair) {
+            $hPickup = $hotelModels[$pair[0]] ?? null;
+            $hDropoff = $hotelModels[$pair[1]] ?? null;
+            if ($hPickup && $hDropoff) {
+                HotelTransferPriceList::firstOrCreate(
+                    [
+                        'hotel_id_pickup' => $hPickup->id,
+                        'hotel_id_dropoff' => $hDropoff->id,
+                    ],
+                    [
+                        'regular_price' => $pair[2],
+                        'luxury_price' => $pair[3],
+                    ]
+                );
+            }
+        }
+
+        // 8. Tour Packages
+        $packages = [
+            [
+                'slug' => 'ubud-cultural-waterfall-tour',
+                'name' => 'Ubud Cultural & Waterfall Tour',
+                'subtitle' => 'Tegalalang rice terrace, Monkey Forest, and Tegenungan waterfall',
+                'price' => 950000,
+                'duration_type' => 'Full Day',
+                'regular_price' => 950000,
+                'luxury_price' => 1600000,
+                'big_van_price' => 1400000,
+                'display_order' => 1,
+            ],
+            [
+                'slug' => 'bedugul-tanah-lot-sunset-tour',
+                'name' => 'Bedugul & Tanah Lot Sunset Tour',
+                'subtitle' => 'Ulun Danu Beratan temple, Handara Gate, and iconic Tanah Lot sunset',
+                'price' => 1000000,
+                'duration_type' => 'Full Day',
+                'regular_price' => 1000000,
+                'luxury_price' => 1750000,
+                'big_van_price' => 1500000,
+                'display_order' => 2,
+            ],
+            [
+                'slug' => 'uluwatu-cliff-kecak-dance-tour',
+                'name' => 'Uluwatu Cliff & Kecak Dance Tour',
+                'subtitle' => 'Padang Padang beach, dramatic cliff temple, and sunset Kecak dance',
+                'price' => 600000,
+                'duration_type' => 'Half Day',
+                'regular_price' => 600000,
+                'luxury_price' => 1100000,
+                'big_van_price' => 950000,
+                'display_order' => 3,
+            ],
+            [
+                'slug' => 'denpasar-heritage-food-tour',
+                'name' => 'Denpasar Heritage & Food Tour',
+                'subtitle' => 'Bajra Sandhi monument, Badung traditional market, and authentic Balinese culinary',
+                'price' => 500000,
+                'duration_type' => 'Half Day',
+                'regular_price' => 500000,
+                'luxury_price' => 950000,
+                'big_van_price' => 850000,
+                'display_order' => 4,
+            ],
+        ];
+
+        $pkgModels = [];
+        foreach ($packages as $pkg) {
+            $pkgModels[$pkg['slug']] = Package::updateOrCreate(['slug' => $pkg['slug']], $pkg);
+        }
+
         $today = Carbon::today();
 
-        // 4. Sample Bookings Data
+        // 9. Sample Bookings Data
         $sampleBookings = [
-            // Today's Bookings (Shows on Dashboard & Calendar)
             [
-                'booking_code' => 'BFS-2024-001',
+                'booking_code' => 'BFS-2026-001',
                 'booking_type' => BookingType::AirportTransfer->value,
                 'transfer_direction' => TransferDirection::PickUp->value,
                 'status' => BookingStatus::OnGoing->value,
@@ -152,19 +322,19 @@ class DummyDataSeeder extends Seeder
                 'flight_number' => 'GA 881',
                 'adults' => 2,
                 'children' => 2,
-                'pickup_location' => 'DPS Airport',
-                'dropoff_location' => 'Ubud Resort & Spa',
+                'pickup_location' => 'I Gusti Ngurah Rai Airport (DPS)',
+                'dropoff_location' => 'Mandapa, a Ritz-Carlton Reserve - Ubud',
                 'booking_date' => $today->format('Y-m-d'),
                 'pickup_time' => '09:30:00',
                 'total_fee' => 450000,
-                'vehicle_id' => $suv->id,
+                'vehicle_id' => $innova->id,
                 'driver_id' => $drivers[0]->id,
                 'child_seats' => [
                     ['type_id' => $seatType2->id, 'qty' => 2],
                 ],
             ],
             [
-                'booking_code' => 'BFS-2024-002',
+                'booking_code' => 'BFS-2026-002',
                 'booking_type' => BookingType::HotelTransfer->value,
                 'transfer_direction' => null,
                 'status' => BookingStatus::Assigned->value,
@@ -174,42 +344,43 @@ class DummyDataSeeder extends Seeder
                 'flight_number' => null,
                 'adults' => 2,
                 'children' => 1,
-                'pickup_location' => 'Seminyak Villa',
-                'dropoff_location' => 'Uluwatu Cliff Resort',
+                'pickup_location' => 'W Bali - Seminyak',
+                'dropoff_location' => 'Grand Hyatt Bali - Nusa Dua',
                 'booking_date' => $today->format('Y-m-d'),
                 'pickup_time' => '11:00:00',
-                'total_fee' => 550000,
-                'vehicle_id' => $suv->id,
+                'total_fee' => 350000,
+                'vehicle_id' => $innova->id,
                 'driver_id' => $drivers[1]->id,
                 'child_seats' => [
                     ['type_id' => $seatType3->id, 'qty' => 1],
                 ],
             ],
             [
-                'booking_code' => 'BFS-2024-003',
+                'booking_code' => 'BFS-2026-003',
                 'booking_type' => BookingType::DayTour->value,
                 'transfer_direction' => null,
                 'status' => BookingStatus::Confirmed->value,
-                'guest_name' => 'Jackson Family',
+                'package_id' => $pkgModels['ubud-cultural-waterfall-tour']->id ?? null,
+                'guest_name' => 'Jackson Family Group',
                 'whatsapp_number' => '+44 7700 900077',
                 'email' => 'jackson.uk@example.com',
                 'flight_number' => null,
-                'adults' => 4,
-                'children' => 2,
-                'pickup_location' => 'Canggu Haven',
-                'dropoff_location' => 'Kintamani & Bedugul Full Tour',
+                'adults' => 6,
+                'children' => 4,
+                'pickup_location' => 'COMO Uma Canggu',
+                'dropoff_location' => 'Ubud Cultural & Waterfall Tour',
                 'booking_date' => $today->format('Y-m-d'),
                 'pickup_time' => '08:30:00',
-                'total_fee' => 1250000,
-                'vehicle_id' => $van->id,
-                'driver_id' => $drivers[2]->id,
+                'total_fee' => 1400000,
+                'vehicle_id' => $bigVan->id,
+                'driver_id' => $drivers[4]->id,
                 'child_seats' => [
                     ['type_id' => $seatType1->id, 'qty' => 1],
                     ['type_id' => $seatType2->id, 'qty' => 1],
                 ],
             ],
             [
-                'booking_code' => 'BFS-2024-004',
+                'booking_code' => 'BFS-2026-004',
                 'booking_type' => BookingType::AirportTransfer->value,
                 'transfer_direction' => TransferDirection::DropOff->value,
                 'status' => BookingStatus::Pending->value,
@@ -219,19 +390,17 @@ class DummyDataSeeder extends Seeder
                 'flight_number' => 'SQ 947',
                 'adults' => 2,
                 'children' => 0,
-                'pickup_location' => 'Nusa Dua Beach Hotel',
-                'dropoff_location' => 'DPS International Departure',
+                'pickup_location' => 'Grand Hyatt Bali - Nusa Dua',
+                'dropoff_location' => 'I Gusti Ngurah Rai Airport (DPS)',
                 'booking_date' => $today->format('Y-m-d'),
                 'pickup_time' => '17:00:00',
-                'total_fee' => 400000,
+                'total_fee' => 500000,
                 'vehicle_id' => $alphard->id,
                 'driver_id' => null,
                 'child_seats' => [],
             ],
-
-            // Current Month Bookings (Past, Ongoing & Future)
             [
-                'booking_code' => 'BFS-2024-005',
+                'booking_code' => 'BFS-2026-005',
                 'booking_type' => BookingType::AirportTransfer->value,
                 'transfer_direction' => TransferDirection::PickUp->value,
                 'status' => BookingStatus::Completed->value,
@@ -241,42 +410,19 @@ class DummyDataSeeder extends Seeder
                 'flight_number' => 'QF 43',
                 'adults' => 3,
                 'children' => 1,
-                'pickup_location' => 'DPS Airport',
-                'dropoff_location' => 'Jimbaran Bay Villas',
+                'pickup_location' => 'I Gusti Ngurah Rai Airport (DPS)',
+                'dropoff_location' => 'AYANA Resort Bali - Jimbaran',
                 'booking_date' => $today->copy()->subDays(2)->format('Y-m-d'),
                 'pickup_time' => '14:00:00',
-                'total_fee' => 450000,
-                'vehicle_id' => $suv->id,
+                'total_fee' => 300000,
+                'vehicle_id' => $innova->id,
                 'driver_id' => $drivers[0]->id,
                 'child_seats' => [
                     ['type_id' => $seatType2->id, 'qty' => 1],
                 ],
             ],
             [
-                'booking_code' => 'BFS-2024-006',
-                'booking_type' => BookingType::DayTour->value,
-                'transfer_direction' => null,
-                'status' => BookingStatus::Completed->value,
-                'guest_name' => 'David Miller',
-                'whatsapp_number' => '+61 488 777 666',
-                'email' => 'david.m@example.com',
-                'flight_number' => null,
-                'adults' => 4,
-                'children' => 3,
-                'pickup_location' => 'Sanur Beach',
-                'dropoff_location' => 'Uluwatu Sunset & Kecak Dance',
-                'booking_date' => $today->copy()->subDays(4)->format('Y-m-d'),
-                'pickup_time' => '13:00:00',
-                'total_fee' => 1100000,
-                'vehicle_id' => $van->id,
-                'driver_id' => $drivers[3]->id,
-                'child_seats' => [
-                    ['type_id' => $seatType2->id, 'qty' => 2],
-                    ['type_id' => $seatType3->id, 'qty' => 1],
-                ],
-            ],
-            [
-                'booking_code' => 'BFS-2024-007',
+                'booking_code' => 'BFS-2026-006',
                 'booking_type' => BookingType::HotelTransfer->value,
                 'transfer_direction' => null,
                 'status' => BookingStatus::Pending->value,
@@ -286,214 +432,15 @@ class DummyDataSeeder extends Seeder
                 'flight_number' => null,
                 'adults' => 2,
                 'children' => 1,
-                'pickup_location' => 'Ubud Forest Sanctuary',
-                'dropoff_location' => 'Canggu Eco Villa',
+                'pickup_location' => 'Maya Sanur Resort & Spa',
+                'dropoff_location' => 'Mandapa, a Ritz-Carlton Reserve - Ubud',
                 'booking_date' => $today->copy()->addDays(2)->format('Y-m-d'),
                 'pickup_time' => '10:00:00',
-                'total_fee' => 500000,
-                'vehicle_id' => $suv->id,
+                'total_fee' => 450000,
+                'vehicle_id' => $innova->id,
                 'driver_id' => null,
                 'child_seats' => [
                     ['type_id' => $seatType1->id, 'qty' => 1],
-                ],
-            ],
-            [
-                'booking_code' => 'BFS-2024-008',
-                'booking_type' => BookingType::DayTour->value,
-                'transfer_direction' => null,
-                'status' => BookingStatus::Confirmed->value,
-                'guest_name' => 'Oliver Taylor',
-                'whatsapp_number' => '+64 21 555 1234',
-                'email' => 'oliver.t@example.com',
-                'flight_number' => null,
-                'adults' => 5,
-                'children' => 2,
-                'pickup_location' => 'Nusa Dua Suite',
-                'dropoff_location' => 'Tanah Lot & Jatiluwih UNESCO Tour',
-                'booking_date' => $today->copy()->addDays(4)->format('Y-m-d'),
-                'pickup_time' => '08:00:00',
-                'total_fee' => 1350000,
-                'vehicle_id' => $van->id,
-                'driver_id' => $drivers[4]->id,
-                'child_seats' => [
-                    ['type_id' => $seatType2->id, 'qty' => 1],
-                    ['type_id' => $seatType3->id, 'qty' => 1],
-                ],
-            ],
-            [
-                'booking_code' => 'BFS-2024-009',
-                'booking_type' => BookingType::AirportTransfer->value,
-                'transfer_direction' => TransferDirection::DropOff->value,
-                'status' => BookingStatus::Cancelled->value,
-                'guest_name' => 'Lucas Brown',
-                'whatsapp_number' => '+1 415 888 2233',
-                'email' => 'lucas.b@example.com',
-                'flight_number' => 'JL 726',
-                'adults' => 2,
-                'children' => 0,
-                'pickup_location' => 'Seminyak Boutique Hotel',
-                'dropoff_location' => 'DPS International Airport',
-                'booking_date' => $today->copy()->subDays(1)->format('Y-m-d'),
-                'pickup_time' => '19:30:00',
-                'total_fee' => 350000,
-                'vehicle_id' => $suv->id,
-                'driver_id' => null,
-                'child_seats' => [],
-            ],
-
-            // August 2026 Sample Bookings (matching Figma dates: Aug 1, 3, 6, 10, etc.)
-            [
-                'booking_code' => 'BFS-AUG-001',
-                'booking_type' => BookingType::AirportTransfer->value,
-                'transfer_direction' => TransferDirection::PickUp->value,
-                'status' => BookingStatus::OnGoing->value,
-                'guest_name' => 'Smith Family',
-                'whatsapp_number' => '+61 412 345 678',
-                'email' => 'smith.aug@example.com',
-                'flight_number' => 'GA 881',
-                'adults' => 2,
-                'children' => 2,
-                'pickup_location' => 'DPS Airport',
-                'dropoff_location' => 'Ubud Resort',
-                'booking_date' => '2026-08-06',
-                'pickup_time' => '09:30:00',
-                'total_fee' => 450000,
-                'vehicle_id' => $suv->id,
-                'driver_id' => $drivers[0]->id,
-                'child_seats' => [
-                    ['type_id' => $seatType2->id, 'qty' => 2],
-                ],
-            ],
-            [
-                'booking_code' => 'BFS-AUG-002',
-                'booking_type' => BookingType::AirportTransfer->value,
-                'transfer_direction' => TransferDirection::PickUp->value,
-                'status' => BookingStatus::Completed->value,
-                'guest_name' => 'Smith Family',
-                'whatsapp_number' => '+61 412 345 678',
-                'email' => 'smith.completed@example.com',
-                'flight_number' => 'GA 881',
-                'adults' => 2,
-                'children' => 2,
-                'pickup_location' => 'DPS Airport',
-                'dropoff_location' => 'Ubud Resort',
-                'booking_date' => '2026-08-06',
-                'pickup_time' => '09:30:00',
-                'total_fee' => 450000,
-                'vehicle_id' => $suv->id,
-                'driver_id' => $drivers[0]->id,
-                'child_seats' => [
-                    ['type_id' => $seatType2->id, 'qty' => 2],
-                ],
-            ],
-            [
-                'booking_code' => 'BFS-AUG-003',
-                'booking_type' => BookingType::HotelTransfer->value,
-                'transfer_direction' => null,
-                'status' => BookingStatus::OnGoing->value,
-                'guest_name' => 'Jackson Group',
-                'whatsapp_number' => '+44 7700 900077',
-                'email' => 'jackson.aug@example.com',
-                'flight_number' => null,
-                'adults' => 4,
-                'children' => 2,
-                'pickup_location' => 'DPS Airport',
-                'dropoff_location' => 'Ubud Resort',
-                'booking_date' => '2026-08-06',
-                'pickup_time' => '14:30:00',
-                'total_fee' => 600000,
-                'vehicle_id' => $van->id,
-                'driver_id' => $drivers[1]->id,
-                'child_seats' => [
-                    ['type_id' => $seatType2->id, 'qty' => 2],
-                ],
-            ],
-            [
-                'booking_code' => 'BFS-AUG-004',
-                'booking_type' => BookingType::DayTour->value,
-                'transfer_direction' => null,
-                'status' => BookingStatus::Completed->value,
-                'guest_name' => 'Lee Family',
-                'whatsapp_number' => '+82 10 1234 5678',
-                'email' => 'lee.aug@example.com',
-                'flight_number' => null,
-                'adults' => 2,
-                'children' => 2,
-                'pickup_location' => 'Seminyak Hotel',
-                'dropoff_location' => 'Jimbaran Dinner Tour',
-                'booking_date' => '2026-08-06',
-                'pickup_time' => '18:00:00',
-                'total_fee' => 850000,
-                'vehicle_id' => $suv->id,
-                'driver_id' => $drivers[2]->id,
-                'child_seats' => [
-                    ['type_id' => $seatType3->id, 'qty' => 2],
-                ],
-            ],
-            [
-                'booking_code' => 'BFS-AUG-005',
-                'booking_type' => BookingType::AirportTransfer->value,
-                'transfer_direction' => TransferDirection::PickUp->value,
-                'status' => BookingStatus::OnGoing->value,
-                'guest_name' => 'Smith Family',
-                'whatsapp_number' => '+61 412 345 678',
-                'email' => 'smith.aug1@example.com',
-                'flight_number' => 'VA 45',
-                'adults' => 2,
-                'children' => 2,
-                'pickup_location' => 'DPS Airport',
-                'dropoff_location' => 'Canggu Villa',
-                'booking_date' => '2026-08-01',
-                'pickup_time' => '10:00:00',
-                'total_fee' => 450000,
-                'vehicle_id' => $suv->id,
-                'driver_id' => $drivers[0]->id,
-                'child_seats' => [
-                    ['type_id' => $seatType2->id, 'qty' => 2],
-                ],
-            ],
-            [
-                'booking_code' => 'BFS-AUG-006',
-                'booking_type' => BookingType::AirportTransfer->value,
-                'transfer_direction' => TransferDirection::PickUp->value,
-                'status' => BookingStatus::Pending->value,
-                'guest_name' => 'Doe Family',
-                'whatsapp_number' => '+1 555 444 3322',
-                'email' => 'doe.aug3@example.com',
-                'flight_number' => 'DL 123',
-                'adults' => 2,
-                'children' => 1,
-                'pickup_location' => 'DPS Airport',
-                'dropoff_location' => 'Sanur Resort',
-                'booking_date' => '2026-08-03',
-                'pickup_time' => '14:30:00',
-                'total_fee' => 400000,
-                'vehicle_id' => $suv->id,
-                'driver_id' => null,
-                'child_seats' => [
-                    ['type_id' => $seatType1->id, 'qty' => 1],
-                ],
-            ],
-            [
-                'booking_code' => 'BFS-AUG-007',
-                'booking_type' => BookingType::HotelTransfer->value,
-                'transfer_direction' => null,
-                'status' => BookingStatus::Pending->value,
-                'guest_name' => 'Robert Johnson',
-                'whatsapp_number' => '+1 555 999 0011',
-                'email' => 'robert.aug10@example.com',
-                'flight_number' => null,
-                'adults' => 2,
-                'children' => 2,
-                'pickup_location' => 'Ubud Hanging Gardens',
-                'dropoff_location' => 'Nusa Dua St Regis',
-                'booking_date' => '2026-08-10',
-                'pickup_time' => '12:00:00',
-                'total_fee' => 650000,
-                'vehicle_id' => $alphard->id,
-                'driver_id' => null,
-                'child_seats' => [
-                    ['type_id' => $seatType2->id, 'qty' => 2],
                 ],
             ],
         ];
@@ -502,6 +449,7 @@ class DummyDataSeeder extends Seeder
             $childSeats = $bData['child_seats'] ?? [];
             unset($bData['child_seats']);
 
+<<<<<<< Updated upstream
             if (!empty($bData['pickup_location'])) {
                 if (stripos($bData['pickup_location'], 'airport') !== false || stripos($bData['pickup_location'], 'dps') !== false) {
                     $airport = \App\Models\Airport::firstOrCreate(
@@ -530,12 +478,21 @@ class DummyDataSeeder extends Seeder
 
             unset($bData['pickup_location'], $bData['dropoff_location']);
 
+=======
+            $bDate = Carbon::parse($bData['booking_date']);
+            if ($bDate->lt($today) && ($bData['status'] ?? '') !== BookingStatus::Cancelled->value) {
+                $bData['status'] = BookingStatus::Completed->value;
+                if (empty($bData['driver_id'])) {
+                    $bData['driver_id'] = $drivers[0]->id;
+                }
+            }
+
+>>>>>>> Stashed changes
             $booking = Booking::updateOrCreate(
                 ['booking_code' => $bData['booking_code']],
                 $bData
             );
 
-            // Attach child seats
             foreach ($childSeats as $cs) {
                 BookingChildSeat::firstOrCreate([
                     'booking_id' => $booking->id,
@@ -545,7 +502,6 @@ class DummyDataSeeder extends Seeder
                 ]);
             }
 
-            // If completed, add sample trip expense
             if ($booking->status === BookingStatus::Completed && $booking->driver_id) {
                 TripExpense::firstOrCreate([
                     'booking_id' => $booking->id,

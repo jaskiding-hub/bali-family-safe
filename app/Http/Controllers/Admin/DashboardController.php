@@ -7,7 +7,6 @@ use App\Enums\DriverStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\Driver;
-use App\Models\VehicleUnit;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -28,6 +27,7 @@ class DashboardController extends Controller
             ->whereYear('booking_date', $now->year)
             ->sum('total_fee');
 
+<<<<<<< Updated upstream
         // Driver Management Query
         $driverSearch = $request->input('search_driver');
         $driversQuery = Driver::with('currentVehicleUnit.vehicle');
@@ -89,48 +89,110 @@ class DashboardController extends Controller
 
         $todaySchedule = Booking::whereDate('booking_date', $today)
             ->with(['driver', 'package', 'pickupHotel', 'dropoffHotel', 'airport'])
+=======
+        $todaySchedule = Booking::whereDate('booking_date', $today)
+            ->with(['driver', 'vehicle', 'vehicleUnit', 'package', 'childSeats.childSeatType'])
+>>>>>>> Stashed changes
             ->orderBy('pickup_time', 'asc')
             ->get()
             ->map(function (Booking $booking) {
                 $pickupTime = $booking->pickup_time;
                 if ($pickupTime instanceof Carbon) {
                     $formattedTime = $pickupTime->format('h:i A');
+                    $time24 = $pickupTime->format('H:i');
                 } elseif (is_string($pickupTime)) {
                     try {
-                        $formattedTime = Carbon::createFromFormat('H:i:s', $pickupTime)->format('h:i A');
+                        $cTime = Carbon::createFromFormat('H:i:s', $pickupTime);
+                        $formattedTime = $cTime->format('h:i A');
+                        $time24 = $cTime->format('H:i');
                     } catch (\Throwable $e) {
                         try {
-                            $formattedTime = Carbon::parse($pickupTime)->format('h:i A');
+                            $cTime = Carbon::parse($pickupTime);
+                            $formattedTime = $cTime->format('h:i A');
+                            $time24 = $cTime->format('H:i');
                         } catch (\Throwable $e) {
                             $formattedTime = $pickupTime;
+                            $time24 = $pickupTime;
                         }
                     }
                 } else {
                     $formattedTime = '-';
+                    $time24 = '-';
+                }
+
+                $statusStr = $booking->status instanceof \BackedEnum ? $booking->status->value : (string) $booking->status;
+                $typeStr = $booking->booking_type instanceof \BackedEnum ? $booking->booking_type->value : (string) $booking->booking_type;
+                $directionStr = $booking->transfer_direction instanceof \BackedEnum ? $booking->transfer_direction->value : (string) $booking->transfer_direction;
+
+                $bookingTypeUi = 'Hotel Transfer';
+                if ($typeStr === 'airport_transfer' || $typeStr === 'Airport Transfer') {
+                    $bookingTypeUi = ($directionStr === 'drop_off' || $directionStr === 'Drop Off') ? 'Airport Drop-Off' : 'Airport Pick-Up';
+                } elseif ($typeStr === 'day_tour' || $typeStr === 'Day Tour') {
+                    $bookingTypeUi = 'Day Tour';
+                } elseif ($typeStr === 'hotel_transfer' || $typeStr === 'Hotel Transfer') {
+                    $bookingTypeUi = 'Hotel Transfer';
                 }
 
                 $serviceName = $booking->package?->name
-                    ?? ($booking->booking_type instanceof \BackedEnum ? $booking->booking_type->value : (string) $booking->booking_type)
+                    ?? $bookingTypeUi
                     ?? 'Trip Service';
 
+<<<<<<< Updated upstream
                 $pickup = $booking->pickupHotel?->nama_hotel ?? ($booking->airport?->destinasi ?? '-');
                 $dropoff = $booking->dropoffHotel?->nama_hotel ?? ($booking->airport?->destinasi ?? '-');
+=======
+                $categoryStr = $booking->vehicle?->category instanceof \BackedEnum ? $booking->vehicle->category->value : (string) ($booking->vehicle?->category ?? 'Vehicle');
+
+                $childSeatsList = $booking->childSeats->map(function ($cs) {
+                    return [
+                        'name' => $cs->childSeatType?->name ?? 'Child Seat',
+                        'quantity' => (int) $cs->quantity,
+                    ];
+                })->values()->all();
+>>>>>>> Stashed changes
 
                 return [
                     'id' => $booking->id,
                     'booking_code' => $booking->booking_code,
                     'pickup_time' => $formattedTime,
+                    'time' => $time24 . ($formattedTime !== '-' ? " ({$formattedTime})" : ''),
+                    'booking_date' => $booking->booking_date ? $booking->booking_date->format('Y-m-d') : '',
+                    'trip_date_formatted' => $booking->booking_date ? $booking->booking_date->format('l, j F Y') : '',
+                    'duration_hours' => $booking->duration_hours ?? null,
                     'guest_name' => $booking->guest_name,
+                    'whatsapp_number' => $booking->whatsapp_number ?: '-',
+                    'email' => $booking->email ?: '-',
                     'service_name' => $serviceName,
+<<<<<<< Updated upstream
                     'booking_type' => $booking->booking_type instanceof \BackedEnum ? $booking->booking_type->value : (string) $booking->booking_type,
                     'pickup_location' => $pickup,
                     'dropoff_location' => $dropoff,
                     'status' => $booking->status instanceof \BackedEnum ? $booking->status->value : (string) $booking->status,
+=======
+                    'booking_type' => $typeStr,
+                    'booking_type_ui' => $bookingTypeUi,
+                    'flight_number' => $booking->flight_number ?: '-',
+                    'pickup_location' => $booking->pickup_location ?? '-',
+                    'dropoff_location' => $booking->dropoff_location ?? '-',
+                    'adults' => (int) ($booking->adults ?? 1),
+                    'children' => (int) ($booking->children ?? 0),
+                    'total_fee' => (float) ($booking->total_fee ?? 0),
+                    'total_fee_formatted' => 'Rp ' . number_format((float) ($booking->total_fee ?? 0), 0, ',', '.'),
+                    'notes' => $booking->notes ?: null,
+                    'status' => $statusStr,
+>>>>>>> Stashed changes
                     'driver' => $booking->driver ? [
                         'id' => $booking->driver->id,
                         'name' => $booking->driver->full_name,
+                        'phone' => $booking->driver->whatsapp_number ?: '-',
                         'photo_url' => $booking->driver->profile_photo_url,
                     ] : null,
+                    'driver_name' => $booking->driver ? $booking->driver->full_name : 'Unassigned',
+                    'driver_phone' => $booking->driver?->whatsapp_number ?: '-',
+                    'vehicle_name' => $booking->vehicle?->name ?? $categoryStr,
+                    'vehicle_category' => $categoryStr,
+                    'vehicle_plate' => $booking->vehicleUnit?->plate_number ?? '-',
+                    'child_seats_list' => $childSeatsList,
                 ];
             });
 
@@ -144,11 +206,6 @@ class DashboardController extends Controller
             ],
             'today_date' => $now->translatedFormat('l, M j, Y'),
             'today_schedule' => $todaySchedule,
-            'drivers' => $driversData,
-            'available_vehicle_units' => $availableVehicleUnits,
-            'filters' => [
-                'search_driver' => $driverSearch,
-            ],
         ]);
     }
 }

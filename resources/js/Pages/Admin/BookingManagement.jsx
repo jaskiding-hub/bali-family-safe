@@ -3,7 +3,7 @@ import { router, useForm, usePage } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import Modal from '@/Components/Modal';
 
-const selectClass = "w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs hover:border-slate-300 transition-colors cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22%2364748b%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M5.22%208.22a.75.75%200%200%201%201.06%200L10%2011.94l3.72-3.72a.75.75%200%201%201%201.06%201.06l-4.25%204.25a.75.75%200%200%201-1.06%200L5.22%209.28a.75.75%200%200%201%200-1.06z%22%20clip-rule%3D%22evenodd%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem_1.25rem] bg-[right_0.75rem_center] bg-no-repeat pr-10";
+const selectClass = "w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-base sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs hover:border-slate-300 transition-colors cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22%2364748b%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M5.22%208.22a.75.75%200%200%201%201.06%200L10%2011.94l3.72-3.72a.75.75%200%201%201%201.06%201.06l-4.25%204.25a.75.75%200%200%201-1.06%200L5.22%209.28a.75.75%200%200%201%200-1.06z%22%20clip-rule%3D%22evenodd%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem_1.25rem] bg-[right_0.75rem_center] bg-no-repeat pr-10";
 
 export default function BookingManagement({
     stats = {},
@@ -11,6 +11,9 @@ export default function BookingManagement({
     available_drivers = [],
     vehicles = [],
     packages = [],
+    hotels = [],
+    airports = [],
+    hotel_price_lists = [],
     filters = {},
 }) {
     const { errors = {}, flash = {} } = usePage().props;
@@ -34,6 +37,11 @@ export default function BookingManagement({
         auto_parse_text: '',
         status: 'Pending',
         booking_type_ui: 'Airport Pick-Up',
+        selected_destinasi: '',
+        selected_hotel_id: '',
+        hotel_id_pickup: '',
+        hotel_id_dropoff: '',
+        vehicle_tier: 'Regular',
         package_id: '',
         guest_name: '',
         whatsapp_number: '',
@@ -55,6 +63,11 @@ export default function BookingManagement({
         auto_parse_text: '',
         status: 'Pending',
         booking_type_ui: 'Airport Pick-Up',
+        selected_destinasi: '',
+        selected_hotel_id: '',
+        hotel_id_pickup: '',
+        hotel_id_dropoff: '',
+        vehicle_tier: 'Regular',
         package_id: '',
         guest_name: '',
         whatsapp_number: '',
@@ -71,6 +84,60 @@ export default function BookingManagement({
         notes: '',
     });
 
+    // Helper functions for pricing and data filtering
+    const getDestinations = (direction) => {
+        const list = airports
+            .filter((a) => a.type === direction)
+            .map((a) => a.destinasi);
+        return Array.from(new Set(list));
+    };
+
+    const getHotelsForDestinasi = (destinasiName) => {
+        if (!destinasiName) return [];
+        return hotels.filter((h) =>
+            Array.isArray(h.airports) && h.airports.some((a) => a.destinasi === destinasiName)
+        );
+    };
+
+    const getFilteredVehicles = (tier, durationType = null) => {
+        if (durationType === 'Full Day') {
+            return vehicles.filter((v) => v.category === 'Family Minibus');
+        }
+        const targetCat = tier === 'Luxury' ? 'Luxury Touring Van' : 'Regular Family SUV';
+        return vehicles.filter((v) => v.category === targetCat);
+    };
+
+    const calcAirportPrice = (destinasi, direction, tier) => {
+        if (!destinasi) return null;
+        const row = airports.find((a) => a.destinasi === destinasi && a.type === direction);
+        if (!row) return null;
+        if (tier === 'Luxury') return row.price_luxury;
+        if (tier === 'Big Van') return row.price_luxury;
+        return row.price_regular;
+    };
+
+    const calcHotelTransferPrice = (pickupId, dropoffId, tier) => {
+        if (!pickupId || !dropoffId) return { price: null, warning: null };
+        let row = hotel_price_lists.find(
+            (hp) => String(hp.hotel_id_pickup) === String(pickupId) && String(hp.hotel_id_dropoff) === String(dropoffId)
+        );
+        if (!row) {
+            row = hotel_price_lists.find(
+                (hp) => String(hp.hotel_id_pickup) === String(dropoffId) && String(hp.hotel_id_dropoff) === String(pickupId)
+            );
+        }
+        if (row) {
+            return {
+                price: (tier === 'Luxury' || tier === 'Big Van') ? row.luxury_price : row.regular_price,
+                warning: null,
+            };
+        }
+        return {
+            price: null,
+            warning: 'Harga belum diatur untuk rute ini, isi manual',
+        };
+    };
+
     // Handle Booking Search
     const handleBookingSearch = (e) => {
         e.preventDefault();
@@ -83,23 +150,36 @@ export default function BookingManagement({
 
     // Booking Action Handlers
     const openAddBooking = () => {
+        const initialDirection = 'Pick-Up';
+        const defaultDestinations = getDestinations(initialDirection);
+        const firstDest = defaultDestinations[0] || '';
+        const regVehicles = vehicles.filter((v) => v.tier === 'Regular' || v.category === 'Regular Family SUV');
+        const defaultVehicle = regVehicles[0] || vehicles[0];
+        const initialTier = defaultVehicle?.tier || 'Regular';
+        const autoPrice = calcAirportPrice(firstDest, initialDirection, initialTier);
+
         addBookingForm.setData({
             auto_parse_text: '',
             status: 'Pending',
             booking_type_ui: 'Airport Pick-Up',
-            package_id: packages[0]?.id ? String(packages[0].id) : '',
+            selected_destinasi: firstDest,
+            selected_hotel_id: '',
+            hotel_id_pickup: '',
+            hotel_id_dropoff: '',
+            vehicle_tier: initialTier,
+            package_id: '',
             guest_name: '',
             whatsapp_number: '',
             email: '',
             flight_number: '',
-            vehicle_id: vehicles[0]?.id ? String(vehicles[0].id) : '',
+            vehicle_id: defaultVehicle?.id ? String(defaultVehicle.id) : '',
             booking_date: new Date().toISOString().split('T')[0],
             pickup_time: '09:00',
-            pickup_location: '',
+            pickup_location: 'I Gusti Ngurah Rai Airport (DPS)',
             dropoff_location: '',
             adults: 1,
             children: 0,
-            total_fee: '',
+            total_fee: autoPrice !== null ? String(autoPrice) : '',
             notes: '',
         });
         setShowAddBookingModal(true);
@@ -121,6 +201,9 @@ export default function BookingManagement({
     };
 
     const openAssignDriver = (booking) => {
+        if (['Completed', 'Cancelled'].includes(booking?.status)) {
+            return;
+        }
         setSelectedBooking(booking);
         assignDriverForm.setData('driver_id', booking.driver_id || (available_drivers[0]?.id || ''));
         setShowAssignDriverModal(true);
@@ -149,11 +232,53 @@ export default function BookingManagement({
             typeUi = 'Day Tour';
         }
 
+        const currentVehicle = vehicles.find((v) => String(v.id) === String(booking.vehicle_id));
+        let tier = 'Regular';
+        if (currentVehicle?.tier === 'Luxury' || currentVehicle?.category === 'Luxury Touring Van') {
+            tier = 'Luxury';
+        } else if (currentVehicle?.tier === 'Big Van' || currentVehicle?.category === 'Family Minibus') {
+            tier = 'Big Van';
+        }
+
+        let selectedDest = '';
+        let selectedHotelId = '';
+        let hotelPickupId = '';
+        let hotelDropoffId = '';
+
+        if (typeUi === 'Airport Pick-Up' || typeUi === 'Airport Drop-Off') {
+            const hotelTargetName = typeUi === 'Airport Pick-Up' ? booking.dropoff_location : booking.pickup_location;
+            const matchedHotel = hotels.find((h) => h.nama_hotel?.toLowerCase() === hotelTargetName?.toLowerCase());
+            if (matchedHotel) {
+                selectedHotelId = String(matchedHotel.id);
+                if (matchedHotel.airports && matchedHotel.airports.length > 0) {
+                    selectedDest = matchedHotel.airports[0].destinasi;
+                }
+            }
+            if (!selectedDest) {
+                const dir = typeUi === 'Airport Pick-Up' ? 'Pick-Up' : 'Drop-Off';
+                const availDests = getDestinations(dir);
+                const foundDest = availDests.find((d) => hotelTargetName?.toLowerCase()?.includes(d.toLowerCase()));
+                if (foundDest) {
+                    selectedDest = foundDest;
+                }
+            }
+        } else if (typeUi === 'Hotel Transfer') {
+            const hPickup = hotels.find((h) => h.nama_hotel?.toLowerCase() === booking.pickup_location?.toLowerCase());
+            const hDropoff = hotels.find((h) => h.nama_hotel?.toLowerCase() === booking.dropoff_location?.toLowerCase());
+            if (hPickup) hotelPickupId = String(hPickup.id);
+            if (hDropoff) hotelDropoffId = String(hDropoff.id);
+        }
+
         editBookingForm.setData({
             _method: 'put',
             auto_parse_text: '',
             status: booking.status || 'Pending',
             booking_type_ui: typeUi,
+            selected_destinasi: selectedDest,
+            selected_hotel_id: selectedHotelId,
+            hotel_id_pickup: hotelPickupId,
+            hotel_id_dropoff: hotelDropoffId,
+            vehicle_tier: tier,
             package_id: booking.package_id ? String(booking.package_id) : '',
             guest_name: booking.guest_name || '',
             whatsapp_number: booking.whatsapp_number || '',
@@ -299,6 +424,756 @@ export default function BookingManagement({
         );
     };
 
+    // Render Conditional Booking Form Fields for Add and Edit Modals
+    const renderBookingFormFields = (form, formId) => {
+        const typeUi = form.data.booking_type_ui;
+        const isAirport = typeUi === 'Airport Pick-Up' || typeUi === 'Airport Drop-Off';
+        const direction = typeUi === 'Airport Pick-Up' ? 'Pick-Up' : 'Drop-Off';
+        const isHotelTransfer = typeUi === 'Hotel Transfer';
+        const isDayTour = typeUi === 'Day Tour';
+
+        const selectedPkg = packages.find((p) => String(p.id) === String(form.data.package_id));
+        const isFullDayTour = isDayTour && (selectedPkg?.duration_type === 'Full Day');
+
+        // Dynamic lists
+        const availableDestinations = isAirport ? getDestinations(direction) : [];
+        const hotelsForSelectedDest = isAirport ? getHotelsForDestinasi(form.data.selected_destinasi) : [];
+        const selectedVehicle = vehicles.find((v) => String(v.id) === String(form.data.vehicle_id));
+        const vehicleTier = selectedVehicle?.tier || form.data.vehicle_tier || 'Regular';
+
+        const hotelTransferPricing = isHotelTransfer
+            ? calcHotelTransferPrice(form.data.hotel_id_pickup, form.data.hotel_id_dropoff, vehicleTier)
+            : { price: null, warning: null };
+
+        return (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* 1. Status */}
+                <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                        Status <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                        value={form.data.status}
+                        onChange={(e) => form.setData('status', e.target.value)}
+                        required
+                        className={selectClass}
+                    >
+                        <option value="Pending">Pending</option>
+                        <option value="Confirmed">Confirmed</option>
+                        <option value="Assigned">Assigned</option>
+                        <option value="On Going">On Going</option>
+                        <option value="Completed">Completed</option>
+                        <option value="Cancelled">Cancelled</option>
+                    </select>
+                    {form.errors.status && (
+                        <p className="text-xs text-red-600 mt-1 font-medium">{form.errors.status}</p>
+                    )}
+                </div>
+
+                {/* 2. Booking Type */}
+                <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                        Booking Type <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                        value={form.data.booking_type_ui}
+                        onChange={(e) => {
+                            const val = e.target.value;
+                            if (val === 'Airport Pick-Up') {
+                                const dests = getDestinations('Pick-Up');
+                                const firstDest = dests[0] || '';
+                                const regVehicles = vehicles.filter((v) => v.tier === 'Regular' || v.category === 'Regular Family SUV');
+                                const chosenV = regVehicles[0] || vehicles[0];
+                                const tier = chosenV?.tier || 'Regular';
+                                const price = calcAirportPrice(firstDest, 'Pick-Up', tier);
+                                form.setData((prev) => ({
+                                    ...prev,
+                                    booking_type_ui: 'Airport Pick-Up',
+                                    selected_destinasi: firstDest,
+                                    selected_hotel_id: '',
+                                    hotel_id_pickup: '',
+                                    hotel_id_dropoff: '',
+                                    vehicle_tier: tier,
+                                    vehicle_id: chosenV?.id ? String(chosenV.id) : '',
+                                    package_id: '',
+                                    pickup_location: 'I Gusti Ngurah Rai Airport (DPS)',
+                                    dropoff_location: '',
+                                    total_fee: price !== null ? String(price) : '',
+                                }));
+                            } else if (val === 'Airport Drop-Off') {
+                                const dests = getDestinations('Drop-Off');
+                                const firstDest = dests[0] || '';
+                                const regVehicles = vehicles.filter((v) => v.tier === 'Regular' || v.category === 'Regular Family SUV');
+                                const chosenV = regVehicles[0] || vehicles[0];
+                                const tier = chosenV?.tier || 'Regular';
+                                const price = calcAirportPrice(firstDest, 'Drop-Off', tier);
+                                form.setData((prev) => ({
+                                    ...prev,
+                                    booking_type_ui: 'Airport Drop-Off',
+                                    selected_destinasi: firstDest,
+                                    selected_hotel_id: '',
+                                    hotel_id_pickup: '',
+                                    hotel_id_dropoff: '',
+                                    vehicle_tier: tier,
+                                    vehicle_id: chosenV?.id ? String(chosenV.id) : '',
+                                    package_id: '',
+                                    pickup_location: '',
+                                    dropoff_location: 'I Gusti Ngurah Rai Airport (DPS)',
+                                    total_fee: price !== null ? String(price) : '',
+                                }));
+                            } else if (val === 'Hotel Transfer') {
+                                const regVehicles = vehicles.filter((v) => v.tier === 'Regular' || v.category === 'Regular Family SUV');
+                                const chosenV = regVehicles[0] || vehicles[0];
+                                const tier = chosenV?.tier || 'Regular';
+                                form.setData((prev) => ({
+                                    ...prev,
+                                    booking_type_ui: 'Hotel Transfer',
+                                    selected_destinasi: '',
+                                    selected_hotel_id: '',
+                                    hotel_id_pickup: '',
+                                    hotel_id_dropoff: '',
+                                    vehicle_tier: tier,
+                                    vehicle_id: chosenV?.id ? String(chosenV.id) : '',
+                                    package_id: '',
+                                    flight_number: '',
+                                    pickup_location: '',
+                                    dropoff_location: '',
+                                    total_fee: '',
+                                }));
+                            } else if (val === 'Day Tour') {
+                                const firstPkg = packages[0];
+                                const pkgId = firstPkg?.id ? String(firstPkg.id) : '';
+                                const isFull = firstPkg?.duration_type === 'Full Day';
+                                const targetList = isFull
+                                    ? vehicles.filter((v) => v.tier === 'Big Van' || v.category === 'Family Minibus')
+                                    : vehicles.filter((v) => v.tier === 'Regular' || v.category === 'Regular Family SUV');
+                                const chosenV = targetList[0] || vehicles[0];
+                                const tier = isFull ? 'Big Van' : (chosenV?.tier || 'Regular');
+                                const price = isFull
+                                    ? (firstPkg?.big_van_price || firstPkg?.price)
+                                    : (firstPkg?.regular_price || firstPkg?.price);
+                                form.setData((prev) => ({
+                                    ...prev,
+                                    booking_type_ui: 'Day Tour',
+                                    selected_destinasi: '',
+                                    selected_hotel_id: '',
+                                    hotel_id_pickup: '',
+                                    hotel_id_dropoff: '',
+                                    vehicle_tier: tier,
+                                    vehicle_id: chosenV?.id ? String(chosenV.id) : '',
+                                    package_id: pkgId,
+                                    flight_number: '',
+                                    pickup_location: '',
+                                    dropoff_location: '',
+                                    total_fee: price ? String(price) : '',
+                                }));
+                            }
+                        }}
+                        required
+                        className={selectClass}
+                    >
+                        <option value="Airport Pick-Up">Airport Pick-Up</option>
+                        <option value="Airport Drop-Off">Airport Drop-Off</option>
+                        <option value="Hotel Transfer">Hotel Transfer</option>
+                        <option value="Day Tour">Day Tour</option>
+                    </select>
+                    {form.errors.booking_type && (
+                        <p className="text-xs text-red-600 mt-1 font-medium">{form.errors.booking_type}</p>
+                    )}
+                </div>
+
+                {/* ═══ SECTION A: AIRPORT TRANSFER FLOW ═══ */}
+                {isAirport && (
+                    <>
+                        {/* 1. Destinasi/Wilayah */}
+                        <div>
+                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                                Destinasi / Wilayah ({direction}) <span className="text-red-500">*</span>
+                            </label>
+                            <select
+                                value={form.data.selected_destinasi}
+                                onChange={(e) => {
+                                    const destVal = e.target.value;
+                                    const price = calcAirportPrice(destVal, direction, vehicleTier);
+                                    form.setData((prev) => ({
+                                        ...prev,
+                                        selected_destinasi: destVal,
+                                        selected_hotel_id: '',
+                                        total_fee: price !== null ? String(price) : prev.total_fee,
+                                        ...(direction === 'Pick-Up' ? { dropoff_location: '' } : { pickup_location: '' }),
+                                    }));
+                                }}
+                                required
+                                className={selectClass}
+                            >
+                                <option value="">-- Pilih Wilayah/Destinasi --</option>
+                                {availableDestinations.map((d) => (
+                                    <option key={d} value={d}>
+                                        {d}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        {/* 2. Hotel Tujuan / Penjemputan */}
+                        <div>
+                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                                Hotel {direction === 'Pick-Up' ? 'Tujuan' : 'Penjemputan'}{' '}
+                                {form.data.selected_destinasi ? `di ${form.data.selected_destinasi}` : ''} <span className="text-red-500">*</span>
+                            </label>
+                            <select
+                                value={form.data.selected_hotel_id}
+                                onChange={(e) => {
+                                    const hotelId = e.target.value;
+                                    if (hotelId === '__custom__') {
+                                        form.setData((prev) => ({
+                                            ...prev,
+                                            selected_hotel_id: '__custom__',
+                                            ...(direction === 'Pick-Up' ? { dropoff_location: '' } : { pickup_location: '' }),
+                                        }));
+                                    } else {
+                                        const selectedH = hotels.find((h) => String(h.id) === String(hotelId));
+                                        const hotelName = selectedH?.nama_hotel || '';
+                                        form.setData((prev) => ({
+                                            ...prev,
+                                            selected_hotel_id: hotelId,
+                                            ...(direction === 'Pick-Up'
+                                                ? { dropoff_location: hotelName }
+                                                : { pickup_location: hotelName }),
+                                        }));
+                                    }
+                                }}
+                                disabled={!form.data.selected_destinasi}
+                                required={form.data.selected_hotel_id !== '__custom__'}
+                                className={selectClass}
+                            >
+                                <option value="">
+                                    {form.data.selected_destinasi
+                                        ? (hotelsForSelectedDest.length > 0 ? '-- Pilih Hotel Terdaftar --' : '-- Belum ada hotel terdaftar, ketik manual --')
+                                        : '-- Pilih Destinasi Dahulu --'}
+                                </option>
+                                {hotelsForSelectedDest.map((h) => (
+                                    <option key={h.id} value={h.id}>
+                                        {h.nama_hotel}
+                                    </option>
+                                ))}
+                                {form.data.selected_destinasi && (
+                                    <option value="__custom__">+ Ketik Nama Hotel / Villa Manual</option>
+                                )}
+                            </select>
+                        </div>
+
+                        {/* Custom Hotel Input if chosen or no hotels in dest */}
+                        {(form.data.selected_hotel_id === '__custom__' || (form.data.selected_destinasi && hotelsForSelectedDest.length === 0)) && (
+                            <div className="sm:col-span-2">
+                                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                                    Nama Hotel / Villa / Lokasi {direction === 'Pick-Up' ? 'Tujuan' : 'Penjemputan'} <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    required
+                                    value={direction === 'Pick-Up' ? form.data.dropoff_location : form.data.pickup_location}
+                                    onChange={(e) => {
+                                        const locVal = e.target.value;
+                                        form.setData((prev) => ({
+                                            ...prev,
+                                            selected_hotel_id: '__custom__',
+                                            ...(direction === 'Pick-Up' ? { dropoff_location: locVal } : { pickup_location: locVal }),
+                                        }));
+                                    }}
+                                    placeholder="e.g. Maya Sanur Resort & Spa / Villa Ombak Sunset"
+                                    className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-base sm:text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
+                                />
+                            </div>
+                        )}
+
+                        {/* 3. Pilih Kendaraan */}
+                        <div>
+                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                                Pilih Kendaraan <span className="text-red-500">*</span>
+                            </label>
+                            <select
+                                value={form.data.vehicle_tier}
+                                onChange={(e) => {
+                                    const newTier = e.target.value;
+                                    const chosenV = vehicles.find((v) => v.tier === newTier) || vehicles[0];
+                                    const price = calcAirportPrice(form.data.selected_destinasi, direction, newTier);
+                                    form.setData((prev) => ({
+                                        ...prev,
+                                        vehicle_tier: newTier,
+                                        vehicle_id: chosenV?.id ? String(chosenV.id) : prev.vehicle_id,
+                                        total_fee: price !== null ? String(price) : prev.total_fee,
+                                    }));
+                                }}
+                                required
+                                className={selectClass}
+                            >
+                                <option value="Regular">Regular</option>
+                                <option value="Luxury">Luxury</option>
+                                <option value="Big Van">Big Van</option>
+                            </select>
+                            {form.errors.vehicle_id && (
+                                <p className="text-xs text-red-600 mt-1 font-medium">{form.errors.vehicle_id}</p>
+                            )}
+                        </div>
+
+                        {/* 4. Flight Number */}
+                        <div>
+                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                                Flight Number <span className="text-slate-400 font-normal lowercase">(optional)</span>
+                            </label>
+                            <input
+                                type="text"
+                                value={form.data.flight_number}
+                                onChange={(e) => form.setData('flight_number', e.target.value)}
+                                placeholder="e.g. SQ-938 / GA-401"
+                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-base sm:text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
+                            />
+                            {form.errors.flight_number && (
+                                <p className="text-xs text-red-600 mt-1 font-medium">{form.errors.flight_number}</p>
+                            )}
+                        </div>
+
+                        {/* Route Summary Pill */}
+                        <div className="sm:col-span-2 p-3 bg-slate-50 border border-slate-200/80 rounded-xl text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                            <div className="flex items-center gap-2 text-slate-600">
+                                <span className="font-semibold text-slate-500 uppercase tracking-wider text-[11px]">Rute:</span>
+                                <span className="font-semibold text-slate-800">{form.data.pickup_location || '(Bandara DPS)'}</span>
+                                <span className="text-slate-400">➔</span>
+                                <span className="font-semibold text-slate-800">{form.data.dropoff_location || '(Hotel Tujuan)'}</span>
+                            </div>
+                            <span className="text-[11px] font-medium text-slate-500">
+                                Kendaraan: <strong className="text-slate-700">{vehicleTier}</strong>
+                            </span>
+                        </div>
+                    </>
+                )}
+
+                {/* ═══ SECTION B: HOTEL TRANSFER FLOW ═══ */}
+                {isHotelTransfer && (
+                    <>
+                        {/* 1. Hotel Asal */}
+                        <div>
+                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                                Hotel Asal (Penjemputan) <span className="text-red-500">*</span>
+                            </label>
+                            <select
+                                value={form.data.hotel_id_pickup}
+                                onChange={(e) => {
+                                    const asalId = e.target.value;
+                                    const hAsal = hotels.find((h) => String(h.id) === String(asalId));
+                                    const destinationPairCheck = (destId) => (form.data.hotel_id_dropoff === destId ? '' : form.data.hotel_id_dropoff);
+                                    const tujuanId = form.data.hotel_id_dropoff === asalId ? '' : form.data.hotel_id_dropoff;
+                                    const hTujuan = hotels.find((h) => String(h.id) === String(tujuanId));
+                                    const pricing = calcHotelTransferPrice(asalId, tujuanId, vehicleTier);
+                                    form.setData((prev) => ({
+                                        ...prev,
+                                        hotel_id_pickup: asalId,
+                                        hotel_id_dropoff: tujuanId,
+                                        pickup_location: hAsal?.nama_hotel || '',
+                                        dropoff_location: hTujuan?.nama_hotel || (tujuanId ? prev.dropoff_location : ''),
+                                        total_fee: pricing.price !== null ? String(pricing.price) : '',
+                                    }));
+                                }}
+                                required
+                                className={selectClass}
+                            >
+                                <option value="">-- Pilih Hotel Asal --</option>
+                                {hotels.map((h) => (
+                                    <option key={h.id} value={h.id}>
+                                        {h.nama_hotel}
+                                    </option>
+                                ))}
+                            </select>
+                            {form.errors.pickup_location && (
+                                <p className="text-xs text-red-600 mt-1 font-medium">{form.errors.pickup_location}</p>
+                            )}
+                        </div>
+
+                        {/* 2. Hotel Tujuan (Exclude Hotel Asal) */}
+                        <div>
+                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                                Hotel Tujuan (Pengantaran) <span className="text-red-500">*</span>
+                            </label>
+                            <select
+                                value={form.data.hotel_id_dropoff}
+                                onChange={(e) => {
+                                    const tujuanId = e.target.value;
+                                    const hTujuan = hotels.find((h) => String(h.id) === String(tujuanId));
+                                    const pricing = calcHotelTransferPrice(form.data.hotel_id_pickup, tujuanId, vehicleTier);
+                                    form.setData((prev) => ({
+                                        ...prev,
+                                        hotel_id_dropoff: tujuanId,
+                                        dropoff_location: hTujuan?.nama_hotel || '',
+                                        total_fee: pricing.price !== null ? String(pricing.price) : '',
+                                    }));
+                                }}
+                                required
+                                className={selectClass}
+                            >
+                                <option value="">-- Pilih Hotel Tujuan --</option>
+                                {hotels
+                                    .filter((h) => String(h.id) !== String(form.data.hotel_id_pickup))
+                                    .map((h) => (
+                                        <option key={h.id} value={h.id}>
+                                            {h.nama_hotel}
+                                        </option>
+                                    ))}
+                            </select>
+                            {form.errors.dropoff_location && (
+                                <p className="text-xs text-red-600 mt-1 font-medium">{form.errors.dropoff_location}</p>
+                            )}
+                        </div>
+
+                        {/* 3. Pilih Kendaraan */}
+                        <div className="sm:col-span-2">
+                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                                Pilih Kendaraan <span className="text-red-500">*</span>
+                            </label>
+                            <select
+                                value={form.data.vehicle_tier}
+                                onChange={(e) => {
+                                    const newTier = e.target.value;
+                                    const chosenV = vehicles.find((v) => v.tier === newTier) || vehicles[0];
+                                    const pricing = calcHotelTransferPrice(form.data.hotel_id_pickup, form.data.hotel_id_dropoff, newTier);
+                                    form.setData((prev) => ({
+                                        ...prev,
+                                        vehicle_tier: newTier,
+                                        vehicle_id: chosenV?.id ? String(chosenV.id) : prev.vehicle_id,
+                                        total_fee: pricing.price !== null ? String(pricing.price) : prev.total_fee,
+                                    }));
+                                }}
+                                required
+                                className={selectClass}
+                            >
+                                <option value="Regular">Regular</option>
+                                <option value="Luxury">Luxury</option>
+                                <option value="Big Van">Big Van</option>
+                            </select>
+                            {form.errors.vehicle_id && (
+                                <p className="text-xs text-red-600 mt-1 font-medium">{form.errors.vehicle_id}</p>
+                            )}
+                        </div>
+
+                        {/* Price Warning if unconfigured */}
+                        {form.data.hotel_id_pickup && form.data.hotel_id_dropoff && hotelTransferPricing.warning && (
+                            <div className="sm:col-span-2 flex items-center gap-2 p-3 bg-amber-50 border border-amber-200/80 rounded-xl text-xs font-semibold text-amber-800">
+                                <svg className="w-4 h-4 text-amber-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                    <circle cx="12" cy="12" r="10" />
+                                    <line x1="12" y1="8" x2="12" y2="12" />
+                                    <line x1="12" y1="16" x2="12.01" y2="16" />
+                                </svg>
+                                <span>{hotelTransferPricing.warning}</span>
+                            </div>
+                        )}
+
+                        {/* Route Summary Pill */}
+                        <div className="sm:col-span-2 p-3 bg-slate-50 border border-slate-200/80 rounded-xl text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                            <div className="flex items-center gap-2 text-slate-600">
+                                <span className="font-semibold text-slate-500 uppercase tracking-wider text-[11px]">Rute Antar Hotel:</span>
+                                <span className="font-semibold text-slate-800">{form.data.pickup_location || '(Hotel Asal)'}</span>
+                                <span className="text-slate-400">➔</span>
+                                <span className="font-semibold text-slate-800">{form.data.dropoff_location || '(Hotel Tujuan)'}</span>
+                            </div>
+                            <span className="text-[11px] font-medium text-slate-500">
+                                Kendaraan: <strong className="text-slate-700">{vehicleTier}</strong>
+                            </span>
+                        </div>
+                    </>
+                )}
+
+                {/* ═══ SECTION C: DAY TOUR FLOW ═══ */}
+                {isDayTour && (
+                    <>
+                        {/* 1. Pilih Package */}
+                        <div className="sm:col-span-2">
+                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                                Pilih Package Tour <span className="text-red-500">*</span>
+                            </label>
+                            <select
+                                value={form.data.package_id}
+                                onChange={(e) => {
+                                    const pkgId = e.target.value;
+                                    const pkg = packages.find((p) => String(p.id) === String(pkgId));
+                                    const isFull = pkg?.duration_type === 'Full Day';
+                                    const newTier = isFull ? 'Big Van' : (form.data.vehicle_tier === 'Big Van' ? 'Regular' : form.data.vehicle_tier);
+                                    const chosenV = vehicles.find((v) => v.tier === newTier) || vehicles[0];
+
+                                    const price = isFull
+                                        ? (pkg?.big_van_price || pkg?.price || '')
+                                        : (newTier === 'Luxury' ? (pkg?.luxury_price || pkg?.price || '') : (pkg?.regular_price || pkg?.price || ''));
+
+                                    form.setData((prev) => ({
+                                        ...prev,
+                                        package_id: pkgId,
+                                        vehicle_id: chosenV?.id ? String(chosenV.id) : prev.vehicle_id,
+                                        vehicle_tier: newTier,
+                                        total_fee: price ? String(price) : prev.total_fee,
+                                    }));
+                                }}
+                                required
+                                className={selectClass}
+                            >
+                                <option value="">-- Pilih Tour Package --</option>
+                                {packages.map((pkg) => (
+                                    <option key={pkg.id} value={pkg.id}>
+                                        {pkg.name} ({pkg.duration_type || 'Full Day'})
+                                    </option>
+                                ))}
+                            </select>
+                            {form.errors.package_id && (
+                                <p className="text-xs text-red-600 mt-1 font-medium">{form.errors.package_id}</p>
+                            )}
+                        </div>
+
+                        {/* 2. Vehicle Selector */}
+                        {isFullDayTour ? (
+                            <div className="sm:col-span-2">
+                                <div className="flex items-center justify-between mb-1.5">
+                                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700">
+                                        Pilih Kendaraan <span className="text-red-500">*</span>
+                                    </label>
+                                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                        Full Day: Big Van
+                                    </span>
+                                </div>
+                                <select
+                                    value="Big Van"
+                                    disabled
+                                    className={`${selectClass} bg-slate-100 opacity-90 cursor-not-allowed`}
+                                >
+                                    <option value="Big Van">Big Van</option>
+                                </select>
+                            </div>
+                        ) : (
+                            <div className="sm:col-span-2">
+                                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                                    Pilih Kendaraan <span className="text-red-500">*</span>
+                                </label>
+                                <select
+                                    value={form.data.vehicle_tier}
+                                    onChange={(e) => {
+                                        const newTier = e.target.value;
+                                        const chosenV = vehicles.find((v) => v.tier === newTier) || vehicles[0];
+                                        const p = newTier === 'Big Van'
+                                            ? (selectedPkg?.big_van_price || selectedPkg?.price)
+                                            : (newTier === 'Luxury' ? (selectedPkg?.luxury_price || selectedPkg?.price) : (selectedPkg?.regular_price || selectedPkg?.price));
+                                        form.setData((prev) => ({
+                                            ...prev,
+                                            vehicle_id: chosenV?.id ? String(chosenV.id) : prev.vehicle_id,
+                                            vehicle_tier: newTier,
+                                            total_fee: p ? String(p) : prev.total_fee,
+                                        }));
+                                    }}
+                                    required
+                                    className={selectClass}
+                                >
+                                    <option value="Regular">Regular</option>
+                                    <option value="Luxury">Luxury</option>
+                                    <option value="Big Van">Big Van</option>
+                                </select>
+                                {form.errors.vehicle_id && (
+                                    <p className="text-xs text-red-600 mt-1 font-medium">{form.errors.vehicle_id}</p>
+                                )}
+                            </div>
+                        )}
+
+                        {/* 3. Lokasi Penjemputan Day Tour */}
+                        <div className="sm:col-span-2">
+                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                                Lokasi Penjemputan (Hotel / Villa / Meeting Point) <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                                type="text"
+                                required
+                                value={form.data.pickup_location}
+                                onChange={(e) => {
+                                    const loc = e.target.value;
+                                    form.setData((prev) => ({
+                                        ...prev,
+                                        pickup_location: loc,
+                                        dropoff_location: loc,
+                                    }));
+                                }}
+                                placeholder="e.g. Lobby Maya Sanur Resort & Spa / Villa Seminyak"
+                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-base sm:text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
+                            />
+                            {form.errors.pickup_location && (
+                                <p className="text-xs text-red-600 mt-1 font-medium">{form.errors.pickup_location}</p>
+                            )}
+                        </div>
+                    </>
+                )}
+
+                {/* Date */}
+                <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                        Date <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                        type="date"
+                        required
+                        value={form.data.booking_date}
+                        onChange={(e) => form.setData('booking_date', e.target.value)}
+                        className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-base sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
+                    />
+                    {form.errors.booking_date && (
+                        <p className="text-xs text-red-600 mt-1 font-medium">{form.errors.booking_date}</p>
+                    )}
+                </div>
+
+                {/* Pickup Time */}
+                <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                        Pickup Time <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                        type="time"
+                        required
+                        value={form.data.pickup_time}
+                        onChange={(e) => form.setData('pickup_time', e.target.value)}
+                        className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-base sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
+                    />
+                    {form.errors.pickup_time && (
+                        <p className="text-xs text-red-600 mt-1 font-medium">{form.errors.pickup_time}</p>
+                    )}
+                </div>
+
+                {/* Guest Name */}
+                <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                        Guest Name <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                        type="text"
+                        required
+                        value={form.data.guest_name}
+                        onChange={(e) => form.setData('guest_name', e.target.value)}
+                        placeholder="e.g. John Doe"
+                        className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-base sm:text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
+                    />
+                    {form.errors.guest_name && (
+                        <p className="text-xs text-red-600 mt-1 font-medium">{form.errors.guest_name}</p>
+                    )}
+                </div>
+
+                {/* WhatsApp Number */}
+                <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                        Phone / WhatsApp <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                        type="text"
+                        required
+                        value={form.data.whatsapp_number}
+                        onChange={(e) => form.setData('whatsapp_number', e.target.value)}
+                        placeholder="e.g. +62 812-3456-7890"
+                        className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-base sm:text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
+                    />
+                    {form.errors.whatsapp_number && (
+                        <p className="text-xs text-red-600 mt-1 font-medium">{form.errors.whatsapp_number}</p>
+                    )}
+                </div>
+
+                {/* Email Address */}
+                <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                        Email Address
+                    </label>
+                    <input
+                        type="email"
+                        value={form.data.email}
+                        onChange={(e) => form.setData('email', e.target.value)}
+                        placeholder="e.g. john@example.com"
+                        className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-base sm:text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
+                    />
+                    {form.errors.email && (
+                        <p className="text-xs text-red-600 mt-1 font-medium">{form.errors.email}</p>
+                    )}
+                </div>
+
+                {/* Adults */}
+                <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                        Adults <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                        type="number"
+                        min="1"
+                        max="100"
+                        required
+                        value={form.data.adults}
+                        onChange={(e) => form.setData('adults', e.target.value)}
+                        className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-base sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
+                    />
+                    {form.errors.adults && (
+                        <p className="text-xs text-red-600 mt-1 font-medium">{form.errors.adults}</p>
+                    )}
+                </div>
+
+                {/* Children */}
+                <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                        Children
+                    </label>
+                    <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        value={form.data.children}
+                        onChange={(e) => form.setData('children', e.target.value)}
+                        className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-base sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
+                    />
+                    {form.errors.children && (
+                        <p className="text-xs text-red-600 mt-1 font-medium">{form.errors.children}</p>
+                    )}
+                </div>
+
+                {/* Total Fee */}
+                <div className="sm:col-span-2">
+                    <div className="flex items-center justify-between mb-1.5">
+                        <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700">
+                            Total Fee (Rp) <span className="text-red-500">*</span>
+                        </label>
+                        <span className="text-[11px] text-slate-400 font-medium">
+                            Otomatis terisi dari rute/paket & kendaraan, dapat disesuaikan manual
+                        </span>
+                    </div>
+                    <input
+                        type="number"
+                        min="0"
+                        max="9999999999"
+                        required
+                        value={form.data.total_fee}
+                        onChange={(e) => form.setData('total_fee', e.target.value)}
+                        placeholder="e.g. 450000"
+                        className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-base sm:text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs font-semibold"
+                    />
+                    {form.errors.total_fee && (
+                        <p className="text-xs text-red-600 mt-1 font-medium">{form.errors.total_fee}</p>
+                    )}
+                </div>
+
+                {/* Notes */}
+                <div className="sm:col-span-2">
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                        Notes / Special Requests
+                    </label>
+                    <textarea
+                        rows="2"
+                        value={form.data.notes}
+                        onChange={(e) => form.setData('notes', e.target.value)}
+                        placeholder="e.g. Request 1 baby car seat, butuh driver fasih bahasa inggris..."
+                        className="w-full bg-white border border-slate-200 rounded-xl p-3 text-base sm:text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 resize-none font-sans shadow-2xs"
+                    />
+                    {form.errors.notes && (
+                        <p className="text-xs text-red-600 mt-1 font-medium">{form.errors.notes}</p>
+                    )}
+                </div>
+            </div>
+        );
+    };
+
     return (
         <AdminLayout title="Booking Management">
             <div className="space-y-6 max-w-[1240px]">
@@ -336,98 +1211,95 @@ export default function BookingManagement({
                     </div>
                 )}
 
-                {/* 1. 4 STAT CARDS */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                {/* 1. 4 STAT CARDS (2 Columns on mobile, 4 Columns on desktop) */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
                     {/* Card 1: All Bookings */}
-                    <div className="bg-white border border-slate-200/80 shadow-xs hover:shadow-md transition-all duration-200 rounded-2xl p-5 flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-sky-50 border border-sky-200/60 flex items-center justify-center text-[#00AEEF] shrink-0">
-                            <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <div className="bg-white border border-slate-200/80 shadow-xs hover:shadow-md transition-all duration-200 rounded-2xl p-3.5 sm:p-5 flex items-center gap-3 sm:gap-4">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-sky-50 border border-sky-200/60 flex items-center justify-center text-[#00AEEF] shrink-0">
+                            <svg className="w-5 h-5 sm:w-6 sm:h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <rect width="18" height="18" x="3" y="3" rx="2" />
                                 <path d="M3 9h18" />
                                 <path d="M9 21V9" />
                             </svg>
                         </div>
-                        <div className="flex flex-col">
-                            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                        <div className="flex flex-col min-w-0">
+                            <span className="text-[10px] sm:text-xs font-semibold text-slate-500 uppercase tracking-tight whitespace-nowrap">
                                 All Bookings
                             </span>
-                            <div className="flex items-baseline gap-1.5 mt-0.5">
-                                <span className="text-2xl font-bold text-slate-900">
+                            <div className="flex items-baseline gap-1 mt-0.5">
+                                <span className="text-xl sm:text-2xl font-bold text-slate-900">
                                     {stats.all_bookings ?? 0}
                                 </span>
-                                <span className="text-xs text-slate-400 font-medium">
+                                <span className="text-[10px] sm:text-xs text-slate-400 font-medium">
                                     Total
                                 </span>
                             </div>
                         </div>
                     </div>
 
-                    {/* Card 2: Airport Transport */}
-                    <div className="bg-white border border-slate-200/80 shadow-xs hover:shadow-md transition-all duration-200 rounded-2xl p-5 flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-blue-50 border border-blue-200/60 flex items-center justify-center text-blue-600 shrink-0">
-                            <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    {/* Card 2: Airport Pick-Up */}
+                    <div className="bg-white border border-slate-200/80 shadow-xs hover:shadow-md transition-all duration-200 rounded-2xl p-3.5 sm:p-5 flex items-center gap-3 sm:gap-4">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-blue-50 border border-blue-200/60 flex items-center justify-center text-blue-600 shrink-0">
+                            <svg className="w-5 h-5 sm:w-6 sm:h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z" />
                             </svg>
                         </div>
-                        <div className="flex flex-col">
-                            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                                Airport Transport
+                        <div className="flex flex-col min-w-0">
+                            <span className="text-[10px] sm:text-xs font-semibold text-slate-500 uppercase tracking-tight whitespace-nowrap">
+                                Airport Pick-Up
                             </span>
-                            <div className="flex items-baseline gap-1.5 mt-0.5">
-                                <span className="text-2xl font-bold text-slate-900">
-                                    {stats.airport_transport ?? 0}
+                            <div className="flex items-baseline gap-1 mt-0.5">
+                                <span className="text-xl sm:text-2xl font-bold text-slate-900">
+                                    {stats.airport_pickup ?? 0}
                                 </span>
-                                <span className="text-xs text-slate-400 font-medium">
-                                    Orders
+                                <span className="text-[10px] sm:text-xs text-slate-400 font-medium">
+                                    Trips
                                 </span>
                             </div>
                         </div>
                     </div>
 
-                    {/* Card 3: Hotel Transfer */}
-                    <div className="bg-white border border-slate-200/80 shadow-xs hover:shadow-md transition-all duration-200 rounded-2xl p-5 flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-indigo-50 border border-indigo-200/60 flex items-center justify-center text-indigo-600 shrink-0">
-                            <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M2 4v16" />
-                                <path d="M2 8h18a2 2 0 0 1 2 2v10" />
-                                <path d="M2 17h20" />
-                                <path d="M6 8v9" />
+                    {/* Card 3: Airport Drop-Off */}
+                    <div className="bg-white border border-slate-200/80 shadow-xs hover:shadow-md transition-all duration-200 rounded-2xl p-3.5 sm:p-5 flex items-center gap-3 sm:gap-4">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-indigo-50 border border-indigo-200/60 flex items-center justify-center text-indigo-600 shrink-0">
+                            <svg className="w-5 h-5 sm:w-6 sm:h-6 -scale-x-100" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z" />
                             </svg>
                         </div>
-                        <div className="flex flex-col">
-                            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                                Hotel Transfer
+                        <div className="flex flex-col min-w-0">
+                            <span className="text-[10px] sm:text-xs font-semibold text-slate-500 uppercase tracking-tight whitespace-nowrap">
+                                Airport Drop-Off
                             </span>
-                            <div className="flex items-baseline gap-1.5 mt-0.5">
-                                <span className="text-2xl font-bold text-slate-900">
-                                    {stats.hotel_transfer ?? 0}
+                            <div className="flex items-baseline gap-1 mt-0.5">
+                                <span className="text-xl sm:text-2xl font-bold text-slate-900">
+                                    {stats.airport_dropoff ?? 0}
                                 </span>
-                                <span className="text-xs text-slate-400 font-medium">
-                                    Orders
+                                <span className="text-[10px] sm:text-xs text-slate-400 font-medium">
+                                    Trips
                                 </span>
                             </div>
                         </div>
                     </div>
 
                     {/* Card 4: Day Tour */}
-                    <div className="bg-white border border-slate-200/80 shadow-xs hover:shadow-md transition-all duration-200 rounded-2xl p-5 flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-emerald-50 border border-emerald-200/60 flex items-center justify-center text-emerald-600 shrink-0">
-                            <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <div className="bg-white border border-slate-200/80 shadow-xs hover:shadow-md transition-all duration-200 rounded-2xl p-3.5 sm:p-5 flex items-center gap-3 sm:gap-4">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-emerald-50 border border-emerald-200/60 flex items-center justify-center text-emerald-600 shrink-0">
+                            <svg className="w-5 h-5 sm:w-6 sm:h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21" />
                                 <line x1="9" x2="9" y1="3" y2="18" />
                                 <line x1="15" x2="15" y1="6" y2="21" />
                             </svg>
                         </div>
-                        <div className="flex flex-col">
-                            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                        <div className="flex flex-col min-w-0">
+                            <span className="text-[10px] sm:text-xs font-semibold text-slate-500 uppercase tracking-tight whitespace-nowrap">
                                 Day Tour
                             </span>
-                            <div className="flex items-baseline gap-1.5 mt-0.5">
-                                <span className="text-2xl font-bold text-slate-900">
+                            <div className="flex items-baseline gap-1 mt-0.5">
+                                <span className="text-xl sm:text-2xl font-bold text-slate-900">
                                     {stats.day_tour ?? 0}
                                 </span>
-                                <span className="text-xs text-slate-400 font-medium">
-                                    Orders
+                                <span className="text-[10px] sm:text-xs text-slate-400 font-medium">
+                                    Tours
                                 </span>
                             </div>
                         </div>
@@ -443,7 +1315,7 @@ export default function BookingManagement({
                             value={bookingSearch}
                             onChange={(e) => setBookingSearch(e.target.value)}
                             placeholder="Search booking by code or guest name..."
-                            className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200/90 rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all shadow-xs"
+                            className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200/90 rounded-xl text-base sm:text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all shadow-xs min-h-[44px]"
                         />
                         <div className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
                             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -453,34 +1325,34 @@ export default function BookingManagement({
                         </div>
                     </form>
 
-                    {/* Bookings Table Card */}
+                    {/* Bookings Card Container */}
                     <div className="bg-white border border-slate-200/80 shadow-xs rounded-2xl overflow-hidden">
                         {/* Table Header / Action Bar */}
-                        <div className="flex items-center justify-between px-6 py-4.5 border-b border-slate-100">
+                        <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-100 gap-2">
                             <div className="flex items-center gap-2">
-                                <h3 className="text-base font-bold text-slate-900">
+                                <h3 className="text-sm sm:text-base font-bold text-slate-900 truncate">
                                     Recent Bookings
                                 </h3>
-                                <span className="bg-slate-100 text-slate-600 text-xs font-semibold px-2 py-0.5 rounded-full">
-                                    {bookings.total || bookings.data?.length || 0} entries
+                                <span className="bg-slate-100 text-slate-600 text-[11px] sm:text-xs font-semibold px-2 py-0.5 rounded-full shrink-0">
+                                    {bookings.total || bookings.data?.length || 0}
                                 </span>
                             </div>
 
                             <button
                                 type="button"
                                 onClick={openAddBooking}
-                                className="inline-flex items-center gap-1.5 bg-[#00AEEF] hover:bg-[#009cd7] text-white text-xs font-semibold px-4 py-2 rounded-xl transition-all shadow-xs active:scale-[0.98] cursor-pointer"
+                                className="inline-flex items-center gap-1.5 bg-[#00AEEF] hover:bg-[#009cd7] text-white text-xs font-semibold px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl transition-all shadow-xs active:scale-[0.98] cursor-pointer min-h-[40px] shrink-0"
                             >
                                 <svg className="w-3.5 h-3.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
                                     <line x1="12" x2="12" y1="5" y2="19" />
                                     <line x1="5" x2="19" y1="12" y2="12" />
                                 </svg>
-                                <span>Add New Booking</span>
+                                <span><span className="hidden xs:inline">Add </span>Booking</span>
                             </button>
                         </div>
 
-                        {/* Bookings Table */}
-                        <div className="overflow-x-auto">
+                        {/* Desktop Bookings Table */}
+                        <div className="hidden lg:block overflow-x-auto">
                             <table className="w-full text-left border-collapse">
                                 <thead>
                                     <tr className="bg-slate-50/70 border-b border-slate-100 text-slate-500 text-[11px] font-semibold uppercase tracking-wider">
@@ -539,25 +1411,39 @@ export default function BookingManagement({
                                                 <td className="px-6 py-4 text-right whitespace-nowrap">
                                                     <div className="flex items-center justify-end gap-1.5">
                                                         {/* Assign Driver Action */}
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => openAssignDriver(booking)}
-                                                            className="p-1.5 text-slate-400 hover:text-sky-600 hover:bg-sky-50 rounded-lg transition-colors cursor-pointer"
-                                                            title="Assign Driver"
-                                                        >
-                                                            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                                                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                                                                <circle cx="9" cy="7" r="4" />
-                                                                <line x1="19" x2="19" y1="8" y2="14" />
-                                                                <line x1="22" x2="16" y1="11" y2="11" />
-                                                            </svg>
-                                                        </button>
+                                                        {['Completed', 'Cancelled'].includes(booking.status) ? (
+                                                            <span
+                                                                className="p-1.5 text-slate-300 rounded-lg min-w-[36px] min-h-[36px] flex items-center justify-center cursor-not-allowed opacity-50"
+                                                                title={`Booking ${booking.status} tidak dapat di-assign driver`}
+                                                            >
+                                                                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                                                                    <circle cx="9" cy="7" r="4" />
+                                                                    <line x1="19" x2="19" y1="8" y2="14" />
+                                                                    <line x1="22" x2="16" y1="11" y2="11" />
+                                                                </svg>
+                                                            </span>
+                                                        ) : (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => openAssignDriver(booking)}
+                                                                className="p-1.5 text-slate-400 hover:text-sky-600 hover:bg-sky-50 rounded-lg transition-colors cursor-pointer min-w-[36px] min-h-[36px] flex items-center justify-center"
+                                                                title="Assign Driver"
+                                                            >
+                                                                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                                                                    <circle cx="9" cy="7" r="4" />
+                                                                    <line x1="19" x2="19" y1="8" y2="14" />
+                                                                    <line x1="22" x2="16" y1="11" y2="11" />
+                                                                </svg>
+                                                            </button>
+                                                        )}
 
                                                         {/* Edit Booking Action */}
                                                         <button
                                                             type="button"
                                                             onClick={() => openEditBooking(booking)}
-                                                            className="p-1.5 text-slate-400 hover:text-sky-600 hover:bg-sky-50 rounded-lg transition-colors cursor-pointer"
+                                                            className="p-1.5 text-slate-400 hover:text-sky-600 hover:bg-sky-50 rounded-lg transition-colors cursor-pointer min-w-[36px] min-h-[36px] flex items-center justify-center"
                                                             title="Edit Booking"
                                                         >
                                                             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -570,7 +1456,7 @@ export default function BookingManagement({
                                                         <button
                                                             type="button"
                                                             onClick={() => openDeleteBooking(booking)}
-                                                            className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                                                            className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer min-w-[36px] min-h-[36px] flex items-center justify-center"
                                                             title="Delete Booking"
                                                         >
                                                             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -594,6 +1480,116 @@ export default function BookingManagement({
                             </table>
                         </div>
 
+                        {/* Mobile & Tablet Bookings Card List */}
+                        <div className="block lg:hidden divide-y divide-slate-100">
+                            {bookings.data && bookings.data.length > 0 ? (
+                                bookings.data.map((booking) => (
+                                    <div key={booking.raw_id} className="p-4 sm:p-5 flex flex-col gap-3 hover:bg-slate-50/50 transition-colors">
+                                        {/* Top Row */}
+                                        <div className="flex items-start justify-between gap-2">
+                                            <div>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-xs font-mono font-bold text-slate-500">ID : {booking.id}</span>
+                                                </div>
+                                                <div className="text-xs text-slate-400 font-medium mt-0.5">
+                                                    {booking.date}
+                                                </div>
+                                            </div>
+                                            <div>
+                                                {renderStatusBadge(booking.status)}
+                                            </div>
+                                        </div>
+
+                                        {/* Guest Name */}
+                                        <div>
+                                            <h4 className="text-base font-bold text-slate-900 leading-tight">
+                                                {booking.guest_name}
+                                            </h4>
+                                        </div>
+
+                                        {/* Details info */}
+                                        <div className="space-y-1.5 text-xs text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-slate-500">Booking Type:</span>
+                                                <span className="font-semibold text-slate-800">{booking.booking_type}</span>
+                                            </div>
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-slate-500">Detail :</span>
+                                                <span className="font-medium text-slate-700 truncate max-w-[200px]">{booking.detail}</span>
+                                            </div>
+                                            <div className="flex items-center justify-between pt-1 border-t border-slate-200/60">
+                                                <span className="text-slate-500 font-medium">Total Fee:</span>
+                                                <span className="text-sm font-extrabold text-[#00AEEF]">{booking.payment}</span>
+                                            </div>
+                                        </div>
+
+                                        {/* Action Buttons Row */}
+                                        <div className="grid grid-cols-3 gap-2 pt-1 border-t border-slate-100">
+                                            {['Completed', 'Cancelled'].includes(booking.status) ? (
+                                                <button
+                                                    type="button"
+                                                    disabled
+                                                    className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 text-xs font-semibold text-slate-300 bg-slate-50 border border-slate-100 rounded-xl cursor-not-allowed opacity-50 min-h-[44px]"
+                                                    title={`Booking ${booking.status} tidak dapat di-assign`}
+                                                >
+                                                    <svg className="w-3.5 h-3.5 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                                                        <circle cx="9" cy="7" r="4" />
+                                                        <line x1="19" x2="19" y1="8" y2="14" />
+                                                        <line x1="22" x2="16" y1="11" y2="11" />
+                                                    </svg>
+                                                    <span>Assign</span>
+                                                </button>
+                                            ) : (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => openAssignDriver(booking)}
+                                                    className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors cursor-pointer min-h-[44px]"
+                                                >
+                                                    <svg className="w-3.5 h-3.5 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                                                        <circle cx="9" cy="7" r="4" />
+                                                        <line x1="19" x2="19" y1="8" y2="14" />
+                                                        <line x1="22" x2="16" y1="11" y2="11" />
+                                                    </svg>
+                                                    <span>Assign</span>
+                                                </button>
+                                            )}
+
+                                            <button
+                                                type="button"
+                                                onClick={() => openEditBooking(booking)}
+                                                className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 text-xs font-semibold text-sky-700 bg-sky-50 hover:bg-sky-100 border border-sky-200/60 rounded-xl transition-colors cursor-pointer min-h-[44px]"
+                                            >
+                                                <svg className="w-3.5 h-3.5 text-sky-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                    <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+                                                    <path d="m15 5 4 4" />
+                                                </svg>
+                                                <span>Edit</span>
+                                            </button>
+
+                                            <button
+                                                type="button"
+                                                onClick={() => openDeleteBooking(booking)}
+                                                className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 text-xs font-semibold text-red-700 bg-red-50 hover:bg-red-100 border border-red-200/60 rounded-xl transition-colors cursor-pointer min-h-[44px]"
+                                            >
+                                                <svg className="w-3.5 h-3.5 text-red-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                    <path d="M3 6h18" />
+                                                    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                                                    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                                                </svg>
+                                                <span>Delete</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="px-6 py-8 text-center text-slate-400 text-sm">
+                                    No bookings found.
+                                </div>
+                            )}
+                        </div>
+
                         {/* Booking Pagination */}
                         {renderPagination(bookings)}
                     </div>
@@ -610,8 +1606,33 @@ export default function BookingManagement({
                 onClose={() => setShowAssignDriverModal(false)}
                 title={`Assign Driver ${selectedBooking ? `(${selectedBooking.booking_code})` : ''}`}
                 maxWidth="md"
+                footer={
+                    <>
+                        <button
+                            type="button"
+                            onClick={() => setShowAssignDriverModal(false)}
+                            className="px-5 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition cursor-pointer min-h-[44px]"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="submit"
+                            form="assign-driver-form"
+                            disabled={assignDriverForm.processing || !assignDriverForm.data.driver_id}
+                            className="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-[#00AEEF] hover:bg-[#009cd7] text-white rounded-xl text-sm font-semibold transition shadow-xs disabled:opacity-50 cursor-pointer min-h-[44px]"
+                        >
+                            {assignDriverForm.processing && (
+                                <svg className="w-4 h-4 animate-spin text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <circle cx="12" cy="12" r="10" strokeWidth="4" className="opacity-25" />
+                                    <path fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" className="opacity-75" />
+                                </svg>
+                            )}
+                            <span>Confirm Assignment</span>
+                        </button>
+                    </>
+                }
             >
-                <form onSubmit={handleAssignDriverSubmit} className="space-y-4">
+                <form id="assign-driver-form" onSubmit={handleAssignDriverSubmit} className="space-y-4">
                     {selectedBooking && (
                         <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl flex flex-col gap-1 text-xs text-slate-600">
                             <div className="flex justify-between items-center">
@@ -670,29 +1691,6 @@ export default function BookingManagement({
                             </div>
                         );
                     })()}
-
-                    <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
-                        <button
-                            type="button"
-                            onClick={() => setShowAssignDriverModal(false)}
-                            className="px-5 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition cursor-pointer"
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            type="submit"
-                            disabled={assignDriverForm.processing || !assignDriverForm.data.driver_id}
-                            className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#00AEEF] hover:bg-[#009cd7] text-white rounded-xl text-sm font-semibold transition shadow-xs disabled:opacity-50 cursor-pointer"
-                        >
-                            {assignDriverForm.processing && (
-                                <svg className="w-4 h-4 animate-spin text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                    <circle cx="12" cy="12" r="10" strokeWidth="4" className="opacity-25" />
-                                    <path fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" className="opacity-75" />
-                                </svg>
-                            )}
-                            <span>Confirm Assignment</span>
-                        </button>
-                    </div>
                 </form>
             </Modal>
 
@@ -702,8 +1700,33 @@ export default function BookingManagement({
                 onClose={() => setShowAddBookingModal(false)}
                 title="Add New Booking"
                 maxWidth="2xl"
+                footer={
+                    <>
+                        <button
+                            type="button"
+                            onClick={() => setShowAddBookingModal(false)}
+                            className="px-5 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition cursor-pointer min-h-[44px]"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="submit"
+                            form="add-booking-form"
+                            disabled={addBookingForm.processing}
+                            className="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-[#00AEEF] hover:bg-[#009cd7] text-white rounded-xl text-sm font-semibold transition shadow-xs disabled:opacity-50 cursor-pointer min-h-[44px]"
+                        >
+                            {addBookingForm.processing && (
+                                <svg className="w-4 h-4 animate-spin text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <circle cx="12" cy="12" r="10" strokeWidth="4" className="opacity-25" />
+                                    <path fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" className="opacity-75" />
+                                </svg>
+                            )}
+                            <span>Save Booking</span>
+                        </button>
+                    </>
+                }
             >
-                <form onSubmit={handleAddBookingSubmit} className="space-y-5">
+                <form id="add-booking-form" onSubmit={handleAddBookingSubmit} className="space-y-5">
                     {/* Auto-Parse Section */}
                     <div className="bg-gradient-to-r from-sky-50 to-indigo-50/50 border border-sky-100 rounded-2xl p-4">
                         <div className="flex items-center justify-between mb-2">
@@ -729,7 +1752,7 @@ export default function BookingManagement({
                             value={addBookingForm.data.auto_parse_text}
                             onChange={(e) => addBookingForm.setData('auto_parse_text', e.target.value)}
                             placeholder="Contoh: Nama: John Doe, Tgl: 25 Des 2026, Penjemputan: Airport ke Seminyak, Pesawat GA-401..."
-                            className="w-full bg-white border border-slate-200 rounded-xl p-3 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 resize-none font-sans shadow-2xs"
+                            className="w-full bg-white border border-slate-200 rounded-xl p-3 text-base sm:text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 resize-none font-sans shadow-2xs"
                         />
                         <div className="flex justify-end mt-2">
                             <button
@@ -745,347 +1768,8 @@ export default function BookingManagement({
                         </div>
                     </div>
 
-                    {/* Form Fields Grid */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {/* Status */}
-                        <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                                Status <span className="text-red-500">*</span>
-                            </label>
-                            <select
-                                value={addBookingForm.data.status}
-                                onChange={(e) => addBookingForm.setData('status', e.target.value)}
-                                required
-                                className={selectClass}
-                            >
-                                <option value="Pending">Pending</option>
-                                <option value="Confirmed">Confirmed</option>
-                                <option value="Assigned">Assigned</option>
-                                <option value="On Going">On Going</option>
-                                <option value="Completed">Completed</option>
-                                <option value="Cancelled">Cancelled</option>
-                            </select>
-                            {addBookingForm.errors.status && (
-                                <p className="text-xs text-red-600 mt-1 font-medium">{addBookingForm.errors.status}</p>
-                            )}
-                        </div>
-
-                        {/* Booking Type */}
-                        <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                                Booking Type <span className="text-red-500">*</span>
-                            </label>
-                            <select
-                                value={addBookingForm.data.booking_type_ui}
-                                onChange={(e) => {
-                                    const val = e.target.value;
-                                    addBookingForm.setData((prev) => ({
-                                        ...prev,
-                                        booking_type_ui: val,
-                                        package_id: val === 'Day Tour' ? (prev.package_id || (packages[0]?.id ? String(packages[0].id) : '')) : '',
-                                        flight_number: (val === 'Airport Pick-Up' || val === 'Airport Drop-Off') ? prev.flight_number : '',
-                                    }));
-                                }}
-                                required
-                                className={selectClass}
-                            >
-                                <option value="Airport Pick-Up">Airport Pick-Up</option>
-                                <option value="Airport Drop-Off">Airport Drop-Off</option>
-                                <option value="Hotel Transfer">Hotel Transfer</option>
-                                <option value="Day Tour">Day Tour</option>
-                            </select>
-                            {addBookingForm.errors.booking_type && (
-                                <p className="text-xs text-red-600 mt-1 font-medium">{addBookingForm.errors.booking_type}</p>
-                            )}
-                        </div>
-
-                        {/* Conditional: Package for Day Tour */}
-                        {addBookingForm.data.booking_type_ui === 'Day Tour' && (
-                            <div className="sm:col-span-2">
-                                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                                    Pilih Package <span className="text-red-500">*</span>
-                                </label>
-                                <select
-                                    value={addBookingForm.data.package_id}
-                                    onChange={(e) => addBookingForm.setData('package_id', e.target.value)}
-                                    required
-                                    className={selectClass}
-                                >
-                                    <option value="">-- Pilih Tour Package --</option>
-                                    {packages.map((pkg) => (
-                                        <option key={pkg.id} value={pkg.id}>
-                                            {pkg.name} {pkg.price ? `(Rp ${Number(pkg.price).toLocaleString('id-ID')})` : ''}
-                                        </option>
-                                    ))}
-                                </select>
-                                {addBookingForm.errors.package_id && (
-                                    <p className="text-xs text-red-600 mt-1 font-medium">{addBookingForm.errors.package_id}</p>
-                                )}
-                            </div>
-                        )}
-
-                        {/* Date */}
-                        <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                                Date <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                                type="date"
-                                required
-                                value={addBookingForm.data.booking_date}
-                                onChange={(e) => addBookingForm.setData('booking_date', e.target.value)}
-                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
-                            />
-                            {addBookingForm.errors.booking_date && (
-                                <p className="text-xs text-red-600 mt-1 font-medium">{addBookingForm.errors.booking_date}</p>
-                            )}
-                        </div>
-
-                        {/* Pickup Time */}
-                        <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                                Pickup Time <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                                type="time"
-                                required
-                                value={addBookingForm.data.pickup_time}
-                                onChange={(e) => addBookingForm.setData('pickup_time', e.target.value)}
-                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
-                            />
-                            {addBookingForm.errors.pickup_time && (
-                                <p className="text-xs text-red-600 mt-1 font-medium">{addBookingForm.errors.pickup_time}</p>
-                            )}
-                        </div>
-
-                        {/* Guest Name */}
-                        <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                                Guest Name <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                                type="text"
-                                required
-                                value={addBookingForm.data.guest_name}
-                                onChange={(e) => addBookingForm.setData('guest_name', e.target.value)}
-                                placeholder="e.g. John Doe"
-                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
-                            />
-                            {addBookingForm.errors.guest_name && (
-                                <p className="text-xs text-red-600 mt-1 font-medium">{addBookingForm.errors.guest_name}</p>
-                            )}
-                        </div>
-
-                        {/* WhatsApp Number */}
-                        <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                                Phone / WhatsApp <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                                type="text"
-                                required
-                                value={addBookingForm.data.whatsapp_number}
-                                onChange={(e) => addBookingForm.setData('whatsapp_number', e.target.value)}
-                                placeholder="+62 812-3456-7890"
-                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
-                            />
-                            {addBookingForm.errors.whatsapp_number && (
-                                <p className="text-xs text-red-600 mt-1 font-medium">{addBookingForm.errors.whatsapp_number}</p>
-                            )}
-                        </div>
-
-                        {/* Email */}
-                        <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                                Email Address
-                            </label>
-                            <input
-                                type="email"
-                                value={addBookingForm.data.email}
-                                onChange={(e) => addBookingForm.setData('email', e.target.value)}
-                                placeholder="guest@example.com"
-                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
-                            />
-                            {addBookingForm.errors.email && (
-                                <p className="text-xs text-red-600 mt-1 font-medium">{addBookingForm.errors.email}</p>
-                            )}
-                        </div>
-
-                        {/* Vehicle Selection */}
-                        <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                                Vehicle Type <span className="text-red-500">*</span>
-                            </label>
-                            <select
-                                value={addBookingForm.data.vehicle_id}
-                                onChange={(e) => addBookingForm.setData('vehicle_id', e.target.value)}
-                                required
-                                className={selectClass}
-                            >
-                                <option value="">-- Pilih Kendaraan --</option>
-                                {vehicles.map((v) => (
-                                    <option key={v.id} value={v.id}>
-                                        {v.label}
-                                    </option>
-                                ))}
-                            </select>
-                            {addBookingForm.errors.vehicle_id && (
-                                <p className="text-xs text-red-600 mt-1 font-medium">{addBookingForm.errors.vehicle_id}</p>
-                            )}
-                        </div>
-
-                        {/* Conditional: Flight Number */}
-                        {(addBookingForm.data.booking_type_ui === 'Airport Pick-Up' || addBookingForm.data.booking_type_ui === 'Airport Drop-Off') && (
-                            <div className="sm:col-span-2">
-                                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                                    Flight Number
-                                </label>
-                                <input
-                                    type="text"
-                                    value={addBookingForm.data.flight_number}
-                                    onChange={(e) => addBookingForm.setData('flight_number', e.target.value)}
-                                    placeholder="e.g. GA-401 / SQ-942"
-                                    className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
-                                />
-                                {addBookingForm.errors.flight_number && (
-                                    <p className="text-xs text-red-600 mt-1 font-medium">{addBookingForm.errors.flight_number}</p>
-                                )}
-                            </div>
-                        )}
-
-                        {/* Pickup Location */}
-                        <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                                Pickup Location <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                                type="text"
-                                required
-                                value={addBookingForm.data.pickup_location}
-                                onChange={(e) => addBookingForm.setData('pickup_location', e.target.value)}
-                                placeholder="e.g. I Gusti Ngurah Rai Airport / Hotel Lobby"
-                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
-                            />
-                            {addBookingForm.errors.pickup_location && (
-                                <p className="text-xs text-red-600 mt-1 font-medium">{addBookingForm.errors.pickup_location}</p>
-                            )}
-                        </div>
-
-                        {/* Dropoff Location */}
-                        <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                                Drop-off Location <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                                type="text"
-                                required
-                                value={addBookingForm.data.dropoff_location}
-                                onChange={(e) => addBookingForm.setData('dropoff_location', e.target.value)}
-                                placeholder="e.g. Maya Sanur Resort & Spa"
-                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
-                            />
-                            {addBookingForm.errors.dropoff_location && (
-                                <p className="text-xs text-red-600 mt-1 font-medium">{addBookingForm.errors.dropoff_location}</p>
-                            )}
-                        </div>
-
-                        {/* Adults */}
-                        <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                                Adults <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                                type="number"
-                                min="1"
-                                max="100"
-                                required
-                                value={addBookingForm.data.adults}
-                                onChange={(e) => addBookingForm.setData('adults', e.target.value)}
-                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
-                            />
-                            {addBookingForm.errors.adults && (
-                                <p className="text-xs text-red-600 mt-1 font-medium">{addBookingForm.errors.adults}</p>
-                            )}
-                        </div>
-
-                        {/* Children */}
-                        <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                                Children
-                            </label>
-                            <input
-                                type="number"
-                                min="0"
-                                max="100"
-                                value={addBookingForm.data.children}
-                                onChange={(e) => addBookingForm.setData('children', e.target.value)}
-                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
-                            />
-                            {addBookingForm.errors.children && (
-                                <p className="text-xs text-red-600 mt-1 font-medium">{addBookingForm.errors.children}</p>
-                            )}
-                        </div>
-
-                        {/* Total Fee */}
-                        <div className="sm:col-span-2">
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                                Total Fee (Rp)
-                            </label>
-                            <input
-                                type="number"
-                                min="0"
-                                max="9999999999"
-                                value={addBookingForm.data.total_fee}
-                                onChange={(e) => addBookingForm.setData('total_fee', e.target.value)}
-                                placeholder="e.g. 450000"
-                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
-                            />
-                            {addBookingForm.errors.total_fee && (
-                                <p className="text-xs text-red-600 mt-1 font-medium">{addBookingForm.errors.total_fee}</p>
-                            )}
-                        </div>
-
-                        {/* Notes */}
-                        <div className="sm:col-span-2">
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                                Notes / Special Requests
-                            </label>
-                            <textarea
-                                rows="2"
-                                value={addBookingForm.data.notes}
-                                onChange={(e) => addBookingForm.setData('notes', e.target.value)}
-                                placeholder="e.g. Request 1 baby car seat, butuh driver fasih bahasa inggris..."
-                                className="w-full bg-white border border-slate-200 rounded-xl p-3 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 resize-none font-sans shadow-2xs"
-                            />
-                            {addBookingForm.errors.notes && (
-                                <p className="text-xs text-red-600 mt-1 font-medium">{addBookingForm.errors.notes}</p>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Footer Actions */}
-                    <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
-                        <button
-                            type="button"
-                            onClick={() => setShowAddBookingModal(false)}
-                            className="px-5 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition cursor-pointer"
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            type="submit"
-                            disabled={addBookingForm.processing}
-                            className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#00AEEF] hover:bg-[#009cd7] text-white rounded-xl text-sm font-semibold transition shadow-xs disabled:opacity-50 cursor-pointer"
-                        >
-                            {addBookingForm.processing && (
-                                <svg className="w-4 h-4 animate-spin text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                    <circle cx="12" cy="12" r="10" strokeWidth="4" className="opacity-25" />
-                                    <path fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" className="opacity-75" />
-                                </svg>
-                            )}
-                            <span>Save Booking</span>
-                        </button>
-                    </div>
+                    {/* Conditional Form Fields */}
+                    {renderBookingFormFields(addBookingForm, 'add-booking-form')}
                 </form>
             </Modal>
 
@@ -1095,8 +1779,33 @@ export default function BookingManagement({
                 onClose={() => setShowEditBookingModal(false)}
                 title={`Edit Booking ${selectedBooking ? `(${selectedBooking.booking_code})` : ''}`}
                 maxWidth="2xl"
+                footer={
+                    <>
+                        <button
+                            type="button"
+                            onClick={() => setShowEditBookingModal(false)}
+                            className="px-5 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition cursor-pointer min-h-[44px]"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="submit"
+                            form="edit-booking-form"
+                            disabled={editBookingForm.processing}
+                            className="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-[#00AEEF] hover:bg-[#009cd7] text-white rounded-xl text-sm font-semibold transition shadow-xs disabled:opacity-50 cursor-pointer min-h-[44px]"
+                        >
+                            {editBookingForm.processing && (
+                                <svg className="w-4 h-4 animate-spin text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <circle cx="12" cy="12" r="10" strokeWidth="4" className="opacity-25" />
+                                    <path fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" className="opacity-75" />
+                                </svg>
+                            )}
+                            <span>Update Booking</span>
+                        </button>
+                    </>
+                }
             >
-                <form onSubmit={handleEditBookingSubmit} className="space-y-5">
+                <form id="edit-booking-form" onSubmit={handleEditBookingSubmit} className="space-y-5">
                     {/* Auto-Parse Section */}
                     <div className="bg-gradient-to-r from-sky-50 to-indigo-50/50 border border-sky-100 rounded-2xl p-4">
                         <div className="flex items-center justify-between mb-2">
@@ -1122,7 +1831,7 @@ export default function BookingManagement({
                             value={editBookingForm.data.auto_parse_text}
                             onChange={(e) => editBookingForm.setData('auto_parse_text', e.target.value)}
                             placeholder="Contoh: Nama: John Doe, Tgl: 25 Des 2026, Penjemputan: Airport ke Seminyak, Pesawat GA-401..."
-                            className="w-full bg-white border border-slate-200 rounded-xl p-3 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 resize-none font-sans shadow-2xs"
+                            className="w-full bg-white border border-slate-200 rounded-xl p-3 text-base sm:text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 resize-none font-sans shadow-2xs"
                         />
                         <div className="flex justify-end mt-2">
                             <button
@@ -1138,347 +1847,8 @@ export default function BookingManagement({
                         </div>
                     </div>
 
-                    {/* Form Fields Grid */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {/* Status */}
-                        <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                                Status <span className="text-red-500">*</span>
-                            </label>
-                            <select
-                                value={editBookingForm.data.status}
-                                onChange={(e) => editBookingForm.setData('status', e.target.value)}
-                                required
-                                className={selectClass}
-                            >
-                                <option value="Pending">Pending</option>
-                                <option value="Confirmed">Confirmed</option>
-                                <option value="Assigned">Assigned</option>
-                                <option value="On Going">On Going</option>
-                                <option value="Completed">Completed</option>
-                                <option value="Cancelled">Cancelled</option>
-                            </select>
-                            {editBookingForm.errors.status && (
-                                <p className="text-xs text-red-600 mt-1 font-medium">{editBookingForm.errors.status}</p>
-                            )}
-                        </div>
-
-                        {/* Booking Type */}
-                        <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                                Booking Type <span className="text-red-500">*</span>
-                            </label>
-                            <select
-                                value={editBookingForm.data.booking_type_ui}
-                                onChange={(e) => {
-                                    const val = e.target.value;
-                                    editBookingForm.setData((prev) => ({
-                                        ...prev,
-                                        booking_type_ui: val,
-                                        package_id: val === 'Day Tour' ? (prev.package_id || (packages[0]?.id ? String(packages[0].id) : '')) : '',
-                                        flight_number: (val === 'Airport Pick-Up' || val === 'Airport Drop-Off') ? prev.flight_number : '',
-                                    }));
-                                }}
-                                required
-                                className={selectClass}
-                            >
-                                <option value="Airport Pick-Up">Airport Pick-Up</option>
-                                <option value="Airport Drop-Off">Airport Drop-Off</option>
-                                <option value="Hotel Transfer">Hotel Transfer</option>
-                                <option value="Day Tour">Day Tour</option>
-                            </select>
-                            {editBookingForm.errors.booking_type && (
-                                <p className="text-xs text-red-600 mt-1 font-medium">{editBookingForm.errors.booking_type}</p>
-                            )}
-                        </div>
-
-                        {/* Conditional: Package for Day Tour */}
-                        {editBookingForm.data.booking_type_ui === 'Day Tour' && (
-                            <div className="sm:col-span-2">
-                                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                                    Pilih Package <span className="text-red-500">*</span>
-                                </label>
-                                <select
-                                    value={editBookingForm.data.package_id}
-                                    onChange={(e) => editBookingForm.setData('package_id', e.target.value)}
-                                    required
-                                    className={selectClass}
-                                >
-                                    <option value="">-- Pilih Tour Package --</option>
-                                    {packages.map((pkg) => (
-                                        <option key={pkg.id} value={pkg.id}>
-                                            {pkg.name} {pkg.price ? `(Rp ${Number(pkg.price).toLocaleString('id-ID')})` : ''}
-                                        </option>
-                                    ))}
-                                </select>
-                                {editBookingForm.errors.package_id && (
-                                    <p className="text-xs text-red-600 mt-1 font-medium">{editBookingForm.errors.package_id}</p>
-                                )}
-                            </div>
-                        )}
-
-                        {/* Date */}
-                        <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                                Date <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                                type="date"
-                                required
-                                value={editBookingForm.data.booking_date}
-                                onChange={(e) => editBookingForm.setData('booking_date', e.target.value)}
-                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
-                            />
-                            {editBookingForm.errors.booking_date && (
-                                <p className="text-xs text-red-600 mt-1 font-medium">{editBookingForm.errors.booking_date}</p>
-                            )}
-                        </div>
-
-                        {/* Pickup Time */}
-                        <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                                Pickup Time <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                                type="time"
-                                required
-                                value={editBookingForm.data.pickup_time}
-                                onChange={(e) => editBookingForm.setData('pickup_time', e.target.value)}
-                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
-                            />
-                            {editBookingForm.errors.pickup_time && (
-                                <p className="text-xs text-red-600 mt-1 font-medium">{editBookingForm.errors.pickup_time}</p>
-                            )}
-                        </div>
-
-                        {/* Guest Name */}
-                        <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                                Guest Name <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                                type="text"
-                                required
-                                value={editBookingForm.data.guest_name}
-                                onChange={(e) => editBookingForm.setData('guest_name', e.target.value)}
-                                placeholder="e.g. John Doe"
-                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
-                            />
-                            {editBookingForm.errors.guest_name && (
-                                <p className="text-xs text-red-600 mt-1 font-medium">{editBookingForm.errors.guest_name}</p>
-                            )}
-                        </div>
-
-                        {/* WhatsApp Number */}
-                        <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                                Phone / WhatsApp <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                                type="text"
-                                required
-                                value={editBookingForm.data.whatsapp_number}
-                                onChange={(e) => editBookingForm.setData('whatsapp_number', e.target.value)}
-                                placeholder="+62 812-3456-7890"
-                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
-                            />
-                            {editBookingForm.errors.whatsapp_number && (
-                                <p className="text-xs text-red-600 mt-1 font-medium">{editBookingForm.errors.whatsapp_number}</p>
-                            )}
-                        </div>
-
-                        {/* Email */}
-                        <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                                Email Address
-                            </label>
-                            <input
-                                type="email"
-                                value={editBookingForm.data.email}
-                                onChange={(e) => editBookingForm.setData('email', e.target.value)}
-                                placeholder="guest@example.com"
-                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
-                            />
-                            {editBookingForm.errors.email && (
-                                <p className="text-xs text-red-600 mt-1 font-medium">{editBookingForm.errors.email}</p>
-                            )}
-                        </div>
-
-                        {/* Vehicle Selection */}
-                        <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                                Vehicle Type <span className="text-red-500">*</span>
-                            </label>
-                            <select
-                                value={editBookingForm.data.vehicle_id}
-                                onChange={(e) => editBookingForm.setData('vehicle_id', e.target.value)}
-                                required
-                                className={selectClass}
-                            >
-                                <option value="">-- Pilih Kendaraan --</option>
-                                {vehicles.map((v) => (
-                                    <option key={v.id} value={v.id}>
-                                        {v.label}
-                                    </option>
-                                ))}
-                            </select>
-                            {editBookingForm.errors.vehicle_id && (
-                                <p className="text-xs text-red-600 mt-1 font-medium">{editBookingForm.errors.vehicle_id}</p>
-                            )}
-                        </div>
-
-                        {/* Conditional: Flight Number */}
-                        {(editBookingForm.data.booking_type_ui === 'Airport Pick-Up' || editBookingForm.data.booking_type_ui === 'Airport Drop-Off') && (
-                            <div className="sm:col-span-2">
-                                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                                    Flight Number
-                                </label>
-                                <input
-                                    type="text"
-                                    value={editBookingForm.data.flight_number}
-                                    onChange={(e) => editBookingForm.setData('flight_number', e.target.value)}
-                                    placeholder="e.g. GA-401 / SQ-942"
-                                    className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
-                                />
-                                {editBookingForm.errors.flight_number && (
-                                    <p className="text-xs text-red-600 mt-1 font-medium">{editBookingForm.errors.flight_number}</p>
-                                )}
-                            </div>
-                        )}
-
-                        {/* Pickup Location */}
-                        <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                                Pickup Location <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                                type="text"
-                                required
-                                value={editBookingForm.data.pickup_location}
-                                onChange={(e) => editBookingForm.setData('pickup_location', e.target.value)}
-                                placeholder="e.g. I Gusti Ngurah Rai Airport / Hotel Lobby"
-                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
-                            />
-                            {editBookingForm.errors.pickup_location && (
-                                <p className="text-xs text-red-600 mt-1 font-medium">{editBookingForm.errors.pickup_location}</p>
-                            )}
-                        </div>
-
-                        {/* Dropoff Location */}
-                        <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                                Drop-off Location <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                                type="text"
-                                required
-                                value={editBookingForm.data.dropoff_location}
-                                onChange={(e) => editBookingForm.setData('dropoff_location', e.target.value)}
-                                placeholder="e.g. Maya Sanur Resort & Spa"
-                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
-                            />
-                            {editBookingForm.errors.dropoff_location && (
-                                <p className="text-xs text-red-600 mt-1 font-medium">{editBookingForm.errors.dropoff_location}</p>
-                            )}
-                        </div>
-
-                        {/* Adults */}
-                        <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                                Adults <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                                type="number"
-                                min="1"
-                                max="100"
-                                required
-                                value={editBookingForm.data.adults}
-                                onChange={(e) => editBookingForm.setData('adults', e.target.value)}
-                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
-                            />
-                            {editBookingForm.errors.adults && (
-                                <p className="text-xs text-red-600 mt-1 font-medium">{editBookingForm.errors.adults}</p>
-                            )}
-                        </div>
-
-                        {/* Children */}
-                        <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                                Children
-                            </label>
-                            <input
-                                type="number"
-                                min="0"
-                                max="100"
-                                value={editBookingForm.data.children}
-                                onChange={(e) => editBookingForm.setData('children', e.target.value)}
-                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
-                            />
-                            {editBookingForm.errors.children && (
-                                <p className="text-xs text-red-600 mt-1 font-medium">{editBookingForm.errors.children}</p>
-                            )}
-                        </div>
-
-                        {/* Total Fee */}
-                        <div className="sm:col-span-2">
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                                Total Fee (Rp)
-                            </label>
-                            <input
-                                type="number"
-                                min="0"
-                                max="9999999999"
-                                value={editBookingForm.data.total_fee}
-                                onChange={(e) => editBookingForm.setData('total_fee', e.target.value)}
-                                placeholder="e.g. 450000"
-                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
-                            />
-                            {editBookingForm.errors.total_fee && (
-                                <p className="text-xs text-red-600 mt-1 font-medium">{editBookingForm.errors.total_fee}</p>
-                            )}
-                        </div>
-
-                        {/* Notes */}
-                        <div className="sm:col-span-2">
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                                Notes / Special Requests
-                            </label>
-                            <textarea
-                                rows="2"
-                                value={editBookingForm.data.notes}
-                                onChange={(e) => editBookingForm.setData('notes', e.target.value)}
-                                placeholder="e.g. Request 1 baby car seat, butuh driver fasih bahasa inggris..."
-                                className="w-full bg-white border border-slate-200 rounded-xl p-3 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 resize-none font-sans shadow-2xs"
-                            />
-                            {editBookingForm.errors.notes && (
-                                <p className="text-xs text-red-600 mt-1 font-medium">{editBookingForm.errors.notes}</p>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Footer Actions */}
-                    <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
-                        <button
-                            type="button"
-                            onClick={() => setShowEditBookingModal(false)}
-                            className="px-5 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition cursor-pointer"
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            type="submit"
-                            disabled={editBookingForm.processing}
-                            className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#00AEEF] hover:bg-[#009cd7] text-white rounded-xl text-sm font-semibold transition shadow-xs disabled:opacity-50 cursor-pointer"
-                        >
-                            {editBookingForm.processing && (
-                                <svg className="w-4 h-4 animate-spin text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                    <circle cx="12" cy="12" r="10" strokeWidth="4" className="opacity-25" />
-                                    <path fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" className="opacity-75" />
-                                </svg>
-                            )}
-                            <span>Update Booking</span>
-                        </button>
-                    </div>
+                    {/* Conditional Form Fields */}
+                    {renderBookingFormFields(editBookingForm, 'edit-booking-form')}
                 </form>
             </Modal>
 
@@ -1488,12 +1858,8 @@ export default function BookingManagement({
                 onClose={() => setShowDeleteBookingModal(false)}
                 title="Delete Booking"
                 maxWidth="md"
-            >
-                <div className="space-y-4">
-                    <p className="text-sm text-slate-600">
-                        Apakah Anda yakin ingin menghapus booking <strong>{selectedBooking?.booking_code}</strong>?
-                    </p>
-                    <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+                footer={
+                    <>
                         <button
                             type="button"
                             onClick={() => setShowDeleteBookingModal(false)}
@@ -1508,7 +1874,13 @@ export default function BookingManagement({
                         >
                             Delete
                         </button>
-                    </div>
+                    </>
+                }
+            >
+                <div className="space-y-4">
+                    <p className="text-sm text-slate-600">
+                        Apakah Anda yakin ingin menghapus booking <strong>{selectedBooking?.booking_code}</strong>?
+                    </p>
                 </div>
             </Modal>
         </AdminLayout>

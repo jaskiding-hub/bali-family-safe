@@ -69,7 +69,7 @@ class DashboardTest extends TestCase
         $response->assertRedirect(route('admin.login'));
     }
 
-    public function test_authenticated_admin_can_view_dashboard_with_stats_schedule_and_drivers(): void
+    public function test_authenticated_admin_can_view_dashboard_with_operational_overview(): void
     {
         $package = Package::create([
             'name' => 'Airport Transfer (DPS)',
@@ -119,8 +119,6 @@ class DashboardTest extends TestCase
             ->has('stats.month_revenue')
             ->has('stats.month_revenue_formatted')
             ->has('today_schedule', 2)
-            ->has('drivers.data', 1)
-            ->has('available_vehicle_units')
             ->has('today_date')
             ->where('stats.pending_bookings', 1)
             ->where('stats.today_trips', 2)
@@ -129,30 +127,8 @@ class DashboardTest extends TestCase
             ->where('today_schedule.0.guest_name', 'Sarah Jenkins')
             ->where('today_schedule.0.pickup_time', '09:30 AM')
             ->where('today_schedule.0.driver.name', 'Wayan Sudira')
-            ->where('drivers.data.0.full_name', 'Wayan Sudira')
-            ->where('drivers.data.0.email', 'wayan@bfs.test')
-        );
-    }
-
-    public function test_driver_search_on_dashboard(): void
-    {
-        Driver::create([
-            'full_name' => 'Made Kertayasa',
-            'whatsapp_number' => '081999999999',
-            'email' => 'made.k@bfs.test',
-            'password_hash' => bcrypt('password123'),
-            'license_number' => 'SIM-MADE-888',
-            'license_expiry_date' => '2029-01-01',
-            'status' => DriverStatus::Active->value,
-        ]);
-
-        $response = $this->actingAs($this->admin, 'admin')->get(route('admin.dashboard', ['search_driver' => 'Made']));
-
-        $response->assertOk();
-        $response->assertInertia(fn (Assert $page) => $page
-            ->component('Admin/Dashboard')
-            ->has('drivers.data', 1)
-            ->where('drivers.data.0.full_name', 'Made Kertayasa')
+            ->missing('drivers')
+            ->missing('available_vehicle_units')
         );
     }
 }
