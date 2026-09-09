@@ -2,21 +2,29 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class TripExpense extends Model
 {
-    const UPDATED_AT = null;
-    protected $fillable = ['booking_id', 'driver_id', 'expense_name', 'amount', 'receipt_photo_url'];
-    protected $casts = ['amount' => 'decimal:2'];
+    use HasFactory;
 
-    public function booking(): BelongsTo
+    protected $fillable = [
+        'trip_id',
+        'driver_id',
+        'expense_type',
+        'expense_name',
+        'amount',
+        'receipt_path',
+        'notes',
+    ];
+
+    public function trip()
     {
-        return $this->belongsTo(Booking::class);
+        return $this->belongsTo(Trip::class);
     }
 
-    public function driver(): BelongsTo
+    public function driver()
     {
         return $this->belongsTo(Driver::class);
     }

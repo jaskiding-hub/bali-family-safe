@@ -6,16 +6,20 @@ use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
+    /**
+     * Seed the application's database.
+     */
     public function run(): void
     {
         $this->call([
-            VehicleSeeder::class,
             AdminUserSeeder::class,
-            DriverSeeder::class,
+            VehicleSeeder::class,
             ChildSeatTypeSeeder::class,
-            PackageSeeder::class,
             ServiceSeeder::class,
+            PackageSeeder::class,
             SiteSettingSeeder::class,
+            DriverSeeder::class,
+            DriverTripSeeder::class,
             DummyDataSeeder::class,
         ]);
     }

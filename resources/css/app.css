@@ -9,6 +9,81 @@
 @theme {
     --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
+    --color-driver-primary: #00AEEF;
+    --color-driver-navy: #3E5E95;
+    --color-driver-dark: #004C6B;
+    --color-driver-accent: #EA8C21;
+}
+
+.calendar-day-btn.active-selected {
+    background-color: #00AEEF !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    box-shadow: 0 4px 14px 0 rgba(0, 174, 239, 0.35) !important;
+    transform: scale(1.05);
+}
+
+.calendar-day-btn.active-selected .day-text {
+    color: #ffffff !important;
+}
+
+.calendar-day-btn.active-selected .trip-dot {
+    background-color: #ffffff !important;
+}
+
+.calendar-day-btn.is-today:not(.active-selected) {
+    border: 2px solid #00AEEF !important;
+    color: #00658D !important;
+    background-color: #f0f9ff !important;
+    font-weight: 700 !important;
+}
+
+.calendar-day-btn .trip-dot {
+    background-color: #00AEEF;
+}
+
+@keyframes elegantFadeUp {
+    0% {
+        opacity: 0;
+        transform: translate3d(0, 14px, 0);
+    }
+    100% {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+    }
+}
+
+@keyframes softBreathing {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.55;
+        transform: scale(0.94);
+    }
+}
+
+.anim-ease-up {
+    animation: elegantFadeUp 0.85s cubic-bezier(0.16, 1, 0.3, 1) both;
+    will-change: transform, opacity;
+    backface-visibility: hidden;
+}
+
+/* Stagger delay classes */
+.delay-1 { animation-delay: 40ms; }
+.delay-2 { animation-delay: 130ms; }
+.delay-3 { animation-delay: 220ms; }
+.delay-4 { animation-delay: 310ms; }
+.delay-5 { animation-delay: 400ms; }
+
+/* Cross-browser Hide Scrollbar */
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
 }
 
 /* Global reset and base styles for Bali Family Safe */
