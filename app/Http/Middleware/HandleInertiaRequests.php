@@ -35,6 +35,8 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $driver = $request->user('driver') ?? \App\Models\Driver::first();
+
         return [
             ...parent::share($request),
             'auth' => [
@@ -43,10 +45,14 @@ class HandleInertiaRequests extends Middleware
                     'name' => $request->user('admin')->name,
                     'email' => $request->user('admin')->email,
                 ] : null,
-                'driver' => $request->user('driver') ? [
-                    'id' => $request->user('driver')->id,
-                    'name' => $request->user('driver')->full_name,
-                    'email' => $request->user('driver')->email,
+                'driver' => $driver ? [
+                    'id' => $driver->id,
+                    'name' => $driver->full_name ?? $driver->name,
+                    'full_name' => $driver->full_name ?? $driver->name,
+                    'username' => $driver->username ?? null,
+                    'email' => $driver->email,
+                    'whatsapp_number' => $driver->whatsapp_number ?? null,
+                    'profile_photo_url' => $driver->profile_photo_url ?? null,
                 ] : null,
             ],
             'pending_bookings_count' => fn () => $request->user('admin')
@@ -56,6 +62,7 @@ class HandleInertiaRequests extends Middleware
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),
             ],
+            'csrf_token' => csrf_token(),
         ];
     }
 }

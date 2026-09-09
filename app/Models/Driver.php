@@ -2,37 +2,33 @@
 
 namespace App\Models;
 
-use App\Enums\DriverStatus;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 class Driver extends Authenticatable
 {
-    use Notifiable, SoftDeletes;
+    use HasFactory, Notifiable, SoftDeletes;
 
     const UPDATED_AT = null;
 
     protected $fillable = [
         'vehicle_unit_id',
         'full_name',
+        'username',
         'whatsapp_number',
         'email',
         'password_hash',
         'license_number',
         'license_expiry_date',
-        'status',
         'profile_photo_url',
+        'status',
     ];
 
-    protected $hidden = ['password_hash', 'remember_token'];
-
-    protected $casts = [
-        'license_expiry_date' => 'date',
-        'status' => DriverStatus::class,
+    protected $hidden = [
+        'password_hash',
+        'remember_token',
     ];
 
     public function getAuthPassword()
@@ -40,23 +36,18 @@ class Driver extends Authenticatable
         return $this->password_hash;
     }
 
-    public function currentVehicleUnit(): BelongsTo
+    public function vehicleUnit()
     {
-        return $this->belongsTo(VehicleUnit::class, 'vehicle_unit_id');
+        return $this->belongsTo(VehicleUnit::class);
     }
 
-    public function bookings(): HasMany
+    public function trips()
     {
-        return $this->hasMany(Booking::class);
+        return $this->hasMany(Trip::class);
     }
 
-    public function tripExpenses(): HasMany
+    public function expenses()
     {
         return $this->hasMany(TripExpense::class);
-    }
-
-    public function teamMember(): HasOne
-    {
-        return $this->hasOne(TeamMember::class);
     }
 }

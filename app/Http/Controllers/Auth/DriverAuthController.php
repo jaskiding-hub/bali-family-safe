@@ -16,17 +16,26 @@ class DriverAuthController extends Controller
 
     public function login(Request $request)
     {
-        $credentials = $request->validate([
-            'email' => ['required', 'email'],
+        $loginInput = $request->input('login', $request->input('email'));
+        $password = $request->input('password');
+
+        $request->validate([
             'password' => ['required'],
         ]);
+
+        $fieldType = filter_var($loginInput, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
+
+        $credentials = [
+            $fieldType => $loginInput,
+            'password' => $password,
+        ];
 
         if (Auth::guard('driver')->attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
             return redirect()->intended(route('driver.home'));
         }
 
-        return back()->withErrors(['email' => 'Email atau password salah.'])->onlyInput('email');
+        return back()->withErrors(['login' => 'Username, email, atau password salah.'])->onlyInput('login');
     }
 
     public function logout(Request $request)
