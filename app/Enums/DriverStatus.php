@@ -6,4 +6,4 @@ enum DriverStatus: string
 {
     case Active = 'Active';
     case OnLeave = 'On Leave';
-}
+}
