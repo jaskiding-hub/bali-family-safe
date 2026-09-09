@@ -1,0 +1,186 @@
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+
+const FAQS = [
+    {
+        q: 'Are the child car seats really 100% free?',
+        a: 'Yes! We provide certified infant capsules, toddler seats, and booster seats completely free of charge with all airport transfers and private day tours. Every seat is sanitized before each trip.',
+    },
+    {
+        q: 'How do we find our driver at DPS Airport?',
+        a: 'Your driver will be waiting in the arrival hall holding a clear sign with your full name. We will also send you a WhatsApp message before your flight lands so you know exactly where to go.',
+    },
+    {
+        q: 'What happens if our flight is delayed?',
+        a: 'We monitor your flight status in real-time. If your arrival is delayed, your driver adjusts the pickup time automatically at no extra charge. We\'ll keep you informed via WhatsApp.',
+    },
+    {
+        q: 'Can we request multiple car seats?',
+        a: 'Absolutely. We can provide up to 2 car seats in our Toyota Innova and up to 4 in our Toyota HiAce Commuter. Just let us know the ages and weights of your children when booking.',
+    },
+    {
+        q: 'What payment methods do you accept?',
+        a: 'You can pay directly to your driver in Cash (IDR/AUD/USD) upon completion of your trip, or via Bank Transfer and QRIS. No prepayment is required to confirm your booking.',
+    },
+    {
+        q: 'How far in advance should we book?',
+        a: 'We recommend booking at least 48 hours before your arrival to guarantee car seat availability. However, we often accommodate last-minute bookings — just send us a WhatsApp message.',
+    },
+];
+
+function AccordionItem({ faq, isOpen, onToggle }) {
+    const contentRef = useRef(null);
+    const [height, setHeight] = useState(0);
+
+    const measure = useCallback(() => {
+        if (contentRef.current) {
+            setHeight(contentRef.current.scrollHeight);
+        }
+    }, []);
+
+    useEffect(() => {
+        measure();
+        window.addEventListener('resize', measure);
+        return () => window.removeEventListener('resize', measure);
+    }, [measure]);
+
+    return (
+        <div
+            style={{
+                borderRadius: '12px',
+                border: isOpen ? '1px solid #00658D' : '1px solid #E1E3E4',
+                background: '#FFFFFF',
+                overflow: 'hidden',
+                transition: 'border-color 0.3s ease, box-shadow 0.3s ease',
+                boxShadow: isOpen ? '0px 4px 12px rgba(0, 101, 141, 0.08)' : '0px 1px 2px rgba(0,0,0,0.04)',
+            }}
+        >
+            <button
+                type="button"
+                onClick={onToggle}
+                style={{
+                    width: '100%',
+                    display: 'flex',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '16px',
+                    padding: '20px 24px',
+                    background: 'transparent',
+                    border: 'none',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    fontFamily: 'Inter, sans-serif',
+                    fontWeight: 600,
+                    fontSize: '15px',
+                    lineHeight: '24px',
+                    color: isOpen ? '#00658D' : '#191C1D',
+                    transition: 'color 0.25s ease',
+                }}
+            >
+                <span>{faq.q}</span>
+
+                {/* Rotating plus/minus icon */}
+                <div style={{
+                    flexShrink: 0,
+                    width: '24px',
+                    height: '24px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: isOpen ? '#00658D' : '#BDC8D1',
+                    transition: 'color 0.25s ease, transform 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
+                    transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                }}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/>
+                    </svg>
+                </div>
+            </button>
+
+            {/* Animated answer */}
+            <div
+                style={{
+                    maxHeight: isOpen ? `${height + 40}px` : '0px',
+                    opacity: isOpen ? 1 : 0,
+                    transition: 'max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease',
+                    overflow: 'hidden',
+                }}
+            >
+                <div ref={contentRef} style={{ padding: '0 24px 20px' }}>
+                    <div style={{
+                        borderTop: '1px solid #E1E3E4',
+                        paddingTop: '16px',
+                    }}>
+                        <p style={{
+                            fontFamily: 'Inter, sans-serif',
+                            fontWeight: 400,
+                            fontSize: '15px',
+                            lineHeight: '24px',
+                            color: '#3E4850',
+                            margin: 0,
+                        }}>
+                            {faq.a}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+export default function FaqSection() {
+    const [openIndex, setOpenIndex] = useState(-1);
+
+    return (
+        <section
+            id="faq"
+            style={{
+                background: '#FFFFFF',
+                padding: '96px 40px',
+            }}
+        >
+            <div style={{
+                maxWidth: '1200px',
+                margin: '0 auto',
+                padding: '0 64px',
+            }}>
+                {/* Header */}
+                <div style={{ textAlign: 'center', marginBottom: '48px' }}>
+                    <h2 style={{
+                        fontFamily: 'Inter, sans-serif',
+                        fontWeight: 700,
+                        fontSize: '40px',
+                        lineHeight: '48px',
+                        color: '#191C1D',
+                        margin: 0,
+                        marginBottom: '16px',
+                    }}>
+                        Frequently Asked Questions
+                    </h2>
+                    <p style={{
+                        fontFamily: 'Inter, sans-serif',
+                        fontWeight: 400,
+                        fontSize: '18px',
+                        lineHeight: '28px',
+                        color: '#3E4850',
+                        margin: 0,
+                    }}>
+                        Everything you need to know about our family transport and car seats
+                    </p>
+                </div>
+
+                {/* FAQ Accordion */}
+                <div className="bfs-faq-list" style={{ maxWidth: '768px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {FAQS.map((faq, i) => (
+                        <AccordionItem
+                            key={i}
+                            faq={faq}
+                            isOpen={openIndex === i}
+                            onToggle={() => setOpenIndex(openIndex === i ? -1 : i)}
+                        />
+                    ))}
+                </div>
+            </div>
+        </section>
+    );
+}
