@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             SiteSettingSeeder::class,
             DriverSeeder::class,
             DriverTripSeeder::class,
+            DummyDataSeeder::class,
         ]);
     }
 }

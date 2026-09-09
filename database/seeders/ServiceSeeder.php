@@ -9,11 +9,13 @@ class ServiceSeeder extends Seeder
 {
     public function run(): void
     {
-        Service::create([
-            'name' => 'Airport Transfer',
-            'short_description' => 'Jemput & antar bandara tepat waktu',
-            'category' => 'transfer',
-            'display_order' => 1,
-        ]);
+        Service::firstOrCreate(
+            ['name' => 'Airport Transfer'],
+            [
+                'short_description' => 'Jemput & antar bandara tepat waktu',
+                'category' => 'transfer',
+                'display_order' => 1,
+            ]
+        );
     }
 }

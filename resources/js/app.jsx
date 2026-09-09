@@ -4,8 +4,12 @@ import { createRoot } from 'react-dom/client';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 
 createInertiaApp({
-    title: (title) => title ? `${title} - Driver Bali Family Safe Tours` : 'Driver Bali Family Safe Tours',
-    resolve: (name) => resolvePageComponent(`./Pages/${name}.jsx`, import.meta.glob('./Pages/**/*.jsx')),
+    title: (title) => title ? `${title} - ${import.meta.env.VITE_APP_NAME || 'Bali Family Safe'}` : (import.meta.env.VITE_APP_NAME || 'Bali Family Safe'),
+    resolve: (name) =>
+        resolvePageComponent(
+            `./Pages/${name}.jsx`,
+            import.meta.glob('./Pages/**/*.jsx')
+        ),
     setup({ el, App, props }) {
         createRoot(el).render(<App {...props} />);
     },
