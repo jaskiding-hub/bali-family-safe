@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Driver;
 use App\Models\Trip;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class HomeEmptyStateTest extends TestCase
@@ -36,7 +37,11 @@ class HomeEmptyStateTest extends TestCase
 
         $response = $this->actingAs($driver, 'driver')->get(route('driver.home'));
         $response->assertOk();
-        $response->assertSee('All Done for Today!');
+        $response->assertInertia(fn (Assert $page) => $page
+            ->component('Driver/Home')
+            ->where('activeTrip', null)
+            ->has('laterTodayTrips', 0)
+        );
     }
 
     public function test_home_page_shows_active_trip_and_later_today_when_trips_exist(): void
@@ -76,7 +81,11 @@ class HomeEmptyStateTest extends TestCase
 
         $response = $this->actingAs($driver, 'driver')->get(route('driver.home'));
         $response->assertOk();
-        $response->assertSee('UP NEXT');
-        $response->assertSee('Later Today');
+        $response->assertInertia(fn (Assert $page) => $page
+            ->component('Driver/Home')
+            ->has('activeTrip')
+            ->where('activeTrip.guest_name', 'Active Guest')
+            ->has('laterTodayTrips', 1)
+        );
     }
 }

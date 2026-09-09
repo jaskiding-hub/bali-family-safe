@@ -8,6 +8,7 @@ use App\Models\TripExpense;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class DriverSystemFlowTest extends TestCase
@@ -56,8 +57,7 @@ class DriverSystemFlowTest extends TestCase
     {
         $response = $this->get(route('driver.login'));
         $response->assertOk();
-        $response->assertSee('Driver Portal');
-        $response->assertSee('driver@transport.com');
+        $response->assertInertia(fn (Assert $page) => $page->component('Auth/DriverLogin'));
     }
 
     public function test_driver_can_login_with_username(): void
@@ -86,29 +86,33 @@ class DriverSystemFlowTest extends TestCase
     {
         $response = $this->actingAs($this->driver, 'driver')->get(route('driver.home'));
         $response->assertOk();
-        $response->assertSee('Hi, Wayan!');
-        $response->assertSee('UP NEXT');
-        $response->assertSee('Sarah Jenkins');
+        $response->assertInertia(fn (Assert $page) => $page
+            ->component('Driver/Home')
+            ->has('activeTrip')
+            ->where('activeTrip.guest_name', 'Sarah Jenkins')
+        );
     }
 
     public function test_driver_can_view_schedule_page(): void
     {
         $response = $this->actingAs($this->driver, 'driver')->get(route('driver.schedule'));
         $response->assertOk();
-        $response->assertSee('My Schedule');
-        $response->assertSee('Sarah Jenkins');
-        $response->assertSee('View Trip Details');
+        $response->assertInertia(fn (Assert $page) => $page
+            ->component('Driver/Schedule')
+            ->has('calendarDays')
+            ->has('trips')
+        );
     }
 
     public function test_driver_can_view_trip_detail_page(): void
     {
         $response = $this->actingAs($this->driver, 'driver')->get(route('driver.trip.detail', ['id' => $this->trip->id]));
         $response->assertOk();
-        $response->assertSee('Trip Details');
-        $response->assertSee('Sarah Jenkins');
-        $response->assertSee('Bali Airport (DPS)');
-        $response->assertSee('Ubud Resort');
-        $response->assertSee('Back');
+        $response->assertInertia(fn (Assert $page) => $page
+            ->component('Driver/TripDetail')
+            ->has('trip')
+            ->where('trip.guest_name', 'Sarah Jenkins')
+        );
     }
 
     public function test_driver_can_complete_trip(): void
@@ -124,10 +128,10 @@ class DriverSystemFlowTest extends TestCase
     {
         $response = $this->actingAs($this->driver, 'driver')->get(route('driver.trip.expense', ['id' => $this->trip->id]));
         $response->assertOk();
-        $response->assertSee('Log Trip Expense');
-        $response->assertSee('Saved Expenses');
-        $response->assertSee('Add New Expense');
-        $response->assertSee('Back');
+        $response->assertInertia(fn (Assert $page) => $page
+            ->component('Driver/Expense')
+            ->has('trip')
+        );
     }
 
     public function test_driver_can_store_update_and_delete_expense_via_ajax(): void

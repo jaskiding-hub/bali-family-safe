@@ -35,9 +35,25 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $driver = $request->user('driver') ?? \App\Models\Driver::first();
+
         return [
             ...parent::share($request),
-            //
+            'auth' => [
+                'driver' => $driver ? [
+                    'id' => $driver->id,
+                    'full_name' => $driver->full_name,
+                    'username' => $driver->username,
+                    'email' => $driver->email,
+                    'whatsapp_number' => $driver->whatsapp_number,
+                    'profile_photo_url' => $driver->profile_photo_url,
+                ] : null,
+            ],
+            'flash' => [
+                'success' => fn () => $request->session()->get('success'),
+                'error' => fn () => $request->session()->get('error'),
+            ],
+            'csrf_token' => csrf_token(),
         ];
     }
 }

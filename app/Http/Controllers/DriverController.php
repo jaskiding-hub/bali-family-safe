@@ -7,6 +7,7 @@ use App\Models\Trip;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
 
 class DriverController extends Controller
 {
@@ -37,7 +38,11 @@ class DriverController extends Controller
             ->orderBy('trip_time', 'asc')
             ->get();
 
-        return view('driver.home', compact('driver', 'activeTrip', 'laterTodayTrips'));
+        return Inertia::render('Driver/Home', [
+            'driver' => $driver,
+            'activeTrip' => $activeTrip,
+            'laterTodayTrips' => $laterTodayTrips,
+        ]);
     }
 
     public function schedule(Request $request)
@@ -104,24 +109,27 @@ class DriverController extends Controller
 
         $trips = $selectedTrips;
 
-        return view('driver.schedule', compact(
-            'calendarDays',
-            'tripsByDate',
-            'monthName',
-            'prevMonth',
-            'nextMonth',
-            'monthParam',
-            'selectedDate',
-            'driver',
-            'trips'
-        ));
+        return Inertia::render('Driver/Schedule', [
+            'calendarDays' => $calendarDays,
+            'tripsByDate' => $tripsByDate,
+            'monthName' => $monthName,
+            'prevMonth' => $prevMonth,
+            'nextMonth' => $nextMonth,
+            'monthParam' => $monthParam,
+            'selectedDate' => $selectedDate,
+            'driver' => $driver,
+            'trips' => $trips,
+        ]);
     }
 
     public function tripDetail($id)
     {
         $trip = Trip::with(['expenses'])->findOrFail($id);
         $authDriver = Auth::guard('driver')->user() ?? Driver::first();
-        return view('driver.trip-detail', compact('trip', 'authDriver'));
+        return Inertia::render('Driver/TripDetail', [
+            'trip' => $trip,
+            'authDriver' => $authDriver,
+        ]);
     }
 
     public function completeTrip($id)
@@ -130,6 +138,18 @@ class DriverController extends Controller
         $trip->status = 'completed';
         $trip->save();
 
+        if (request()->header('X-Inertia')) {
+            return redirect()->route('driver.home')->with('success', 'Trip successfully completed!');
+        }
+
+        if (request()->ajax() || request()->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Trip successfully completed!',
+                'redirect_url' => route('driver.home'),
+            ]);
+        }
+
         return redirect()->route('driver.home')->with('success', 'Trip successfully completed!');
     }
 
@@ -137,6 +157,9 @@ class DriverController extends Controller
     {
         $trip = Trip::with('expenses')->findOrFail($id);
         $authDriver = Auth::guard('driver')->user() ?? Driver::first();
-        return view('driver.expense', compact('trip', 'authDriver'));
+        return Inertia::render('Driver/Expense', [
+            'trip' => $trip,
+            'authDriver' => $authDriver,
+        ]);
     }
 }

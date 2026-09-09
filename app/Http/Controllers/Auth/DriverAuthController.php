@@ -5,12 +5,13 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
 
 class DriverAuthController extends Controller
 {
     public function showLogin()
     {
-        return view('driver.login');
+        return Inertia::render('Auth/DriverLogin');
     }
 
     public function login(Request $request)

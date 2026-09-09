@@ -41,3 +41,47 @@
 .calendar-day-btn .trip-dot {
     background-color: #00AEEF;
 }
+
+@keyframes elegantFadeUp {
+    0% {
+        opacity: 0;
+        transform: translate3d(0, 14px, 0);
+    }
+    100% {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+    }
+}
+
+@keyframes softBreathing {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.55;
+        transform: scale(0.94);
+    }
+}
+
+.anim-ease-up {
+    animation: elegantFadeUp 0.85s cubic-bezier(0.16, 1, 0.3, 1) both;
+    will-change: transform, opacity;
+    backface-visibility: hidden;
+}
+
+/* Stagger delay classes */
+.delay-1 { animation-delay: 40ms; }
+.delay-2 { animation-delay: 130ms; }
+.delay-3 { animation-delay: 220ms; }
+.delay-4 { animation-delay: 310ms; }
+.delay-5 { animation-delay: 400ms; }
+
+/* Cross-browser Hide Scrollbar */
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
