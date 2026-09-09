@@ -25,8 +25,10 @@ class Booking extends Model
         'flight_number',
         'adults',
         'children',
-        'pickup_location',
-        'dropoff_location',
+        'pickup_hotel_id',
+        'dropoff_hotel_id',
+        'airport_id',
+        'hotel_transfer_price_list_id',
         'booking_date',
         'pickup_time',
         'notes',
@@ -70,6 +72,26 @@ class Booking extends Model
     public function createdByAdmin(): BelongsTo
     {
         return $this->belongsTo(AdminUser::class, 'created_by_admin_id');
+    }
+
+    public function pickupHotel(): BelongsTo
+    {
+        return $this->belongsTo(Hotel::class, 'pickup_hotel_id');
+    }
+
+    public function dropoffHotel(): BelongsTo
+    {
+        return $this->belongsTo(Hotel::class, 'dropoff_hotel_id');
+    }
+
+    public function airport(): BelongsTo
+    {
+        return $this->belongsTo(Airport::class);
+    }
+
+    public function priceList(): BelongsTo
+    {
+        return $this->belongsTo(HotelTransferPriceList::class, 'hotel_transfer_price_list_id');
     }
 
     public function childSeats(): HasMany

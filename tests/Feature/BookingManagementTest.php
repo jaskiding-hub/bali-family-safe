@@ -7,8 +7,10 @@ use App\Enums\BookingType;
 use App\Enums\DriverStatus;
 use App\Enums\TransferDirection;
 use App\Models\AdminUser;
+use App\Models\Airport;
 use App\Models\Booking;
 use App\Models\Driver;
+use App\Models\Hotel;
 use App\Models\Package;
 use App\Models\TripExpense;
 use App\Models\Vehicle;
@@ -67,14 +69,20 @@ class BookingManagementTest extends TestCase
 
     public function test_admin_can_view_booking_management_page(): void
     {
+        $pickupHotel = Hotel::firstOrCreate(['nama_hotel' => 'Canggu'], ['wilayah' => 'Canggu']);
+        $dropoffAirport = Airport::firstOrCreate(
+            ['destinasi' => 'Airport', 'type' => TransferDirection::DropOff->value],
+            ['price_regular' => 200000, 'price_luxury' => 350000]
+        );
+
         Booking::create([
             'booking_code' => 'BFS-001',
             'booking_type' => BookingType::AirportTransfer->value,
             'status' => BookingStatus::Pending->value,
             'guest_name' => 'John Doe',
             'whatsapp_number' => '081299990001',
-            'pickup_location' => 'Canggu',
-            'dropoff_location' => 'Airport',
+            'pickup_hotel_id' => $pickupHotel->id,
+            'airport_id' => $dropoffAirport->id,
             'booking_date' => Carbon::parse('2024-10-24'),
             'pickup_time' => '09:30:00',
             'total_fee' => 450000,
@@ -312,12 +320,12 @@ class BookingManagementTest extends TestCase
             'transfer_direction' => TransferDirection::DropOff->value,
             'flight_number' => 'GA-999',
             'status' => BookingStatus::Confirmed->value,
-            'pickup_location' => 'Seminyak Villa',
-            'dropoff_location' => 'DPS International Airport',
             'adults' => 4,
             'children' => 2,
             'total_fee' => 600000,
             'notes' => 'Updated notes',
         ]);
+        $this->assertDatabaseHas('hotels', ['nama_hotel' => 'Seminyak Villa']);
+        $this->assertDatabaseHas('hotels', ['nama_hotel' => 'DPS International Airport']);
     }
 }

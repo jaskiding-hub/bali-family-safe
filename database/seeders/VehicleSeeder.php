@@ -5,7 +5,6 @@ namespace Database\Seeders;
 use App\Enums\VehicleCategory;
 use App\Models\Vehicle;
 use App\Models\VehicleUnit;
-use App\Models\TransferRate;
 use App\Models\VehicleFeature;
 use App\Enums\VehicleUnitStatus;
 use App\Enums\VehicleFeatureType;
@@ -46,13 +45,6 @@ class VehicleSeeder extends Seeder
                 'vehicle_id' => $vehicle->id,
                 'feature_type' => VehicleFeatureType::Amenity->value,
                 'label' => 'AC',
-            ]);
-
-            TransferRate::create([
-                'vehicle_id' => $vehicle->id,
-                'pickup_zone' => 'Ngurah Rai Airport',
-                'dropoff_zone' => 'Ubud',
-                'price' => 350000,
             ]);
         }
     }

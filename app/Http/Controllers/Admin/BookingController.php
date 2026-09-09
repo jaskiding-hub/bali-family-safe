@@ -32,7 +32,7 @@ class BookingController extends Controller
 
         // 2. Bookings Query
         $bookingSearch = $request->input('search_booking');
-        $bookingsQuery = Booking::with('driver');
+        $bookingsQuery = Booking::with(['driver', 'pickupHotel', 'dropoffHotel', 'airport']);
 
         if ($bookingSearch) {
             $bookingsQuery->where(function ($q) use ($bookingSearch) {
@@ -50,13 +50,13 @@ class BookingController extends Controller
 
         $bookingsData = [
             'data' => collect($bookingsPaginated->items())->map(function (Booking $booking) {
-                $pickup = $booking->pickup_location;
-                $dropoff = $booking->dropoff_location;
-                if ($pickup && $dropoff) {
+                $pickup = $booking->pickupHotel?->nama_hotel ?? ($booking->airport?->destinasi ?? '-');
+                $dropoff = $booking->dropoffHotel?->nama_hotel ?? ($booking->airport?->destinasi ?? '-');
+                if ($pickup !== '-' && $dropoff !== '-') {
                     $detail = "{$pickup}-{$dropoff}";
-                } elseif ($pickup) {
+                } elseif ($pickup !== '-') {
                     $detail = $pickup;
-                } elseif ($dropoff) {
+                } elseif ($dropoff !== '-') {
                     $detail = $dropoff;
                 } else {
                     $detail = '-';
@@ -78,8 +78,12 @@ class BookingController extends Controller
                     'package_id' => $booking->package_id,
                     'vehicle_id' => $booking->vehicle_id,
                     'vehicle_unit_id' => $booking->vehicle_unit_id,
-                    'pickup_location' => $booking->pickup_location,
-                    'dropoff_location' => $booking->dropoff_location,
+                    'pickup_location' => $pickup,
+                    'dropoff_location' => $dropoff,
+                    'pickup_hotel_id' => $booking->pickup_hotel_id,
+                    'dropoff_hotel_id' => $booking->dropoff_hotel_id,
+                    'airport_id' => $booking->airport_id,
+                    'hotel_transfer_price_list_id' => $booking->hotel_transfer_price_list_id,
                     'adults' => $booking->adults,
                     'children' => $booking->children,
                     'total_fee' => $booking->total_fee,
@@ -199,13 +203,27 @@ class BookingController extends Controller
             'vehicle_id' => ['required', 'exists:vehicles,id'],
             'booking_date' => ['required', 'date'],
             'pickup_time' => ['required'],
-            'pickup_location' => ['required', 'string', 'max:255'],
-            'dropoff_location' => ['required', 'string', 'max:255'],
+            'pickup_location' => ['nullable', 'string', 'max:255'],
+            'dropoff_location' => ['nullable', 'string', 'max:255'],
+            'pickup_hotel_id' => ['nullable', 'exists:hotels,id'],
+            'dropoff_hotel_id' => ['nullable', 'exists:hotels,id'],
+            'airport_id' => ['nullable', 'exists:airports,id'],
+            'hotel_transfer_price_list_id' => ['nullable', 'exists:hotel_transfer_price_lists,id'],
             'adults' => ['required', 'integer', 'min:1', 'max:100'],
             'children' => ['nullable', 'integer', 'min:0', 'max:100'],
             'total_fee' => ['nullable', 'numeric', 'min:0', 'max:9999999999.99'],
             'notes' => ['nullable', 'string', 'max:1000'],
         ]);
+
+        if (!empty($validated['pickup_location']) && empty($validated['pickup_hotel_id'])) {
+            $hotel = \App\Models\Hotel::firstOrCreate(['nama_hotel' => $validated['pickup_location']]);
+            $validated['pickup_hotel_id'] = $hotel->id;
+        }
+        if (!empty($validated['dropoff_location']) && empty($validated['dropoff_hotel_id'])) {
+            $hotel = \App\Models\Hotel::firstOrCreate(['nama_hotel' => $validated['dropoff_location']]);
+            $validated['dropoff_hotel_id'] = $hotel->id;
+        }
+        unset($validated['pickup_location'], $validated['dropoff_location']);
 
         do {
             $bookingCode = 'BFS-' . strtoupper(\Illuminate\Support\Str::random(5));
@@ -267,13 +285,27 @@ class BookingController extends Controller
             'vehicle_id' => ['required', 'exists:vehicles,id'],
             'booking_date' => ['required', 'date'],
             'pickup_time' => ['required'],
-            'pickup_location' => ['required', 'string', 'max:255'],
-            'dropoff_location' => ['required', 'string', 'max:255'],
+            'pickup_location' => ['nullable', 'string', 'max:255'],
+            'dropoff_location' => ['nullable', 'string', 'max:255'],
+            'pickup_hotel_id' => ['nullable', 'exists:hotels,id'],
+            'dropoff_hotel_id' => ['nullable', 'exists:hotels,id'],
+            'airport_id' => ['nullable', 'exists:airports,id'],
+            'hotel_transfer_price_list_id' => ['nullable', 'exists:hotel_transfer_price_lists,id'],
             'adults' => ['required', 'integer', 'min:1', 'max:100'],
             'children' => ['nullable', 'integer', 'min:0', 'max:100'],
             'total_fee' => ['nullable', 'numeric', 'min:0', 'max:9999999999.99'],
             'notes' => ['nullable', 'string', 'max:1000'],
         ]);
+
+        if (!empty($validated['pickup_location']) && empty($validated['pickup_hotel_id'])) {
+            $hotel = \App\Models\Hotel::firstOrCreate(['nama_hotel' => $validated['pickup_location']]);
+            $validated['pickup_hotel_id'] = $hotel->id;
+        }
+        if (!empty($validated['dropoff_location']) && empty($validated['dropoff_hotel_id'])) {
+            $hotel = \App\Models\Hotel::firstOrCreate(['nama_hotel' => $validated['dropoff_location']]);
+            $validated['dropoff_hotel_id'] = $hotel->id;
+        }
+        unset($validated['pickup_location'], $validated['dropoff_location']);
 
         $validated['children'] = $validated['children'] ?? 0;
 

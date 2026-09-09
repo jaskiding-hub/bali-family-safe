@@ -2,9 +2,13 @@
 
 namespace Tests\Feature;
 
+use App\Enums\BookingStatus;
+use App\Enums\BookingType;
+use App\Enums\TransferDirection;
+use App\Models\Booking;
 use App\Models\Driver;
-use App\Models\Trip;
 use App\Models\TripExpense;
+use App\Models\Vehicle;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -16,7 +20,7 @@ class DriverSystemFlowTest extends TestCase
     use RefreshDatabase;
 
     protected Driver $driver;
-    protected Trip $trip;
+    protected Booking $booking;
 
     protected function setUp(): void
     {
@@ -33,23 +37,30 @@ class DriverSystemFlowTest extends TestCase
             'status' => 'Active',
         ]);
 
-        $this->trip = Trip::create([
+        $vehicle = Vehicle::create([
+            'category' => 'Regular Family SUV',
+            'name' => 'Toyota HiAce Premio',
+            'model' => '2024',
+            'daily_rate' => 800000,
+            'passenger_capacity' => 6,
+            'luggage_capacity' => 4,
+        ]);
+
+        $this->booking = Booking::create([
+            'booking_code' => 'BFS-TEST-001',
             'driver_id' => $this->driver->id,
-            'trip_type' => 'Airport Pick-Up',
+            'vehicle_id' => $vehicle->id,
+            'booking_type' => BookingType::AirportTransfer->value,
+            'transfer_direction' => TransferDirection::PickUp->value,
             'flight_number' => 'GA-402',
-            'trip_date' => now()->format('Y-m-d'),
-            'trip_time' => '09:30 AM',
-            'duration_est' => 'Est. 1h 30m duration',
+            'booking_date' => now()->format('Y-m-d'),
+            'pickup_time' => '09:30:00',
             'guest_name' => 'Sarah Jenkins',
-            'guest_phone' => '+61 812 3456 7890',
-            'pax' => 4,
-            'pax_description' => '4 Adults • 1 Child',
-            'vehicle_type' => 'Toyota HiAce Premio',
-            'pickup_location' => 'Bali Airport (DPS)',
-            'dropoff_location' => 'Ubud Resort',
-            'special_requirements' => '1x Child Seat',
+            'whatsapp_number' => '+61 812 3456 7890',
+            'adults' => 4,
+            'children' => 1,
+            'status' => BookingStatus::OnGoing->value,
             'notes' => 'Call on arrival',
-            'status' => 'active',
         ]);
     }
 
@@ -106,7 +117,7 @@ class DriverSystemFlowTest extends TestCase
 
     public function test_driver_can_view_trip_detail_page(): void
     {
-        $response = $this->actingAs($this->driver, 'driver')->get(route('driver.trip.detail', ['id' => $this->trip->id]));
+        $response = $this->actingAs($this->driver, 'driver')->get(route('driver.trip.detail', ['id' => $this->booking->id]));
         $response->assertOk();
         $response->assertInertia(fn (Assert $page) => $page
             ->component('Driver/TripDetail')
@@ -117,16 +128,17 @@ class DriverSystemFlowTest extends TestCase
 
     public function test_driver_can_complete_trip(): void
     {
-        $response = $this->actingAs($this->driver, 'driver')->post(route('driver.trip.complete', ['id' => $this->trip->id]));
+        $response = $this->actingAs($this->driver, 'driver')->post(route('driver.trip.complete', ['id' => $this->booking->id]));
         $response->assertRedirect(route('driver.home'));
         
-        $this->trip->refresh();
-        $this->assertEquals('completed', $this->trip->status);
+        $this->booking->refresh();
+        $statusStr = $this->booking->status instanceof \BackedEnum ? $this->booking->status->value : (string) $this->booking->status;
+        $this->assertEquals(BookingStatus::Completed->value, $statusStr);
     }
 
     public function test_driver_can_view_expense_page(): void
     {
-        $response = $this->actingAs($this->driver, 'driver')->get(route('driver.trip.expense', ['id' => $this->trip->id]));
+        $response = $this->actingAs($this->driver, 'driver')->get(route('driver.trip.expense', ['id' => $this->booking->id]));
         $response->assertOk();
         $response->assertInertia(fn (Assert $page) => $page
             ->component('Driver/Expense')
@@ -141,7 +153,7 @@ class DriverSystemFlowTest extends TestCase
         // 1. Store Expense via AJAX
         $file = UploadedFile::fake()->create('receipt.jpg', 100, 'image/jpeg');
         $storeResponse = $this->actingAs($this->driver, 'driver')
-            ->postJson(route('driver.trip.expense.store', ['id' => $this->trip->id]), [
+            ->postJson(route('driver.trip.expense.store', ['id' => $this->booking->id]), [
                 'type' => 'Parking & Toll',
                 'amount' => '150.000',
                 'notes' => 'Airport fee',
@@ -157,6 +169,7 @@ class DriverSystemFlowTest extends TestCase
         $expenseId = $storeResponse->json('expense.id');
         $this->assertDatabaseHas('trip_expenses', [
             'id' => $expenseId,
+            'booking_id' => $this->booking->id,
             'expense_type' => 'Parking & Toll',
             'amount' => 150000,
         ]);
@@ -164,7 +177,7 @@ class DriverSystemFlowTest extends TestCase
         // 2. Update Expense via AJAX
         $updateResponse = $this->actingAs($this->driver, 'driver')
             ->putJson(route('driver.trip.expense.update', [
-                'id' => $this->trip->id,
+                'id' => $this->booking->id,
                 'expense_id' => $expenseId,
             ]), [
                 'type' => 'BBM Pertamax',
@@ -180,6 +193,7 @@ class DriverSystemFlowTest extends TestCase
 
         $this->assertDatabaseHas('trip_expenses', [
             'id' => $expenseId,
+            'booking_id' => $this->booking->id,
             'expense_type' => 'BBM Pertamax',
             'amount' => 200000,
         ]);
@@ -187,7 +201,7 @@ class DriverSystemFlowTest extends TestCase
         // 3. Delete Expense via AJAX
         $deleteResponse = $this->actingAs($this->driver, 'driver')
             ->deleteJson(route('driver.trip.expense.destroy', [
-                'id' => $this->trip->id,
+                'id' => $this->booking->id,
                 'expense_id' => $expenseId,
             ]));
 

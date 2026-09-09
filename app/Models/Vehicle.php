@@ -38,10 +38,6 @@ class Vehicle extends Model
         return $this->hasMany(VehicleFeature::class);
     }
 
-    public function transferRates(): HasMany
-    {
-        return $this->hasMany(TransferRate::class);
-    }
 
     public function bookings(): HasMany
     {

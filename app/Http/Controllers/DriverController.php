@@ -2,8 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\BookingStatus;
+use App\Models\Booking;
 use App\Models\Driver;
-use App\Models\Trip;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -11,43 +12,102 @@ use Inertia\Inertia;
 
 class DriverController extends Controller
 {
+    private function transformBookingForDriver(Booking $booking): array
+    {
+        $pickup = $booking->pickupHotel?->nama_hotel;
+        $dropoff = $booking->dropoffHotel?->nama_hotel;
+
+        if (!$pickup && $booking->airport) {
+            $pickup = 'Airport (' . $booking->airport->destinasi . ')';
+        }
+        if (!$dropoff && $booking->airport) {
+            $dropoff = 'Airport (' . $booking->airport->destinasi . ')';
+        }
+
+        $pax = (int) $booking->adults + (int) $booking->children;
+        $paxDesc = "{$booking->adults} Adults" . ($booking->children > 0 ? " • {$booking->children} Child" : '');
+
+        $pickupTimeStr = $booking->pickup_time
+            ? (is_string($booking->pickup_time) ? substr($booking->pickup_time, 0, 5) : $booking->pickup_time->format('H:i'))
+            : '';
+
+        $expenses = $booking->tripExpenses->map(function ($exp) {
+            return [
+                'id' => $exp->id,
+                'booking_id' => $exp->booking_id,
+                'trip_id' => $exp->booking_id,
+                'expense_type' => $exp->expense_type,
+                'expense_name' => $exp->expense_name,
+                'amount' => $exp->amount,
+                'receipt_path' => $exp->receipt_path,
+                'notes' => $exp->notes,
+                'created_at' => $exp->created_at ? $exp->created_at->format('H:i') : null,
+            ];
+        });
+
+        $bookingTypeStr = $booking->booking_type instanceof \BackedEnum
+            ? $booking->booking_type->value
+            : (string) $booking->booking_type;
+
+        $statusStr = $booking->status instanceof \BackedEnum
+            ? $booking->status->value
+            : (string) $booking->status;
+
+        return [
+            'id' => $booking->id,
+            'booking_code' => $booking->booking_code,
+            'status' => $statusStr,
+            'trip_type' => $bookingTypeStr,
+            'booking_type' => $bookingTypeStr,
+            'trip_date' => $booking->booking_date ? (is_string($booking->booking_date) ? $booking->booking_date : $booking->booking_date->format('Y-m-d')) : '',
+            'trip_time' => $pickupTimeStr,
+            'pickup_time' => $pickupTimeStr,
+            'flight_number' => $booking->flight_number,
+            'duration_est' => 'Est. 1h 30m duration',
+            'guest_name' => $booking->guest_name,
+            'guest_phone' => $booking->whatsapp_number,
+            'pax' => $pax ?: 1,
+            'pax_description' => $paxDesc,
+            'vehicle_type' => $booking->vehicle?->name ?? 'Vehicle',
+            'pickup_location' => $pickup ?? 'Pickup Location',
+            'dropoff_location' => $dropoff ?? 'Dropoff Location',
+            'special_requirements' => $booking->notes,
+            'notes' => $booking->notes,
+            'expenses' => $expenses,
+        ];
+    }
+
     public function home()
     {
         $driver = Auth::guard('driver')->user() ?? Driver::first();
-        
-        $activeTrip = Trip::where(function ($query) use ($driver) {
-                if ($driver) {
-                    $query->where('driver_id', $driver->id);
-                }
-            })
-            ->whereIn('status', ['active', 'up_next', 'in_progress'])
-            ->orderBy('trip_date', 'asc')
-            ->orderBy('trip_time', 'asc')
+        $driverId = $driver?->id;
+
+        $activeBooking = Booking::with(['vehicle', 'package', 'pickupHotel', 'dropoffHotel', 'airport', 'tripExpenses'])
+            ->when($driverId, fn($q) => $q->where('driver_id', $driverId))
+            ->whereIn('status', [BookingStatus::OnGoing->value, BookingStatus::Assigned->value])
+            ->orderBy('booking_date', 'asc')
+            ->orderBy('pickup_time', 'asc')
             ->first();
 
-        $laterTodayTrips = Trip::where(function ($query) use ($driver) {
-                if ($driver) {
-                    $query->where('driver_id', $driver->id);
-                }
-            })
-            ->where('status', 'scheduled')
-            ->when($activeTrip, function ($query) use ($activeTrip) {
-                return $query->where('id', '!=', $activeTrip->id);
-            })
-            ->orderBy('trip_date', 'asc')
-            ->orderBy('trip_time', 'asc')
+        $laterTodayBookings = Booking::with(['vehicle', 'package', 'pickupHotel', 'dropoffHotel', 'airport', 'tripExpenses'])
+            ->when($driverId, fn($q) => $q->where('driver_id', $driverId))
+            ->whereIn('status', [BookingStatus::Confirmed->value, BookingStatus::Assigned->value])
+            ->when($activeBooking, fn($q) => $q->where('id', '!=', $activeBooking->id))
+            ->orderBy('booking_date', 'asc')
+            ->orderBy('pickup_time', 'asc')
             ->get();
 
         return Inertia::render('Driver/Home', [
             'driver' => $driver,
-            'activeTrip' => $activeTrip,
-            'laterTodayTrips' => $laterTodayTrips,
+            'activeTrip' => $activeBooking ? $this->transformBookingForDriver($activeBooking) : null,
+            'laterTodayTrips' => $laterTodayBookings->map(fn($b) => $this->transformBookingForDriver($b)),
         ]);
     }
 
     public function schedule(Request $request)
     {
         $driver = Auth::guard('driver')->user() ?? Driver::first();
+        $driverId = $driver?->id;
         $monthParam = $request->query('month', Carbon::now()->format('Y-m'));
         $selectedDate = $request->query('date', Carbon::now()->format('Y-m-d'));
 
@@ -62,25 +122,21 @@ class DriverController extends Controller
         $nextMonth = $currentMonth->copy()->addMonth()->format('Y-m');
         $monthName = $currentMonth->translatedFormat('F Y');
 
-        // Build 7-column calendar
         $startOfWeek = $currentMonth->copy()->startOfWeek(Carbon::SUNDAY);
         $endOfWeek = $currentMonth->copy()->endOfMonth()->endOfWeek(Carbon::SATURDAY);
 
-        $trips = Trip::where(function ($query) use ($driver) {
-                if ($driver) {
-                    $query->where('driver_id', $driver->id);
-                }
-            })
-            ->whereBetween('trip_date', [$startOfWeek->format('Y-m-d'), $endOfWeek->format('Y-m-d')])
+        $bookings = Booking::with(['vehicle', 'package', 'pickupHotel', 'dropoffHotel', 'airport', 'tripExpenses'])
+            ->when($driverId, fn($q) => $q->where('driver_id', $driverId))
+            ->whereBetween('booking_date', [$startOfWeek->format('Y-m-d'), $endOfWeek->format('Y-m-d')])
             ->get();
 
         $tripsByDate = [];
-        foreach ($trips as $t) {
-            $d = Carbon::parse($t->trip_date)->format('Y-m-d');
+        foreach ($bookings as $b) {
+            $d = Carbon::parse($b->booking_date)->format('Y-m-d');
             if (!isset($tripsByDate[$d])) {
                 $tripsByDate[$d] = [];
             }
-            $tripsByDate[$d][] = $t;
+            $tripsByDate[$d][] = $this->transformBookingForDriver($b);
         }
 
         $calendarDays = [];
@@ -98,16 +154,13 @@ class DriverController extends Controller
             $dayPtr->addDay();
         }
 
-        $selectedTrips = Trip::where(function ($query) use ($driver) {
-                if ($driver) {
-                    $query->where('driver_id', $driver->id);
-                }
-            })
-            ->where('trip_date', $selectedDate)
-            ->orderBy('trip_time', 'asc')
+        $selectedBookings = Booking::with(['vehicle', 'package', 'pickupHotel', 'dropoffHotel', 'airport', 'tripExpenses'])
+            ->when($driverId, fn($q) => $q->where('driver_id', $driverId))
+            ->where('booking_date', $selectedDate)
+            ->orderBy('pickup_time', 'asc')
             ->get();
 
-        $trips = $selectedTrips;
+        $trips = $selectedBookings->map(fn($b) => $this->transformBookingForDriver($b));
 
         return Inertia::render('Driver/Schedule', [
             'calendarDays' => $calendarDays,
@@ -124,19 +177,22 @@ class DriverController extends Controller
 
     public function tripDetail($id)
     {
-        $trip = Trip::with(['expenses'])->findOrFail($id);
+        $booking = Booking::with(['vehicle', 'package', 'pickupHotel', 'dropoffHotel', 'airport', 'tripExpenses', 'childSeats.childSeatType'])
+            ->findOrFail($id);
+
         $authDriver = Auth::guard('driver')->user() ?? Driver::first();
+
         return Inertia::render('Driver/TripDetail', [
-            'trip' => $trip,
+            'trip' => $this->transformBookingForDriver($booking),
             'authDriver' => $authDriver,
         ]);
     }
 
     public function completeTrip($id)
     {
-        $trip = Trip::findOrFail($id);
-        $trip->status = 'completed';
-        $trip->save();
+        $booking = Booking::findOrFail($id);
+        $booking->status = BookingStatus::Completed->value;
+        $booking->save();
 
         if (request()->header('X-Inertia')) {
             return redirect()->route('driver.home')->with('success', 'Trip successfully completed!');
@@ -155,10 +211,11 @@ class DriverController extends Controller
 
     public function expense($id)
     {
-        $trip = Trip::with('expenses')->findOrFail($id);
+        $booking = Booking::with('tripExpenses')->findOrFail($id);
         $authDriver = Auth::guard('driver')->user() ?? Driver::first();
+
         return Inertia::render('Driver/Expense', [
-            'trip' => $trip,
+            'trip' => $this->transformBookingForDriver($booking),
             'authDriver' => $authDriver,
         ]);
     }

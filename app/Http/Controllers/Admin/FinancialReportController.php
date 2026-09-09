@@ -8,6 +8,7 @@ use App\Models\Booking;
 use App\Models\TripExpense;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -84,7 +85,7 @@ class FinancialReportController extends Controller
         }
 
         // Base query for bookings table
-        $bookingsQuery = Booking::with(['driver', 'vehicle', 'package', 'tripExpenses']);
+        $bookingsQuery = Booking::with(['driver', 'vehicle', 'package', 'tripExpenses', 'pickupHotel', 'dropoffHotel', 'airport']);
         if ($startDate && $endDate) {
             $bookingsQuery->whereBetween('booking_date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')]);
         }
@@ -97,8 +98,9 @@ class FinancialReportController extends Controller
                     ->orWhere('booking_code', 'like', "%{$search}%")
                     ->orWhere('email', 'like', "%{$search}%")
                     ->orWhere('whatsapp_number', 'like', "%{$search}%")
-                    ->orWhere('pickup_location', 'like', "%{$search}%")
-                    ->orWhere('dropoff_location', 'like', "%{$search}%");
+                    ->orWhereHas('pickupHotel', fn($hq) => $hq->where('nama_hotel', 'like', "%{$search}%"))
+                    ->orWhereHas('dropoffHotel', fn($hq) => $hq->where('nama_hotel', 'like', "%{$search}%"))
+                    ->orWhereHas('airport', fn($aq) => $aq->where('destinasi', 'like', "%{$search}%"));
             });
         }
 
@@ -153,7 +155,7 @@ class FinancialReportController extends Controller
                     'name' => $exp->expense_name,
                     'amount' => $amt,
                     'amount_formatted' => '- Rp ' . number_format($amt, 0, ',', '.'),
-                    'receipt_photo_url' => $exp->receipt_photo_url,
+                    'receipt_photo_url' => $exp->receipt_path ? Storage::url($exp->receipt_path) : $exp->receipt_photo_url,
                 ];
             });
 
@@ -168,6 +170,9 @@ class FinancialReportController extends Controller
             $statusStr = $booking->status instanceof \BackedEnum
                 ? $booking->status->value
                 : (string) $booking->status;
+
+            $pickup = $booking->pickupHotel?->nama_hotel ?? ($booking->airport?->destinasi ?? '-');
+            $dropoff = $booking->dropoffHotel?->nama_hotel ?? ($booking->airport?->destinasi ?? '-');
 
             return [
                 'id' => $booking->id,
@@ -197,8 +202,8 @@ class FinancialReportController extends Controller
                 'vehicle' => $booking->vehicle ? [
                     'name' => $booking->vehicle->name,
                 ] : null,
-                'pickup_location' => $booking->pickup_location,
-                'dropoff_location' => $booking->dropoff_location,
+                'pickup_location' => $pickup,
+                'dropoff_location' => $dropoff,
                 'pickup_time' => $booking->pickup_time ? (is_string($booking->pickup_time) ? substr($booking->pickup_time, 0, 5) : $booking->pickup_time->format('H:i')) : '',
             ];
         });

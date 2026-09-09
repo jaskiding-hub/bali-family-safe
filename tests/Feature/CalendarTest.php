@@ -66,6 +66,12 @@ class CalendarTest extends TestCase
 
     public function test_admin_can_view_calendar_page(): void
     {
+        $hotel = \App\Models\Hotel::firstOrCreate(['nama_hotel' => 'Ubud Resort'], ['wilayah' => 'Ubud']);
+        $airport = \App\Models\Airport::firstOrCreate(
+            ['destinasi' => 'DPS', 'type' => TransferDirection::PickUp->value],
+            ['price_regular' => 300000, 'price_luxury' => 500000]
+        );
+
         $booking = Booking::create([
             'booking_code' => 'BFS-CAL-001',
             'booking_type' => BookingType::AirportTransfer->value,
@@ -75,8 +81,8 @@ class CalendarTest extends TestCase
             'whatsapp_number' => '081299990001',
             'adults' => 2,
             'children' => 2,
-            'pickup_location' => 'DPS',
-            'dropoff_location' => 'Ubud Resort',
+            'airport_id' => $airport->id,
+            'dropoff_hotel_id' => $hotel->id,
             'booking_date' => Carbon::parse('2026-08-06'),
             'pickup_time' => '09:30:00',
             'total_fee' => 450000,

@@ -49,7 +49,7 @@ class CalendarController extends Controller
         }
 
         // Fetch bookings for the grid date range
-        $bookings = Booking::with(['driver', 'vehicle', 'childSeats'])
+        $bookings = Booking::with(['driver', 'vehicle', 'childSeats', 'pickupHotel', 'dropoffHotel', 'airport'])
             ->whereBetween('booking_date', [$startOfGrid->format('Y-m-d'), $endOfGrid->format('Y-m-d')])
             ->orderBy('pickup_time', 'asc')
             ->get();
@@ -71,8 +71,8 @@ class CalendarController extends Controller
             $childSeatsCount = (int) $booking->childSeats->sum('quantity');
 
             // Route text
-            $pickup = $booking->pickup_location ?: 'DPS';
-            $dropoff = $booking->dropoff_location ?: 'Bali';
+            $pickup = $booking->pickupHotel?->nama_hotel ?? ($booking->airport?->destinasi ?? 'DPS');
+            $dropoff = $booking->dropoffHotel?->nama_hotel ?? ($booking->airport?->destinasi ?? 'Bali');
             $routeDisplay = "{$pickup} to {$dropoff}";
 
             // Badge info

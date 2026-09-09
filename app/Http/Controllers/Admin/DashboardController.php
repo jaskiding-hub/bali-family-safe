@@ -57,7 +57,7 @@ class DashboardController extends Controller
                     'whatsapp_number' => $driver->whatsapp_number,
                     'email' => $driver->email,
                     'license_number' => $driver->license_number,
-                    'license_expiry_date' => $driver->license_expiry_date ? $driver->license_expiry_date->format('Y-m-d') : '',
+                    'license_expiry_date' => $driver->license_expiry_date ? ($driver->license_expiry_date instanceof \Carbon\CarbonInterface ? $driver->license_expiry_date->format('Y-m-d') : substr((string) $driver->license_expiry_date, 0, 10)) : '',
                     'status' => $driver->status instanceof \BackedEnum ? $driver->status->value : (string) $driver->status,
                     'vehicle_unit_id' => $driver->vehicle_unit_id,
                     'vehicle_unit_label' => $driver->currentVehicleUnit
@@ -88,7 +88,7 @@ class DashboardController extends Controller
             });
 
         $todaySchedule = Booking::whereDate('booking_date', $today)
-            ->with(['driver', 'package'])
+            ->with(['driver', 'package', 'pickupHotel', 'dropoffHotel', 'airport'])
             ->orderBy('pickup_time', 'asc')
             ->get()
             ->map(function (Booking $booking) {
@@ -113,6 +113,9 @@ class DashboardController extends Controller
                     ?? ($booking->booking_type instanceof \BackedEnum ? $booking->booking_type->value : (string) $booking->booking_type)
                     ?? 'Trip Service';
 
+                $pickup = $booking->pickupHotel?->nama_hotel ?? ($booking->airport?->destinasi ?? '-');
+                $dropoff = $booking->dropoffHotel?->nama_hotel ?? ($booking->airport?->destinasi ?? '-');
+
                 return [
                     'id' => $booking->id,
                     'booking_code' => $booking->booking_code,
@@ -120,8 +123,8 @@ class DashboardController extends Controller
                     'guest_name' => $booking->guest_name,
                     'service_name' => $serviceName,
                     'booking_type' => $booking->booking_type instanceof \BackedEnum ? $booking->booking_type->value : (string) $booking->booking_type,
-                    'pickup_location' => $booking->pickup_location ?? '-',
-                    'dropoff_location' => $booking->dropoff_location ?? '-',
+                    'pickup_location' => $pickup,
+                    'dropoff_location' => $dropoff,
                     'status' => $booking->status instanceof \BackedEnum ? $booking->status->value : (string) $booking->status,
                     'driver' => $booking->driver ? [
                         'id' => $booking->driver->id,

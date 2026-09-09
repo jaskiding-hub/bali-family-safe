@@ -3,16 +3,17 @@
 namespace App\Http\Controllers\Driver;
 
 use App\Http\Controllers\Controller;
-use App\Models\Trip;
+use App\Models\Booking;
 use App\Models\TripExpense;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
 class ExpenseController extends Controller
 {
     public function store(Request $request, $id)
     {
-        $trip = Trip::findOrFail($id);
+        $booking = Booking::findOrFail($id);
 
         $request->validate([
             'type' => ['required', 'string', 'max:255'],
@@ -30,8 +31,8 @@ class ExpenseController extends Controller
         }
 
         $expense = TripExpense::create([
-            'trip_id' => $trip->id,
-            'driver_id' => $trip->driver_id,
+            'booking_id' => $booking->id,
+            'driver_id' => $booking->driver_id ?? Auth::guard('driver')->id(),
             'expense_type' => $request->input('type'),
             'expense_name' => $request->input('type'),
             'amount' => (float) $cleanAmount,
@@ -54,19 +55,19 @@ class ExpenseController extends Controller
             ]);
         }
 
-        return redirect()->route('driver.trip.expense', ['id' => $trip->id])
+        return redirect()->route('driver.trip.expense', ['id' => $booking->id])
             ->with('success', 'Expense saved successfully!');
     }
 
     public function update(Request $request, $id, $expense_id = null)
     {
         if ($expense_id !== null) {
-            $trip = Trip::findOrFail($id);
-            $expense = TripExpense::where('trip_id', $trip->id)->findOrFail($expense_id);
-            $tripId = $trip->id;
+            $booking = Booking::findOrFail($id);
+            $expense = TripExpense::where('booking_id', $booking->id)->findOrFail($expense_id);
+            $bookingId = $booking->id;
         } else {
             $expense = TripExpense::findOrFail($id);
-            $tripId = $expense->trip_id;
+            $bookingId = $expense->booking_id;
         }
 
         $request->validate([
@@ -108,19 +109,19 @@ class ExpenseController extends Controller
             ]);
         }
 
-        return redirect()->route('driver.trip.expense', ['id' => $tripId])
+        return redirect()->route('driver.trip.expense', ['id' => $bookingId])
             ->with('success', 'Expense updated successfully!');
     }
 
     public function destroy(Request $request, $id, $expense_id = null)
     {
         if ($expense_id !== null) {
-            $trip = Trip::findOrFail($id);
-            $expense = TripExpense::where('trip_id', $trip->id)->findOrFail($expense_id);
-            $tripId = $trip->id;
+            $booking = Booking::findOrFail($id);
+            $expense = TripExpense::where('booking_id', $booking->id)->findOrFail($expense_id);
+            $bookingId = $booking->id;
         } else {
             $expense = TripExpense::findOrFail($id);
-            $tripId = $expense->trip_id;
+            $bookingId = $expense->booking_id;
         }
 
         if ($expense->receipt_path) {
@@ -136,7 +137,7 @@ class ExpenseController extends Controller
             ]);
         }
 
-        return redirect()->route('driver.trip.expense', ['id' => $tripId])
+        return redirect()->route('driver.trip.expense', ['id' => $bookingId])
             ->with('success', 'Expense deleted successfully!');
     }
 }

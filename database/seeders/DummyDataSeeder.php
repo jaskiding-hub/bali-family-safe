@@ -502,6 +502,34 @@ class DummyDataSeeder extends Seeder
             $childSeats = $bData['child_seats'] ?? [];
             unset($bData['child_seats']);
 
+            if (!empty($bData['pickup_location'])) {
+                if (stripos($bData['pickup_location'], 'airport') !== false || stripos($bData['pickup_location'], 'dps') !== false) {
+                    $airport = \App\Models\Airport::firstOrCreate(
+                        ['destinasi' => 'DPS Airport', 'type' => TransferDirection::PickUp->value],
+                        ['price_regular' => 250000, 'price_luxury' => 450000]
+                    );
+                    $bData['airport_id'] = $airport->id;
+                } else {
+                    $hotel = \App\Models\Hotel::firstOrCreate(['nama_hotel' => $bData['pickup_location']]);
+                    $bData['pickup_hotel_id'] = $hotel->id;
+                }
+            }
+
+            if (!empty($bData['dropoff_location'])) {
+                if (stripos($bData['dropoff_location'], 'airport') !== false || stripos($bData['dropoff_location'], 'dps') !== false) {
+                    $airport = \App\Models\Airport::firstOrCreate(
+                        ['destinasi' => 'DPS Airport', 'type' => TransferDirection::DropOff->value],
+                        ['price_regular' => 250000, 'price_luxury' => 450000]
+                    );
+                    $bData['airport_id'] = $airport->id;
+                } else {
+                    $hotel = \App\Models\Hotel::firstOrCreate(['nama_hotel' => $bData['dropoff_location']]);
+                    $bData['dropoff_hotel_id'] = $hotel->id;
+                }
+            }
+
+            unset($bData['pickup_location'], $bData['dropoff_location']);
+
             $booking = Booking::updateOrCreate(
                 ['booking_code' => $bData['booking_code']],
                 $bData

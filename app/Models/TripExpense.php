@@ -10,18 +10,19 @@ class TripExpense extends Model
     use HasFactory;
 
     protected $fillable = [
-        'trip_id',
+        'booking_id',
         'driver_id',
         'expense_type',
         'expense_name',
         'amount',
         'receipt_path',
+        'receipt_photo_url',
         'notes',
     ];
 
-    public function trip()
+    public function booking()
     {
-        return $this->belongsTo(Trip::class);
+        return $this->belongsTo(Booking::class);
     }
 
     public function driver()

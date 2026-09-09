@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\DriverStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -24,6 +25,13 @@ class Driver extends Authenticatable
         'license_expiry_date',
         'profile_photo_url',
         'status',
+        'is_online',
+    ];
+
+    protected $casts = [
+        'status' => DriverStatus::class,
+        'license_expiry_date' => 'date',
+        'is_online' => 'boolean',
     ];
 
     protected $hidden = [
@@ -41,9 +49,14 @@ class Driver extends Authenticatable
         return $this->belongsTo(VehicleUnit::class);
     }
 
-    public function trips()
+    public function currentVehicleUnit()
     {
-        return $this->hasMany(Trip::class);
+        return $this->belongsTo(VehicleUnit::class, 'vehicle_unit_id');
+    }
+
+    public function bookings()
+    {
+        return $this->hasMany(Booking::class);
     }
 
     public function expenses()
