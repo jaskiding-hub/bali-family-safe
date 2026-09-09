@@ -49,7 +49,11 @@ class CalendarController extends Controller
         }
 
         // Fetch bookings for the grid date range
+<<<<<<< Updated upstream
         $bookings = Booking::with(['driver', 'vehicle', 'childSeats', 'pickupHotel', 'dropoffHotel', 'airport'])
+=======
+        $bookings = Booking::with(['driver', 'vehicle', 'vehicleUnit', 'package', 'childSeats.childSeatType'])
+>>>>>>> Stashed changes
             ->whereBetween('booking_date', [$startOfGrid->format('Y-m-d'), $endOfGrid->format('Y-m-d')])
             ->orderBy('pickup_time', 'asc')
             ->get();
@@ -67,20 +71,42 @@ class CalendarController extends Controller
             $timeFormatted = $booking->pickup_time ? Carbon::parse($booking->pickup_time)->format('H:i') : '00:00';
             $timeAmPm = $booking->pickup_time ? Carbon::parse($booking->pickup_time)->format('h:i A') : '12:00 AM';
 
-            $paxCount = ((int) $booking->adults + (int) $booking->children) ?: 1;
+            $adults = (int) ($booking->adults ?? 1);
+            $children = (int) ($booking->children ?? 0);
+            $paxCount = ($adults + $children) ?: 1;
             $childSeatsCount = (int) $booking->childSeats->sum('quantity');
 
+            // Format Booking Type UI matching Add Booking form options
+            $bookingTypeUi = 'Hotel Transfer';
+            if ($typeStr === 'airport_transfer' || $typeStr === 'Airport Transfer') {
+                $bookingTypeUi = ($directionStr === 'drop_off' || $directionStr === 'Drop Off') ? 'Airport Drop-Off' : 'Airport Pick-Up';
+            } elseif ($typeStr === 'day_tour' || $typeStr === 'Day Tour') {
+                $bookingTypeUi = 'Day Tour';
+            } elseif ($typeStr === 'hotel_transfer' || $typeStr === 'Hotel Transfer') {
+                $bookingTypeUi = 'Hotel Transfer';
+            }
+
             // Route text
+<<<<<<< Updated upstream
             $pickup = $booking->pickupHotel?->nama_hotel ?? ($booking->airport?->destinasi ?? 'DPS');
             $dropoff = $booking->dropoffHotel?->nama_hotel ?? ($booking->airport?->destinasi ?? 'Bali');
+=======
+            $pickup = $booking->pickup_location ?: 'DPS Airport';
+            $dropoff = $booking->dropoff_location ?: 'Hotel / Villa';
+>>>>>>> Stashed changes
             $routeDisplay = "{$pickup} to {$dropoff}";
+
+            // If booking date is in past and not cancelled, ensure status is Completed
+            if ($booking->booking_date && $booking->booking_date->lt(Carbon::today()) && $statusStr !== BookingStatus::Cancelled->value) {
+                $statusStr = BookingStatus::Completed->value;
+            }
 
             // Badge info
             $badgeType = 'arriving';
             $badgeText = 'Arriving';
             if ($statusStr === BookingStatus::Completed->value) {
                 $badgeType = 'success';
-                $badgeText = 'succes';
+                $badgeText = 'Completed';
             } elseif ($statusStr === BookingStatus::Pending->value) {
                 $badgeType = 'pending';
                 $badgeText = 'Pending Approval';
@@ -92,33 +118,62 @@ class CalendarController extends Controller
             // Short summary for month grid badge
             $shortTitle = "{$timeFormatted} - " . ($booking->guest_name ?: 'Booking');
 
-                $categoryStr = $booking->vehicle?->category instanceof \BackedEnum ? $booking->vehicle->category->value : (string) ($booking->vehicle?->category ?? 'Van');
-                $vehicleWord = explode(' ', $categoryStr)[0] ?: 'Van';
-                $driverWord = $booking->driver ? explode(' ', $booking->driver->full_name)[0] : 'Unassigned';
+            $categoryStr = $booking->vehicle?->category instanceof \BackedEnum ? $booking->vehicle->category->value : (string) ($booking->vehicle?->category ?? 'Van');
+            $vehicleWord = explode(' ', $categoryStr)[0] ?: 'Van';
+            $driverWord = $booking->driver ? explode(' ', $booking->driver->full_name)[0] : 'Unassigned';
 
-                $eventsByDate[$dateStr][] = [
-                    'id' => $booking->id,
-                    'booking_code' => $booking->booking_code,
-                    'booking_date' => $dateStr,
-                    'time_formatted' => $timeFormatted,
-                    'time_ampm' => $timeAmPm,
-                    'status' => $statusStr,
-                    'booking_type' => $typeStr,
-                    'booking_type_label' => strtoupper($typeStr),
-                    'transfer_direction' => $directionStr,
-                    'guest_name' => $booking->guest_name ?: 'Guest',
-                    'pax_display' => "{$booking->guest_name} ({$paxCount})",
-                    'pickup_location' => $pickup,
-                    'dropoff_location' => $dropoff,
-                    'route_display' => $routeDisplay,
-                    'driver_name' => $booking->driver ? $booking->driver->full_name : 'Unassigned',
-                    'vehicle_driver_display' => "{$vehicleWord} ({$driverWord})",
-                    'child_seats_count' => $childSeatsCount,
-                    'child_seats_display' => $childSeatsCount > 0 ? "{$childSeatsCount} Child Seats" : 'No Child Seats',
-                    'short_title' => $shortTitle,
-                    'badge_type' => $badgeType,
-                    'badge_text' => $badgeText,
+            // Child seats list details
+            $childSeatsList = $booking->childSeats->map(function ($cs) {
+                return [
+                    'name' => $cs->childSeatType?->name ?? 'Child Seat',
+                    'quantity' => (int) $cs->quantity,
                 ];
+            })->values()->all();
+
+            $eventsByDate[$dateStr][] = [
+                'id' => $booking->id,
+                'booking_code' => $booking->booking_code,
+                'booking_date' => $dateStr,
+                'booking_date_formatted' => $booking->booking_date ? $booking->booking_date->format('l, j F Y') : '-',
+                'time_formatted' => $timeFormatted,
+                'time_ampm' => $timeAmPm,
+                'status' => $statusStr,
+                'booking_type' => $typeStr,
+                'booking_type_ui' => $bookingTypeUi,
+                'booking_type_label' => strtoupper($typeStr),
+                'package_id' => $booking->package_id,
+                'package_name' => $booking->package?->name ?? null,
+                'package_price' => $booking->package?->price ?? null,
+                'transfer_direction' => $directionStr,
+                'guest_name' => $booking->guest_name ?: 'Guest',
+                'whatsapp_number' => $booking->whatsapp_number ?: '-',
+                'email' => $booking->email ?: '-',
+                'flight_number' => $booking->flight_number ?: '-',
+                'adults' => $adults,
+                'children' => $children,
+                'pax_display' => "{$booking->guest_name} ({$paxCount})",
+                'pickup_location' => $pickup,
+                'dropoff_location' => $dropoff,
+                'route_display' => $routeDisplay,
+                'notes' => $booking->notes ?: null,
+                'total_fee' => (float) ($booking->total_fee ?? 0),
+                'total_fee_formatted' => 'IDR ' . number_format((float) ($booking->total_fee ?? 0), 0, ',', '.'),
+                'driver_id' => $booking->driver_id,
+                'driver_name' => $booking->driver ? $booking->driver->full_name : 'Unassigned',
+                'driver_phone' => $booking->driver?->whatsapp_number ?: '-',
+                'driver_photo_url' => $booking->driver?->profile_photo_url ?: null,
+                'vehicle_id' => $booking->vehicle_id,
+                'vehicle_name' => $booking->vehicle?->name ?? $categoryStr,
+                'vehicle_category' => $categoryStr,
+                'vehicle_plate' => $booking->vehicleUnit?->plate_number ?? '-',
+                'vehicle_driver_display' => "{$vehicleWord} ({$driverWord})",
+                'child_seats_count' => $childSeatsCount,
+                'child_seats_display' => $childSeatsCount > 0 ? "{$childSeatsCount} Child Seats" : 'No Child Seats',
+                'child_seats_list' => $childSeatsList,
+                'short_title' => $shortTitle,
+                'badge_type' => $badgeType,
+                'badge_text' => $badgeText,
+            ];
         }
 
         return Inertia::render('Admin/Calendar', [

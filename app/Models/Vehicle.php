@@ -38,6 +38,15 @@ class Vehicle extends Model
         return $this->hasMany(VehicleFeature::class);
     }
 
+<<<<<<< Updated upstream
+=======
+    // DEPRECATED: transfer_rates tidak lagi dipakai, digantikan tabel airports & 
+    // hotel_transfer_price_lists. Akan dihapus di migration terpisah setelah konfirmasi.
+    public function transferRates(): HasMany
+    {
+        return $this->hasMany(TransferRate::class);
+    }
+>>>>>>> Stashed changes
 
     public function bookings(): HasMany
     {

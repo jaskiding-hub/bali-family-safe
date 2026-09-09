@@ -11,6 +11,10 @@ use App\Models\Airport;
 use App\Models\Booking;
 use App\Models\Driver;
 use App\Models\Hotel;
+<<<<<<< Updated upstream
+=======
+use App\Models\HotelTransferPriceList;
+>>>>>>> Stashed changes
 use App\Models\Package;
 use App\Models\TripExpense;
 use App\Models\Vehicle;
@@ -78,6 +82,7 @@ class BookingManagementTest extends TestCase
         Booking::create([
             'booking_code' => 'BFS-001',
             'booking_type' => BookingType::AirportTransfer->value,
+            'transfer_direction' => TransferDirection::PickUp->value,
             'status' => BookingStatus::Pending->value,
             'guest_name' => 'John Doe',
             'whatsapp_number' => '081299990001',
@@ -95,14 +100,15 @@ class BookingManagementTest extends TestCase
         $response->assertInertia(fn (Assert $page) => $page
             ->component('Admin/BookingManagement')
             ->has('stats.all_bookings')
-            ->has('stats.airport_transport')
-            ->has('stats.hotel_transfer')
+            ->has('stats.airport_pickup')
+            ->has('stats.airport_dropoff')
             ->has('stats.day_tour')
             ->has('bookings.data', 1)
             ->has('available_drivers')
             ->missing('drivers')
             ->where('stats.all_bookings', 1)
-            ->where('stats.airport_transport', 1)
+            ->where('stats.airport_pickup', 1)
+            ->where('stats.airport_dropoff', 0)
             ->where('bookings.data.0.booking_code', 'BFS-001')
             ->where('bookings.data.0.guest_name', 'John Doe')
             ->where('bookings.data.0.detail', 'Canggu-Airport')
@@ -136,6 +142,47 @@ class BookingManagementTest extends TestCase
             'vehicle_unit_id' => $this->unit->id,
             'status' => BookingStatus::Assigned->value,
         ]);
+    }
+
+    public function test_cannot_assign_driver_to_completed_or_cancelled_booking(): void
+    {
+        $completedBooking = Booking::create([
+            'booking_code' => 'BFS-CMP-1',
+            'booking_type' => BookingType::AirportTransfer->value,
+            'status' => BookingStatus::Completed->value,
+            'guest_name' => 'Done Guest',
+            'whatsapp_number' => '081299990003',
+            'booking_date' => Carbon::yesterday(),
+            'pickup_time' => '10:00:00',
+            'total_fee' => 500000,
+            'vehicle_id' => $this->vehicle->id,
+            'driver_id' => $this->driver->id,
+            'vehicle_unit_id' => $this->unit->id,
+        ]);
+
+        $response = $this->actingAs($this->admin, 'admin')->post(route('admin.bookings.assign-driver', $completedBooking), [
+            'driver_id' => $this->driver->id,
+        ]);
+
+        $response->assertSessionHasErrors('driver_id');
+
+        $cancelledBooking = Booking::create([
+            'booking_code' => 'BFS-CNC-1',
+            'booking_type' => BookingType::AirportTransfer->value,
+            'status' => BookingStatus::Cancelled->value,
+            'guest_name' => 'Cancelled Guest',
+            'whatsapp_number' => '081299990004',
+            'booking_date' => Carbon::today(),
+            'pickup_time' => '10:00:00',
+            'total_fee' => 500000,
+            'vehicle_id' => $this->vehicle->id,
+        ]);
+
+        $responseCancelled = $this->actingAs($this->admin, 'admin')->post(route('admin.bookings.assign-driver', $cancelledBooking), [
+            'driver_id' => $this->driver->id,
+        ]);
+
+        $responseCancelled->assertSessionHasErrors('driver_id');
     }
 
     public function test_completed_booking_cannot_be_deleted_and_trip_expenses_remain_intact(): void
@@ -328,4 +375,192 @@ class BookingManagementTest extends TestCase
         $this->assertDatabaseHas('hotels', ['nama_hotel' => 'Seminyak Villa']);
         $this->assertDatabaseHas('hotels', ['nama_hotel' => 'DPS International Airport']);
     }
+
+    public function test_calculate_airport_pickup_pricing_matches_airports_table_data(): void
+    {
+        $airport = Airport::create([
+            'destinasi' => 'Ubud',
+            'price_regular' => 400000,
+            'price_luxury' => 800000,
+            'type' => 'Pick-Up',
+        ]);
+
+        $hotel = Hotel::create([
+            'nama_hotel' => 'Maya Ubud Resort',
+        ]);
+        $hotel->airports()->attach($airport->id);
+
+        // Test Luxury Tier
+        $responseLuxury = $this->actingAs($this->admin, 'admin')->getJson(route('admin.bookings.pricing-options', [
+            'booking_type_ui' => 'Airport Pick-Up',
+            'destinasi' => 'Ubud',
+            'tier' => 'Luxury',
+        ]));
+
+        $responseLuxury->assertOk();
+        $responseLuxury->assertJson([
+            'calculated_price' => 800000,
+        ]);
+        $responseLuxury->assertJsonCount(1, 'hotels');
+        $this->assertSame('Maya Ubud Resort', $responseLuxury->json('hotels.0.name'));
+
+        // Test Regular Tier
+        $responseRegular = $this->actingAs($this->admin, 'admin')->getJson(route('admin.bookings.pricing-options', [
+            'booking_type_ui' => 'Airport Pick-Up',
+            'destinasi' => 'Ubud',
+            'tier' => 'Regular',
+        ]));
+
+        $responseRegular->assertOk();
+        $responseRegular->assertJson([
+            'calculated_price' => 400000,
+        ]);
+    }
+
+    public function test_calculate_hotel_transfer_pricing_for_pair_in_price_list(): void
+    {
+        $hotelA = Hotel::create(['nama_hotel' => 'Ayana Resort Jimbaran']);
+        $hotelB = Hotel::create(['nama_hotel' => 'Viceroy Ubud']);
+
+        HotelTransferPriceList::create([
+            'hotel_id_pickup' => $hotelA->id,
+            'hotel_id_dropoff' => $hotelB->id,
+            'regular_price' => 350000,
+            'luxury_price' => 700000,
+        ]);
+
+        $responseRegular = $this->actingAs($this->admin, 'admin')->getJson(route('admin.bookings.pricing-options', [
+            'booking_type_ui' => 'Hotel Transfer',
+            'hotel_id_pickup' => $hotelA->id,
+            'hotel_id_dropoff' => $hotelB->id,
+            'tier' => 'Regular',
+        ]));
+
+        $responseRegular->assertOk();
+        $responseRegular->assertJson([
+            'calculated_price' => 350000,
+            'price_warning' => null,
+        ]);
+
+        $responseLuxury = $this->actingAs($this->admin, 'admin')->getJson(route('admin.bookings.pricing-options', [
+            'booking_type_ui' => 'Hotel Transfer',
+            'hotel_id_pickup' => $hotelA->id,
+            'hotel_id_dropoff' => $hotelB->id,
+            'tier' => 'Luxury',
+        ]));
+
+        $responseLuxury->assertOk();
+        $responseLuxury->assertJson([
+            'calculated_price' => 700000,
+            'price_warning' => null,
+        ]);
+    }
+
+    public function test_calculate_hotel_transfer_pricing_with_reverse_lookup_fallback(): void
+    {
+        $hotelSanur = Hotel::create(['nama_hotel' => 'Hyatt Regency Sanur']);
+        $hotelSeminyak = Hotel::create(['nama_hotel' => 'W Bali Seminyak']);
+
+        // Only store Sanur -> Seminyak
+        HotelTransferPriceList::create([
+            'hotel_id_pickup' => $hotelSanur->id,
+            'hotel_id_dropoff' => $hotelSeminyak->id,
+            'regular_price' => 250000,
+            'luxury_price' => 550000,
+        ]);
+
+        // Request in reverse direction: Seminyak -> Sanur
+        $responseReverse = $this->actingAs($this->admin, 'admin')->getJson(route('admin.bookings.pricing-options', [
+            'booking_type_ui' => 'Hotel Transfer',
+            'hotel_id_pickup' => $hotelSeminyak->id,
+            'hotel_id_dropoff' => $hotelSanur->id,
+            'tier' => 'Luxury',
+        ]));
+
+        $responseReverse->assertOk();
+        $responseReverse->assertJson([
+            'calculated_price' => 550000,
+            'price_warning' => null,
+        ]);
+    }
+
+    public function test_day_tour_full_day_pricing_uses_big_van_price_without_tier_options(): void
+    {
+        $bigVan = Vehicle::create([
+            'category' => 'Family Minibus',
+            'name' => 'Toyota HiAce Premio',
+            'model' => 'HiAce 2023',
+            'daily_rate' => 1200000,
+            'passenger_capacity' => 12,
+            'luggage_capacity' => 8,
+        ]);
+
+        $fullDayPackage = Package::create([
+            'name' => 'Bedugul & Tanah Lot Full Day Tour',
+            'slug' => 'bedugul-tanah-lot-full-day',
+            'duration_type' => 'Full Day',
+            'price' => 900000,
+            'regular_price' => 900000,
+            'luxury_price' => 1500000,
+            'big_van_price' => 1350000,
+            'display_order' => 1,
+        ]);
+
+        $response = $this->actingAs($this->admin, 'admin')->getJson(route('admin.bookings.pricing-options', [
+            'booking_type_ui' => 'Day Tour',
+            'package_id' => $fullDayPackage->id,
+        ]));
+
+        $response->assertOk();
+        $response->assertJson([
+            'calculated_price' => 1350000,
+            'package' => [
+                'duration_type' => 'Full Day',
+                'big_van_price' => 1350000,
+            ],
+        ]);
+        $response->assertJsonFragment([
+            'name' => 'Toyota HiAce Premio',
+            'category' => 'Family Minibus',
+        ]);
+    }
+
+    public function test_day_tour_half_day_pricing_matches_selected_regular_or_luxury_tier(): void
+    {
+        $halfDayPackage = Package::create([
+            'name' => 'Uluwatu Sunset Half Day Tour',
+            'slug' => 'uluwatu-sunset-half-day',
+            'duration_type' => 'Half Day',
+            'price' => 600000,
+            'regular_price' => 600000,
+            'luxury_price' => 1100000,
+            'big_van_price' => 950000,
+            'display_order' => 2,
+        ]);
+
+        // Regular Tier
+        $responseRegular = $this->actingAs($this->admin, 'admin')->getJson(route('admin.bookings.pricing-options', [
+            'booking_type_ui' => 'Day Tour',
+            'package_id' => $halfDayPackage->id,
+            'tier' => 'Regular',
+        ]));
+
+        $responseRegular->assertOk();
+        $responseRegular->assertJson([
+            'calculated_price' => 600000,
+        ]);
+
+        // Luxury Tier
+        $responseLuxury = $this->actingAs($this->admin, 'admin')->getJson(route('admin.bookings.pricing-options', [
+            'booking_type_ui' => 'Day Tour',
+            'package_id' => $halfDayPackage->id,
+            'tier' => 'Luxury',
+        ]));
+
+        $responseLuxury->assertOk();
+        $responseLuxury->assertJson([
+            'calculated_price' => 1100000,
+        ]);
+    }
 }
+

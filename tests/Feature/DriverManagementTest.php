@@ -62,15 +62,14 @@ class DriverManagementTest extends TestCase
             'vehicle_unit_id' => $this->vehicleUnit->id,
         ]);
 
-        $response = $this->actingAs($this->admin, 'admin')->get(route('admin.dashboard'));
+        $response = $this->actingAs($this->admin, 'admin')->get(route('admin.master-data.index'));
 
         $response->assertStatus(200);
         $response->assertInertia(fn ($page) => $page
-            ->component('Admin/Dashboard')
+            ->component('Admin/MasterData')
             ->has('drivers.data', 1)
             ->where('drivers.data.0.full_name', 'Kadek Driver')
             ->where('drivers.data.0.email', 'kadek@bfs.test')
-            ->has('available_vehicle_units')
         );
     }
 
