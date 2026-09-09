@@ -103,10 +103,15 @@ class PricingSeeder extends Seeder
         foreach ($transferRoutes as $route) {
             HotelTransferPriceList::firstOrCreate(
                 [
-                    'pickup_hotel_id' => $route['pickup_hotel_id'],
-                    'dropoff_hotel_id' => $route['dropoff_hotel_id'],
+                    'hotel_id_pickup' => $route['pickup_hotel_id'],
+                    'hotel_id_dropoff' => $route['dropoff_hotel_id'],
                 ],
-                $route
+                [
+                    'hotel_id_pickup' => $route['pickup_hotel_id'],
+                    'hotel_id_dropoff' => $route['dropoff_hotel_id'],
+                    'regular_price' => $route['regular_price'],
+                    'luxury_price' => $route['luxury_price'],
+                ]
             );
         }
     }

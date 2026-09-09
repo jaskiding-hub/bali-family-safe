@@ -7,6 +7,7 @@ use App\Enums\DriverStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\Driver;
+use App\Models\VehicleUnit;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -27,7 +28,6 @@ class DashboardController extends Controller
             ->whereYear('booking_date', $now->year)
             ->sum('total_fee');
 
-<<<<<<< Updated upstream
         // Driver Management Query
         $driverSearch = $request->input('search_driver');
         $driversQuery = Driver::with('currentVehicleUnit.vehicle');
@@ -88,11 +88,7 @@ class DashboardController extends Controller
             });
 
         $todaySchedule = Booking::whereDate('booking_date', $today)
-            ->with(['driver', 'package', 'pickupHotel', 'dropoffHotel', 'airport'])
-=======
-        $todaySchedule = Booking::whereDate('booking_date', $today)
-            ->with(['driver', 'vehicle', 'vehicleUnit', 'package', 'childSeats.childSeatType'])
->>>>>>> Stashed changes
+            ->with(['driver', 'vehicle', 'vehicleUnit', 'package', 'pickupHotel', 'dropoffHotel', 'airport', 'childSeats.childSeatType'])
             ->orderBy('pickup_time', 'asc')
             ->get()
             ->map(function (Booking $booking) {
@@ -137,10 +133,8 @@ class DashboardController extends Controller
                     ?? $bookingTypeUi
                     ?? 'Trip Service';
 
-<<<<<<< Updated upstream
-                $pickup = $booking->pickupHotel?->nama_hotel ?? ($booking->airport?->destinasi ?? '-');
-                $dropoff = $booking->dropoffHotel?->nama_hotel ?? ($booking->airport?->destinasi ?? '-');
-=======
+                $pickup = $booking->pickupHotel?->nama_hotel ?? ($booking->airport?->destinasi ?? ($booking->pickup_location ?? '-'));
+                $dropoff = $booking->dropoffHotel?->nama_hotel ?? ($booking->airport?->destinasi ?? ($booking->dropoff_location ?? '-'));
                 $categoryStr = $booking->vehicle?->category instanceof \BackedEnum ? $booking->vehicle->category->value : (string) ($booking->vehicle?->category ?? 'Vehicle');
 
                 $childSeatsList = $booking->childSeats->map(function ($cs) {
@@ -149,7 +143,6 @@ class DashboardController extends Controller
                         'quantity' => (int) $cs->quantity,
                     ];
                 })->values()->all();
->>>>>>> Stashed changes
 
                 return [
                     'id' => $booking->id,
@@ -163,24 +156,17 @@ class DashboardController extends Controller
                     'whatsapp_number' => $booking->whatsapp_number ?: '-',
                     'email' => $booking->email ?: '-',
                     'service_name' => $serviceName,
-<<<<<<< Updated upstream
-                    'booking_type' => $booking->booking_type instanceof \BackedEnum ? $booking->booking_type->value : (string) $booking->booking_type,
-                    'pickup_location' => $pickup,
-                    'dropoff_location' => $dropoff,
-                    'status' => $booking->status instanceof \BackedEnum ? $booking->status->value : (string) $booking->status,
-=======
                     'booking_type' => $typeStr,
                     'booking_type_ui' => $bookingTypeUi,
                     'flight_number' => $booking->flight_number ?: '-',
-                    'pickup_location' => $booking->pickup_location ?? '-',
-                    'dropoff_location' => $booking->dropoff_location ?? '-',
+                    'pickup_location' => $pickup,
+                    'dropoff_location' => $dropoff,
                     'adults' => (int) ($booking->adults ?? 1),
                     'children' => (int) ($booking->children ?? 0),
                     'total_fee' => (float) ($booking->total_fee ?? 0),
                     'total_fee_formatted' => 'Rp ' . number_format((float) ($booking->total_fee ?? 0), 0, ',', '.'),
                     'notes' => $booking->notes ?: null,
                     'status' => $statusStr,
->>>>>>> Stashed changes
                     'driver' => $booking->driver ? [
                         'id' => $booking->driver->id,
                         'name' => $booking->driver->full_name,

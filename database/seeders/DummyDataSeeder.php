@@ -260,7 +260,6 @@ class DummyDataSeeder extends Seeder
                 'slug' => 'ubud-cultural-waterfall-tour',
                 'name' => 'Ubud Cultural & Waterfall Tour',
                 'subtitle' => 'Tegalalang rice terrace, Monkey Forest, and Tegenungan waterfall',
-                'price' => 950000,
                 'duration_type' => 'Full Day',
                 'regular_price' => 950000,
                 'luxury_price' => 1600000,
@@ -271,7 +270,6 @@ class DummyDataSeeder extends Seeder
                 'slug' => 'bedugul-tanah-lot-sunset-tour',
                 'name' => 'Bedugul & Tanah Lot Sunset Tour',
                 'subtitle' => 'Ulun Danu Beratan temple, Handara Gate, and iconic Tanah Lot sunset',
-                'price' => 1000000,
                 'duration_type' => 'Full Day',
                 'regular_price' => 1000000,
                 'luxury_price' => 1750000,
@@ -282,7 +280,6 @@ class DummyDataSeeder extends Seeder
                 'slug' => 'uluwatu-cliff-kecak-dance-tour',
                 'name' => 'Uluwatu Cliff & Kecak Dance Tour',
                 'subtitle' => 'Padang Padang beach, dramatic cliff temple, and sunset Kecak dance',
-                'price' => 600000,
                 'duration_type' => 'Half Day',
                 'regular_price' => 600000,
                 'luxury_price' => 1100000,
@@ -293,7 +290,6 @@ class DummyDataSeeder extends Seeder
                 'slug' => 'denpasar-heritage-food-tour',
                 'name' => 'Denpasar Heritage & Food Tour',
                 'subtitle' => 'Bajra Sandhi monument, Badung traditional market, and authentic Balinese culinary',
-                'price' => 500000,
                 'duration_type' => 'Half Day',
                 'regular_price' => 500000,
                 'luxury_price' => 950000,
@@ -449,7 +445,6 @@ class DummyDataSeeder extends Seeder
             $childSeats = $bData['child_seats'] ?? [];
             unset($bData['child_seats']);
 
-<<<<<<< Updated upstream
             if (!empty($bData['pickup_location'])) {
                 if (stripos($bData['pickup_location'], 'airport') !== false || stripos($bData['pickup_location'], 'dps') !== false) {
                     $airport = \App\Models\Airport::firstOrCreate(
@@ -476,9 +471,6 @@ class DummyDataSeeder extends Seeder
                 }
             }
 
-            unset($bData['pickup_location'], $bData['dropoff_location']);
-
-=======
             $bDate = Carbon::parse($bData['booking_date']);
             if ($bDate->lt($today) && ($bData['status'] ?? '') !== BookingStatus::Cancelled->value) {
                 $bData['status'] = BookingStatus::Completed->value;
@@ -487,7 +479,7 @@ class DummyDataSeeder extends Seeder
                 }
             }
 
->>>>>>> Stashed changes
+            unset($bData['pickup_location'], $bData['dropoff_location']);
             $booking = Booking::updateOrCreate(
                 ['booking_code' => $bData['booking_code']],
                 $bData

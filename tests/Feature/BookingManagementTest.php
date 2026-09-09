@@ -11,10 +11,7 @@ use App\Models\Airport;
 use App\Models\Booking;
 use App\Models\Driver;
 use App\Models\Hotel;
-<<<<<<< Updated upstream
-=======
 use App\Models\HotelTransferPriceList;
->>>>>>> Stashed changes
 use App\Models\Package;
 use App\Models\TripExpense;
 use App\Models\Vehicle;

@@ -3,10 +3,7 @@
 namespace App\Models;
 
 use App\Enums\PackageDurationType;
-<<<<<<< Updated upstream
 use App\Enums\PackageType;
-=======
->>>>>>> Stashed changes
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -20,11 +17,7 @@ class Package extends Model
         'subtitle',
         'description',
         'hero_image',
-<<<<<<< Updated upstream
         'package_type',
-=======
-        'price',
->>>>>>> Stashed changes
         'duration_type',
         'regular_price',
         'luxury_price',
@@ -33,11 +26,7 @@ class Package extends Model
     ];
 
     protected $casts = [
-<<<<<<< Updated upstream
         'package_type' => PackageType::class,
-=======
-        'price' => 'decimal:2',
->>>>>>> Stashed changes
         'duration_type' => PackageDurationType::class,
         'regular_price' => 'decimal:2',
         'luxury_price' => 'decimal:2',

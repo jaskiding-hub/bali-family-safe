@@ -11,7 +11,6 @@ class PackageSeeder extends Seeder
 {
     public function run(): void
     {
-<<<<<<< Updated upstream
         Package::updateOrCreate(
             ['slug' => 'ubud-day-tour'],
             [
@@ -53,62 +52,62 @@ class PackageSeeder extends Seeder
                 'display_order' => 3,
             ]
         );
-=======
+
         $packages = [
             [
                 'slug' => 'ubud-cultural-waterfall-tour',
                 'name' => 'Ubud Cultural & Waterfall Tour',
                 'subtitle' => 'Tegalalang rice terrace, Monkey Forest, and Tegenungan waterfall',
-                'price' => 950000,
+                'package_type' => PackageType::Ubud->value,
                 'duration_type' => 'Full Day',
                 'regular_price' => 950000,
                 'luxury_price' => 1600000,
                 'big_van_price' => 1400000,
-                'display_order' => 1,
+                'display_order' => 4,
             ],
             [
                 'slug' => 'bedugul-tanah-lot-sunset-tour',
                 'name' => 'Bedugul & Tanah Lot Sunset Tour',
                 'subtitle' => 'Ulun Danu Beratan temple, Handara Gate, and iconic Tanah Lot sunset',
-                'price' => 1000000,
+                'package_type' => PackageType::Ubud->value,
                 'duration_type' => 'Full Day',
                 'regular_price' => 1000000,
                 'luxury_price' => 1750000,
                 'big_van_price' => 1500000,
-                'display_order' => 2,
+                'display_order' => 5,
             ],
             [
                 'slug' => 'uluwatu-cliff-kecak-dance-tour',
                 'name' => 'Uluwatu Cliff & Kecak Dance Tour',
                 'subtitle' => 'Padang Padang beach, dramatic cliff temple, and sunset Kecak dance',
-                'price' => 600000,
+                'package_type' => PackageType::SouthBali->value,
                 'duration_type' => 'Half Day',
                 'regular_price' => 600000,
                 'luxury_price' => 1100000,
                 'big_van_price' => 950000,
-                'display_order' => 3,
+                'display_order' => 6,
             ],
             [
                 'slug' => 'denpasar-heritage-food-tour',
                 'name' => 'Denpasar Heritage & Food Tour',
                 'subtitle' => 'Bajra Sandhi monument, Badung traditional market, and authentic Balinese culinary',
-                'price' => 500000,
+                'package_type' => PackageType::SouthBali->value,
                 'duration_type' => 'Half Day',
                 'regular_price' => 500000,
                 'luxury_price' => 950000,
                 'big_van_price' => 850000,
-                'display_order' => 4,
+                'display_order' => 7,
             ],
             [
                 'slug' => 'east-bali-lempuyang-temple-tour',
                 'name' => 'East Bali & Lempuyang Temple Tour',
                 'subtitle' => 'Gate of Heaven Lempuyang, Tirta Gangga water palace, and Virgin Beach',
-                'price' => 1200000,
+                'package_type' => PackageType::EastBali->value,
                 'duration_type' => 'Full Day',
                 'regular_price' => 1200000,
                 'luxury_price' => 2000000,
                 'big_van_price' => 1800000,
-                'display_order' => 5,
+                'display_order' => 8,
             ],
         ];
 
@@ -118,6 +117,5 @@ class PackageSeeder extends Seeder
                 $pkg
             );
         }
->>>>>>> Stashed changes
     }
 }

@@ -49,11 +49,7 @@ class CalendarController extends Controller
         }
 
         // Fetch bookings for the grid date range
-<<<<<<< Updated upstream
-        $bookings = Booking::with(['driver', 'vehicle', 'childSeats', 'pickupHotel', 'dropoffHotel', 'airport'])
-=======
-        $bookings = Booking::with(['driver', 'vehicle', 'vehicleUnit', 'package', 'childSeats.childSeatType'])
->>>>>>> Stashed changes
+        $bookings = Booking::with(['driver', 'vehicle', 'vehicleUnit', 'package', 'childSeats.childSeatType', 'pickupHotel', 'dropoffHotel', 'airport'])
             ->whereBetween('booking_date', [$startOfGrid->format('Y-m-d'), $endOfGrid->format('Y-m-d')])
             ->orderBy('pickup_time', 'asc')
             ->get();
@@ -87,13 +83,8 @@ class CalendarController extends Controller
             }
 
             // Route text
-<<<<<<< Updated upstream
-            $pickup = $booking->pickupHotel?->nama_hotel ?? ($booking->airport?->destinasi ?? 'DPS');
-            $dropoff = $booking->dropoffHotel?->nama_hotel ?? ($booking->airport?->destinasi ?? 'Bali');
-=======
-            $pickup = $booking->pickup_location ?: 'DPS Airport';
-            $dropoff = $booking->dropoff_location ?: 'Hotel / Villa';
->>>>>>> Stashed changes
+            $pickup = $booking->pickupHotel?->nama_hotel ?? ($booking->airport?->destinasi ?? ($booking->pickup_location ?: 'DPS'));
+            $dropoff = $booking->dropoffHotel?->nama_hotel ?? ($booking->airport?->destinasi ?? ($booking->dropoff_location ?: 'Bali'));
             $routeDisplay = "{$pickup} to {$dropoff}";
 
             // If booking date is in past and not cancelled, ensure status is Completed
