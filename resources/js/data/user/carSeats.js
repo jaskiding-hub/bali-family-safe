@@ -4,7 +4,7 @@ export const CAR_SEATS = [
         type: 'Infant Capsule',
         badge: 'Rear-Facing',
         ageRange: '0 - 12 Months',
-        weight: '0 - 13 kg',
+        weight: 'Ages 0 – 12 Months',
         image: 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=600&q=80',
         description: 'Designed specifically for newborns and infants up to 1 year. Rearward-facing setup with 5-point harness and ergonomic side-impact cushions for newborn head and neck support.',
         features: [
@@ -20,7 +20,7 @@ export const CAR_SEATS = [
         type: 'Toddler Safety Seat',
         badge: 'Forward / Rear-Facing',
         ageRange: '1 - 4 Years',
-        weight: '9 - 18 kg',
+        weight: 'Ages 1 – 4 Years',
         image: 'https://images.unsplash.com/photo-1519689680058-324335c77eba?auto=format&fit=crop&w=600&q=80',
         description: 'Multi-recline convertible seat engineered for active toddlers. Padded shoulder pads, adjustable headrest, and breathable moisture-wicking fabric for Bali warm climate comfort.',
         features: [
@@ -35,8 +35,8 @@ export const CAR_SEATS = [
         id: 'booster-seat',
         type: 'Child Booster Seat',
         badge: 'High Back / Cushion',
-        ageRange: '4 - 10 Years',
-        weight: '15 - 36 kg',
+        ageRange: '4 - 8+ Years',
+        weight: 'Ages 4 – 8+ Years',
         image: 'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=600&q=80',
         description: 'Positioning booster providing correct vehicle lap and diagonal shoulder belt alignment. Offers elevated sightlines so older kids can enjoy Bali’s scenic landscapes comfortably.',
         features: [

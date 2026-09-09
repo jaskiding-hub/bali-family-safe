@@ -3,9 +3,10 @@ import { createPortal } from 'react-dom';
 
 const NAV_LINKS = [
     { label: 'Home', href: '#hero' },
+    { label: 'Car Seats', href: '#car-seats' },
     { label: 'About Us', href: '#about' },
-    { label: 'Our Team', href: '#drivers' },
     { label: 'Why Us', href: '#why-us' },
+    { label: 'Our Team', href: '#drivers' },
     { label: 'Our Services', href: '#services' },
     { label: 'Day Tour', href: '#tours' },
     { label: 'Fleet', href: '#fleet' },
@@ -63,20 +64,23 @@ export default function Navbar() {
                     WebkitBackdropFilter: scrolled ? 'blur(12px)' : 'none',
                 }}
             >
-                {/* Inner container */}
-                <div className="flex flex-row justify-between items-center w-full max-w-7xl mx-auto px-0 sm:px-4 h-full">
-                    {/* Logo */}
+                {/* Inner container with relative positioning */}
+                <div
+                    className="flex flex-row justify-between items-center w-full max-w-7xl mx-auto px-0 sm:px-4 h-full"
+                    style={{ position: 'relative' }}
+                >
+                    {/* Logo on Left */}
                     <a
                         href="#hero"
                         onClick={(e) => scrollTo(e, '#hero')}
-                        style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', flexShrink: 0 }}
+                        style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', flexShrink: 0, zIndex: 10 }}
                     >
                         <img
                             src="/images/logo.png"
                             alt="Bali Family Safe Tours"
                             className="bfs-nav-logo"
                             style={{
-                                height: '96px',
+                                height: scrolled ? '72px' : '90px',
                                 width: 'auto',
                                 objectFit: 'contain',
                                 transition: 'height 0.3s ease',
@@ -85,8 +89,20 @@ export default function Navbar() {
                         />
                     </a>
 
-                    {/* Desktop Nav - Centered */}
-                    <nav className="navbar-desktop" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '24px', flex: 1, margin: '0 24px' }}>
+                    {/* Desktop Nav - Centered horizontally at 50% */}
+                    <nav
+                        className="navbar-desktop"
+                        style={{
+                            position: 'absolute',
+                            left: '50%',
+                            transform: 'translateX(-50%)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '18px',
+                            zIndex: 10,
+                        }}
+                    >
                         {NAV_LINKS.map((link, i) => (
                             <a
                                 key={i}
@@ -95,20 +111,21 @@ export default function Navbar() {
                                 style={{
                                     fontFamily: 'Inter, sans-serif',
                                     fontWeight: i === 0 ? 700 : 600,
-                                    fontSize: i === 0 ? '15px' : '14px',
-                                    lineHeight: '24px',
+                                    fontSize: '14px',
+                                    lineHeight: '20px',
                                     color: scrolled
-                                        ? (i === 0 ? '#00658D' : '#3E4850')
+                                        ? (i === 0 ? '#00658D' : '#334155')
                                         : '#FFFFFF',
                                     textDecoration: 'none',
                                     whiteSpace: 'nowrap',
-                                    letterSpacing: i !== 0 ? '0.14px' : undefined,
-                                    transition: 'color 0.3s ease',
-                                    textShadow: scrolled ? 'none' : '0 1px 3px rgba(0,0,0,0.3)',
+                                    letterSpacing: '0.1px',
+                                    transition: 'color 0.2s ease',
+                                    textShadow: scrolled ? 'none' : '0 1px 3px rgba(0,0,0,0.4)',
+                                    padding: '4px 2px',
                                 }}
                                 onMouseEnter={e => e.target.style.color = '#00AEEF'}
                                 onMouseLeave={e => e.target.style.color = scrolled
-                                    ? (i === 0 ? '#00658D' : '#3E4850')
+                                    ? (i === 0 ? '#00658D' : '#334155')
                                     : '#FFFFFF'}
                             >
                                 {link.label}
@@ -116,23 +133,25 @@ export default function Navbar() {
                         ))}
                     </nav>
 
-                    {/* Mobile Hamburger */}
-                    <button
-                        onClick={() => setMobileOpen(o => !o)}
-                        style={{
-                            display: 'none',
-                            background: 'none',
-                            border: 'none',
-                            cursor: 'pointer',
-                            padding: 8,
-                        }}
-                        className="navbar-hamburger"
-                        aria-label="Toggle menu"
-                    >
-                        <div style={{ width: 24, height: 2.5, background: scrolled ? '#1E293B' : '#FFFFFF', borderRadius: 2, marginBottom: 5, transition: 'background 0.3s ease' }} />
-                        <div style={{ width: 24, height: 2.5, background: scrolled ? '#1E293B' : '#FFFFFF', borderRadius: 2, marginBottom: 5, transition: 'background 0.3s ease' }} />
-                        <div style={{ width: 24, height: 2.5, background: scrolled ? '#1E293B' : '#FFFFFF', borderRadius: 2, transition: 'background 0.3s ease' }} />
-                    </button>
+                    {/* Right slot for Mobile Hamburger */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', flexShrink: 0, zIndex: 10 }}>
+                        <button
+                            onClick={() => setMobileOpen(o => !o)}
+                            style={{
+                                display: 'none',
+                                background: 'none',
+                                border: 'none',
+                                cursor: 'pointer',
+                                padding: 8,
+                            }}
+                            className="navbar-hamburger"
+                            aria-label="Toggle menu"
+                        >
+                            <div style={{ width: 24, height: 2.5, background: scrolled ? '#1E293B' : '#FFFFFF', borderRadius: 2, marginBottom: 5, transition: 'background 0.3s ease' }} />
+                            <div style={{ width: 24, height: 2.5, background: scrolled ? '#1E293B' : '#FFFFFF', borderRadius: 2, marginBottom: 5, transition: 'background 0.3s ease' }} />
+                            <div style={{ width: 24, height: 2.5, background: scrolled ? '#1E293B' : '#FFFFFF', borderRadius: 2, transition: 'background 0.3s ease' }} />
+                        </button>
+                    </div>
                 </div>
             </header>
 

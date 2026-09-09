@@ -4,9 +4,8 @@ import Navbar from '../../Components/User/Navbar';
 import Hero from '../../Components/User/Hero';
 import CarSeatsSection from '../../Components/User/CarSeatsSection';
 import AboutSection from '../../Components/User/AboutSection';
-import DriversSection from '../../Components/User/DriversSection';
-import FeaturesSection from '../../Components/User/FeaturesSection';
 import WhyChooseUsSection from '../../Components/User/WhyChooseUsSection';
+import DriversSection from '../../Components/User/DriversSection';
 import ServicesSection from '../../Components/User/ServicesSection';
 import TourPackagesSection from '../../Components/User/TourPackagesSection';
 import FleetSection from '../../Components/User/FleetSection';
@@ -49,9 +48,8 @@ export default function Home() {
             <main>
                 <ScrollReveal><CarSeatsSection /></ScrollReveal>
                 <ScrollReveal><AboutSection /></ScrollReveal>
-                <ScrollReveal><DriversSection /></ScrollReveal>
-                <ScrollReveal><FeaturesSection /></ScrollReveal>
                 <ScrollReveal><WhyChooseUsSection /></ScrollReveal>
+                <ScrollReveal><DriversSection /></ScrollReveal>
                 <ScrollReveal><ServicesSection /></ScrollReveal>
                 <ScrollReveal><TourPackagesSection /></ScrollReveal>
                 <ScrollReveal><FleetSection /></ScrollReveal>

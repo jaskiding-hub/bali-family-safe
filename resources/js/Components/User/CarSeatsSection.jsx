@@ -2,21 +2,21 @@ import React from 'react';
 
 const seats = [
     {
-        tag: 'Newborn – 13 kg',
+        tag: 'Age 0 – 12 Months',
         title: 'Rear-Facing Infant',
-        desc: 'Ideal for newborns and infants up to 13kg. Provides maximum protection for delicate necks and spines during transit.',
+        desc: 'Ideal for newborns and infants up to 12 months. Provides maximum protection for delicate necks and spines during transit.',
         img: 'https://images.unsplash.com/photo-1555252333-9f8e92e65df9?auto=format&fit=crop&w=600&q=80',
     },
     {
-        tag: '9 kg – 18 kg',
+        tag: 'Age 1 – 4 Years',
         title: 'Forward-Facing Toddler',
-        desc: 'Secure 5-point harness systems for active toddlers weighing 9kg to 18kg. Engineered for long-distance comfort and side-impact protection.',
+        desc: 'Secure 5-point harness systems for active toddlers aged 1 to 4 years old. Engineered for long-distance comfort and side-impact protection.',
         img: 'https://images.unsplash.com/photo-1617137968427-85924c800a22?auto=format&fit=crop&w=600&q=80',
     },
     {
-        tag: '15 kg – 36 kg',
+        tag: 'Age 4 – 8+ Years',
         title: 'Booster Seat',
-        desc: 'Designed for older children needing elevated height for proper vehicle seatbelt positioning. Ensures maximum safety and visibility.',
+        desc: 'Designed for children aged 4 to 8+ years old needing elevated height for proper vehicle seatbelt positioning. Ensures maximum safety and visibility.',
         img: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=600&q=80',
     },
 ];

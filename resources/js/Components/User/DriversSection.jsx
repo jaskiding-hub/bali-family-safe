@@ -1,25 +1,73 @@
 import React from 'react';
 import { Link } from '@inertiajs/react';
+import { Sparkle } from '@phosphor-icons/react';
 
-// Figma DriversSection — full rebuild
-// Section Our Team: bg #F8F9FA, pt 80px
-// Founder Section: bg #F3F4F5, at top: 308px
-// Support Team Section: bg #F8F9FA, at top: 925.5px
-// Drivers Grid Section: bg #FFFFFF, at top: 1705.5px
-// Section - Trust Banner: bg #FFFFFF, at top: 2526px
-// Section - Family Safety Highlight: bg #F8F9FA, at top: 2984.5px
-
-const SUPPORT_TEAM = [
-    { name: 'Wayan', role: 'Senior Driver & Guide', years: '8 yrs experience', img: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=400&q=80' },
-    { name: 'Kadek', role: 'Family Transport Specialist', years: '6 yrs experience', img: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80' },
-    { name: 'Putu', role: 'Tour Driver & Coordinator', years: '5 yrs experience', img: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=400&q=80' },
-];
-
-const DRIVERS_GRID = [
-    { name: 'Made', role: 'Professional Driver', tag: 'BFS VERIFIED', img: 'https://images.unsplash.com/photo-1552058544-f2b08422138a?auto=format&fit=crop&w=400&q=80' },
-    { name: 'Ketut', role: 'Professional Driver', tag: 'BFS VERIFIED', img: 'https://images.unsplash.com/photo-1548372290-8d01b6c8e78c?auto=format&fit=crop&w=400&q=80' },
-    { name: 'Gede', role: 'Professional Driver', tag: 'BFS VERIFIED', img: 'https://images.unsplash.com/photo-1463453091185-61582044d556?auto=format&fit=crop&w=400&q=80' },
-    { name: 'Agus', role: 'Professional Driver', tag: 'BFS VERIFIED', img: 'https://images.unsplash.com/photo-1499996860823-5214fcc65f8f?auto=format&fit=crop&w=400&q=80' },
+// Unified team members (combining both support staff and professional drivers)
+const UNIFIED_TEAM = [
+    {
+        type: 'staff',
+        name: 'Putu Dewi',
+        role: 'Customer Care Specialist',
+        specialty: 'Guest Relations & Planning',
+        badge: 'SUPPORT TEAM',
+        img: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=400&q=80',
+    },
+    {
+        type: 'staff',
+        name: 'Made Yudi',
+        role: 'Booking & Tour Coordinator',
+        specialty: 'Tour Scheduling & Dispatch',
+        badge: 'SUPPORT TEAM',
+        img: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80',
+    },
+    {
+        type: 'driver',
+        name: 'Wayan Arta',
+        role: 'Senior Private Driver',
+        specialty: '10+ yrs • Certified Car Seats',
+        badge: 'POLICE CLEARED',
+        img: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=400&q=80',
+    },
+    {
+        type: 'driver',
+        name: 'Ketut Budi',
+        role: 'Professional Family Driver',
+        specialty: '8 yrs • English Speaking',
+        badge: 'POLICE CLEARED',
+        img: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=400&q=80',
+    },
+    {
+        type: 'staff',
+        name: 'Ni Luh Sari',
+        role: 'Guest Assistance Specialist',
+        specialty: 'Family Inquiries & Helpdesk',
+        badge: 'SUPPORT TEAM',
+        img: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=400&q=80',
+    },
+    {
+        type: 'driver',
+        name: 'Made Suardana',
+        role: 'Private Tour & Airport Driver',
+        specialty: '12 yrs • Stroller Care',
+        badge: 'POLICE CLEARED',
+        img: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=400&q=80',
+    },
+    {
+        type: 'driver',
+        name: 'Kadek Sumerta',
+        role: 'Family Transport Specialist',
+        specialty: '9 yrs • Child Safety Certified',
+        badge: 'POLICE CLEARED',
+        img: 'https://images.unsplash.com/photo-1463453091185-61582044d556?auto=format&fit=crop&w=400&q=80',
+    },
+    {
+        type: 'driver',
+        name: 'Gede Wirawan',
+        role: 'Private Driver & Guide',
+        specialty: '5 yrs • Toddler Friendly',
+        badge: 'POLICE CLEARED',
+        img: 'https://images.unsplash.com/photo-1548372290-8d01b6c8e78c?auto=format&fit=crop&w=400&q=80',
+    },
 ];
 
 const SAFETY_FEATURES = [
@@ -35,190 +83,59 @@ export default function DriversSection() {
         <div id="drivers" style={{ width: '100%', background: '#F8F9FA' }}>
 
             {/* ── FOUNDER SECTION ── */}
-            <div className="bfs-founder" style={{
-                background: '#F3F4F5',
-                padding: '64px 104px',
-            }}>
-                <div className="bfs-founder-card" style={{
-                    maxWidth: '1072px',
-                    margin: '0 auto',
-                    background: '#F8F9FA',
-                    border: '1px solid #E1E3E4',
-                    boxShadow: '0px 10px 30px rgba(0, 45, 99, 0.04)',
-                    borderRadius: '16px',
-                    display: 'flex',
-                    flexDirection: 'row',
-                    overflow: 'hidden',
-                    minHeight: '490px',
-                }}>
-                    {/* Photo left */}
-                    <div style={{ flex: '1 1 0', position: 'relative', minHeight: '490px', overflow: 'hidden' }}>
-                        <img
-                            src="https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=700&q=80"
-                            alt="Founder of Bali Family Safe Tours"
-                            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-                        />
-                        {/* Gradient overlay */}
-                        <div style={{
-                            position: 'absolute', inset: 0,
-                            background: 'linear-gradient(0deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0) 100%)',
-                        }} />
-                    </div>
-
-                    {/* Text right — Figma: bg #F8F9FA, padding 64px */}
-                    <div style={{
-                        flex: '1 1 0',
-                        background: '#F8F9FA',
-                        padding: '64px',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'center',
-                    }}>
-                        {/* OUR DRIVERS tag — Figma: bg #9FBEFD, text #2B4C83 */}
-                        <div style={{
-                            display: 'inline-flex',
-                            alignSelf: 'flex-start',
-                            background: '#9FBEFD',
-                            borderRadius: '9999px',
-                            padding: '4px 12px',
-                            marginBottom: '24px',
-                        }}>
-                            <span style={{
-                                fontFamily: 'Inter, sans-serif',
-                                fontWeight: 500,
-                                fontSize: '12px',
-                                lineHeight: '16px',
-                                letterSpacing: '0.6px',
-                                textTransform: 'uppercase',
-                                color: '#2B4C83',
-                            }}>
-                                OUR DRIVERS
-                            </span>
+            <div className="bfs-founder relative py-12 sm:py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-[#F9FAFB] to-white overflow-hidden">
+                <div className="relative max-w-4xl mx-auto bg-white rounded-2xl sm:rounded-3xl border border-slate-200/70 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden">
+                    <div className="flex flex-col md:flex-row items-stretch">
+                        
+                        {/* Founder Portrait — matches the text height exactly */}
+                        <div className="w-full md:w-[320px] lg:w-[350px] shrink-0 bg-slate-100 relative overflow-hidden">
+                            <img
+                                src="/images/wayan-suparta.jpg"
+                                alt="Wayan Suparta - Founder of Bali Family Safe Tours"
+                                className="w-full h-full object-cover object-top min-h-[300px] md:min-h-0"
+                            />
                         </div>
 
-                        {/* Name — Figma: 32px bold */}
-                        <h2 style={{
-                            fontFamily: 'Inter, sans-serif',
-                            fontWeight: 700,
-                            fontSize: '32px',
-                            lineHeight: '40px',
-                            color: '#191C1D',
-                            margin: 0,
-                            marginBottom: '16px',
-                        }}>
-                            Wayan Suparta
-                        </h2>
-
-                        <p style={{
-                            fontFamily: 'Inter, sans-serif',
-                            fontWeight: 400,
-                            fontSize: '18px',
-                            lineHeight: '29px',
-                            color: '#3E4850',
-                            margin: 0,
-                            marginBottom: '32px',
-                        }}>
-                            "Behind Bali Family Safe Tours is a team that truly cares about every family travelling to Bali. Our goal is simple: to provide safe, comfortable and reliable transportation for families while giving every guest a warm and personal Bali experience."
-                        </p>
-
-                        {/* Credentials row */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                            <div style={{
-                                width: '48px', height: '48px',
-                                background: 'rgba(0, 101, 141, 0.1)',
-                                borderRadius: '9999px',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            }}>
-                                <svg width="16" height="20" viewBox="0 0 24 24" fill="#00658D"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                        {/* Founder Story & Message */}
+                        <div className="flex-1 p-6 sm:p-8 lg:p-10 flex flex-col justify-center">
+                            {/* Subtle Tag */}
+                            <div className="inline-flex items-center gap-1.5 self-start px-3 py-1 rounded-full bg-sky-50 border border-sky-100 text-[#00658D] text-xs font-semibold tracking-wider uppercase mb-3.5">
+                                <Sparkle size={13} weight="fill" className="text-[#00658D]" />
+                                FOUNDER'S MESSAGE
                             </div>
-                            <div>
-                                <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: '14px', color: '#191C1D' }}>
-                                    Founder & Head Driver
-                                </div>
-                                <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400, fontSize: '14px', color: '#3E4850' }}>
-                                    10+ years family transport
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
-            {/* ── SUPPORT TEAM SECTION ── */}
-            <div className="bfs-support-team" style={{
-                background: '#F8F9FA',
-                padding: '96px 40px 128px',
-            }}>
-                <div style={{
-                    maxWidth: '1200px',
-                    margin: '0 auto',
-                    padding: '0 64px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    gap: '40px',
-                }}>
-                    <div style={{ textAlign: 'center' }}>
-                        <h2 style={{
-                            fontFamily: 'Inter, sans-serif',
-                            fontWeight: 800,
-                            fontSize: '30px',
-                            lineHeight: '36px',
-                            color: '#0F172A',
-                            margin: 0,
-                            marginBottom: '8px',
-                        }}>
-                            Your BFS Family Support Team
-                        </h2>
-                        <p style={{
-                            fontFamily: 'Inter, sans-serif',
-                            fontWeight: 400,
-                            fontSize: '16px',
-                            lineHeight: '24px',
-                            color: '#475569',
-                            margin: 0,
-                        }}>
-                            Here to help you before, during and throughout your Bali journey.
-                        </p>
-                    </div>
+                            {/* Main quote heading */}
+                            <h2 className="text-xl sm:text-2xl lg:text-[25px] font-bold text-slate-900 tracking-tight leading-snug mb-3">
+                                "We don't just drive; we take care of your family like our own."
+                            </h2>
 
-                    {/* 3 Support Cards */}
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 w-full max-w-5xl mx-auto">
-                        {SUPPORT_TEAM.map((driver, i) => (
-                            <div
-                                key={i}
-                                className="w-full bg-white border border-slate-100 shadow-sm rounded-2xl overflow-hidden flex flex-col"
-                            >
-                                <div style={{ height: '254px', overflow: 'hidden', background: '#E2E8F0' }}>
-                                    <img src={driver.img} alt={driver.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            {/* Message body */}
+                            <p className="text-slate-600 text-sm sm:text-base leading-relaxed font-normal mb-5">
+                                Behind Bali Family Safe Tours is a simple commitment: every parent traveling with little ones deserves complete peace of mind. We take the stress out of island travel—providing vetted family drivers, certified child seats, and genuine Balinese care so you can focus on making memories.
+                            </p>
+
+                            {/* Founder Info (clean, elegant, no noisy labels) */}
+                            <div className="pt-4 border-t border-slate-100 flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-full bg-[#00658D]/10 text-[#00658D] flex items-center justify-center font-bold text-sm shrink-0">
+                                    WS
                                 </div>
-                                <div style={{ padding: '24px', textAlign: 'center' }}>
-                                    <h3 style={{ fontFamily: 'Inter, sans-serif', fontWeight: 700, fontSize: '18px', lineHeight: '28px', color: '#0F172A', margin: 0 }}>
-                                        {driver.name}
-                                    </h3>
-                                    <p style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400, fontSize: '14px', lineHeight: '20px', color: '#64748B', margin: '4px 0 12px' }}>
-                                        {driver.role}
-                                    </p>
-                                    <div style={{
-                                        display: 'inline-flex',
-                                        background: '#F8FAFC',
-                                        border: '1px solid #F1F5F9',
-                                        borderRadius: '9999px',
-                                        padding: '4px 12px',
-                                    }}>
-                                        <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '12px', color: '#475569' }}>
-                                            {driver.years}
-                                        </span>
+                                <div>
+                                    <div className="text-base font-bold text-slate-900 leading-tight">
+                                        Wayan Suparta
+                                    </div>
+                                    <div className="text-xs font-medium text-slate-500 mt-0.5">
+                                        Founder & Head Driver
                                     </div>
                                 </div>
                             </div>
-                        ))}
+                        </div>
+
                     </div>
                 </div>
             </div>
 
-            {/* ── DRIVERS GRID ── */}
-            <div className="bfs-drivers-grid" style={{
+            {/* ── UNIFIED TEAM SECTION (Staff & Drivers Combined) ── */}
+            <div className="bfs-unified-team" style={{
                 background: '#FFFFFF',
                 borderTop: '1px solid #E1E3E4',
                 padding: '96px 40px',
@@ -226,111 +143,196 @@ export default function DriversSection() {
                 <div style={{
                     maxWidth: '1200px',
                     margin: '0 auto',
-                    padding: '0 64px',
+                    padding: '0 24px',
                     display: 'flex',
                     flexDirection: 'column',
                     gap: '48px',
                 }}>
-                    <div style={{ textAlign: 'center' }}>
+                    {/* Header */}
+                    <div style={{ textAlign: 'center', maxWidth: '720px', margin: '0 auto' }}>
+                        <div style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            background: 'rgba(0, 101, 141, 0.08)',
+                            borderRadius: '9999px',
+                            padding: '4px 14px',
+                            marginBottom: '16px',
+                        }}>
+                            <span style={{
+                                fontFamily: 'Inter, sans-serif',
+                                fontWeight: 600,
+                                fontSize: '12px',
+                                letterSpacing: '0.6px',
+                                textTransform: 'uppercase',
+                                color: '#00658D',
+                            }}>
+                                OUR TEAM & DRIVERS
+                            </span>
+                        </div>
                         <h2 style={{
                             fontFamily: 'Inter, sans-serif',
                             fontWeight: 700,
-                            fontSize: '32px',
-                            lineHeight: '40px',
+                            fontSize: '36px',
+                            lineHeight: '44px',
                             color: '#191C1D',
                             margin: 0,
                             marginBottom: '16px',
                         }}>
-                            Meet Our Professional Drivers
+                            Meet Our Dedicated Team & Drivers
                         </h2>
                         <p style={{
                             fontFamily: 'Inter, sans-serif',
                             fontWeight: 400,
                             fontSize: '16px',
-                            lineHeight: '24px',
-                            color: '#3E4850',
+                            lineHeight: '26px',
+                            color: '#475569',
                             margin: 0,
                         }}>
-                            Friendly, experienced and family-focused drivers you can trust during your Bali holiday.
+                            From customer support specialists to police-cleared family drivers, our team is committed to making your Bali journey safe, seamless, and memorable.
                         </p>
                     </div>
 
-                    {/* 4-driver grid */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 w-full max-w-5xl mx-auto pt-4">
-                        {DRIVERS_GRID.map((driver, i) => (
+                    {/* Combined Staff & Drivers Grid */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 w-full max-w-6xl mx-auto">
+                        {UNIFIED_TEAM.map((member, i) => (
                             <div
                                 key={i}
-                                className="w-full bg-[#F8F9FA] border border-slate-200/60 shadow-sm rounded-2xl overflow-hidden relative flex flex-col"
+                                className="group w-full bg-white border border-slate-200/80 hover:border-sky-300 shadow-sm hover:shadow-md rounded-2xl overflow-hidden relative flex flex-col transition-all duration-200"
                             >
-                                {/* BFS VERIFIED badge */}
-                                <div className="absolute top-4 left-4 z-10 flex items-center gap-1.5 px-3 py-1 bg-white/95 backdrop-blur-md border border-sky-200/80 shadow-sm rounded-full">
-                                    <svg className="w-3.5 h-3.5 text-sky-600 shrink-0" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                    </svg>
-                                    <span className="text-[10px] font-extrabold tracking-wider text-sky-900 uppercase font-sans">
-                                        BFS VERIFIED
-                                    </span>
+                                {/* Role category badge on photo */}
+                                <div className="absolute top-3.5 left-3.5 z-10">
+                                    {member.type === 'staff' ? (
+                                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-sky-900/90 text-white backdrop-blur-md text-[10px] font-bold tracking-wider rounded-full shadow-sm">
+                                            <svg className="w-3 h-3 text-sky-300" viewBox="0 0 20 20" fill="currentColor">
+                                                <path d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z" />
+                                            </svg>
+                                            STAFF
+                                        </span>
+                                    ) : (
+                                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-800/90 text-white backdrop-blur-md text-[10px] font-bold tracking-wider rounded-full shadow-sm">
+                                            <svg className="w-3 h-3 text-emerald-300" viewBox="0 0 20 20" fill="currentColor">
+                                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                            </svg>
+                                            DRIVER
+                                        </span>
+                                    )}
                                 </div>
 
                                 {/* Photo */}
-                                <div style={{ height: '256px', overflow: 'hidden', background: '#D1D5DB' }}>
-                                    <img src={driver.img} alt={driver.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                <div style={{ height: '240px', overflow: 'hidden', background: '#E2E8F0' }}>
+                                    <img
+                                        src={member.img}
+                                        alt={member.name}
+                                        className="group-hover:scale-105 transition-transform duration-300"
+                                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                    />
                                 </div>
 
-                                {/* Info */}
-                                <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                    <h4 style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: '20px', lineHeight: '28px', color: '#191C1D', margin: 0 }}>
-                                        {driver.name}
+                                {/* Card Body */}
+                                <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', flex: 1 }}>
+                                    <h4 style={{
+                                        fontFamily: 'Inter, sans-serif',
+                                        fontWeight: 700,
+                                        fontSize: '18px',
+                                        lineHeight: '24px',
+                                        color: '#0F172A',
+                                        margin: 0,
+                                        marginBottom: '4px',
+                                    }}>
+                                        {member.name}
                                     </h4>
-                                    <p style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400, fontSize: '14px', lineHeight: '20px', color: '#3E4850', margin: '0 0 8px' }}>
-                                        {driver.role}
+                                    <p style={{
+                                        fontFamily: 'Inter, sans-serif',
+                                        fontWeight: 500,
+                                        fontSize: '13px',
+                                        lineHeight: '18px',
+                                        color: '#00658D',
+                                        margin: 0,
+                                        marginBottom: '12px',
+                                    }}>
+                                        {member.role}
                                     </p>
-                                    <div className="inline-flex items-center gap-1.5 self-start bg-sky-50 border border-sky-200/60 rounded-full px-3 py-1">
-                                        <svg className="w-3.5 h-3.5 text-sky-700 shrink-0" viewBox="0 0 20 20" fill="currentColor">
-                                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                        </svg>
-                                        <span className="text-xs font-semibold text-sky-900 font-sans">
-                                            Police Cleared
-                                        </span>
+
+                                    {/* Sub-tag */}
+                                    <div style={{ marginTop: 'auto' }}>
+                                        <div style={{
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            gap: '6px',
+                                            background: '#F8FAFC',
+                                            border: '1px solid #E2E8F0',
+                                            borderRadius: '8px',
+                                            padding: '4px 10px',
+                                            width: '100%',
+                                        }}>
+                                            <span style={{
+                                                width: '6px',
+                                                height: '6px',
+                                                borderRadius: '50%',
+                                                background: member.type === 'staff' ? '#0284C7' : '#10B981',
+                                                flexShrink: 0,
+                                            }} />
+                                            <span style={{
+                                                fontFamily: 'Inter, sans-serif',
+                                                fontWeight: 500,
+                                                fontSize: '11px',
+                                                color: '#475569',
+                                                whiteSpace: 'nowrap',
+                                                overflow: 'hidden',
+                                                textOverflow: 'ellipsis',
+                                            }}>
+                                                {member.specialty}
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         ))}
                     </div>
 
-                    {/* "Meet More" button */}
-                    <div style={{ display: 'flex', justifyContent: 'center' }}>
+                    {/* "Meet More of Our Team" Button */}
+                    <div style={{ display: 'flex', justifyContent: 'center', marginTop: '8px' }}>
                         <Link
                             href="/our-team"
                             style={{
-                                padding: '12px 32px',
-                                height: '48px',
-                                background: 'transparent',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                padding: '14px 36px',
+                                height: '50px',
+                                background: '#FFFFFF',
                                 border: '2px solid #00658D',
-                                boxShadow: '0px 1px 2px rgba(0,0,0,0.05)',
+                                boxShadow: '0px 2px 6px rgba(0, 101, 141, 0.08)',
                                 borderRadius: '12px',
                                 fontFamily: 'Inter, sans-serif',
                                 fontWeight: 600,
-                                fontSize: '14px',
+                                fontSize: '15px',
                                 lineHeight: '20px',
-                                letterSpacing: '0.14px',
                                 color: '#00658D',
-                                cursor: 'pointer',
-                                transition: 'background 0.15s',
                                 textDecoration: 'none',
-                                display: 'inline-flex',
-                                alignItems: 'center',
+                                cursor: 'pointer',
+                                transition: 'all 0.15s ease',
                             }}
-                            onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,101,141,0.05)'}
-                            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                            onMouseEnter={e => {
+                                e.currentTarget.style.background = '#00658D';
+                                e.currentTarget.style.color = '#FFFFFF';
+                            }}
+                            onMouseLeave={e => {
+                                e.currentTarget.style.background = '#FFFFFF';
+                                e.currentTarget.style.color = '#00658D';
+                            }}
                         >
-                            Meet More of Our Team
+                            <span>Meet More of Our Team</span>
+                            <svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                            </svg>
                         </Link>
                     </div>
                 </div>
             </div>
 
-            {/* ── "MORE THAN JUST A DRIVER" BANNER ── */}
+            {/* ── "MORE THAN JUST A DRIVER" BANNER (Commented out per user request) ── */}
+            {/*
             <div className="bfs-banner" style={{
                 background: '#FFFFFF',
                 borderTop: '1px solid rgba(255,255,255,0.1)',
@@ -363,8 +365,10 @@ export default function DriversSection() {
                     Our team are your local guides, photographers, cultural ambassadors, and most importantly, your family's caretakers on the island of Bali.
                 </p>
             </div>
+            */}
 
-            {/* ── FAMILY SAFETY HIGHLIGHT ── */}
+            {/* ── FAMILY SAFETY HIGHLIGHT (Commented out per user request) ── */}
+            {/*
             <div className="bfs-safety" style={{
                 background: '#F8F9FA',
                 padding: '96px 104px',
@@ -377,9 +381,7 @@ export default function DriversSection() {
                     alignItems: 'center',
                     gap: '64px',
                 }}>
-                    {/* Left: Safety Info */}
                     <div style={{ flex: '1 1 0', maxWidth: '504px' }}>
-                        {/* Safety badge */}
                         <div style={{
                             display: 'inline-flex',
                             alignItems: 'center',
@@ -419,7 +421,6 @@ export default function DriversSection() {
                             As parents ourselves, we know the logistics of traveling with kids. That's why every aspect of our service—from our spotless vehicles to our certified child seats—is designed to eliminate stress and maximize enjoyment.
                         </p>
 
-                        {/* Feature pill grid — Figma: 2-column pills */}
                         <div className="bfs-safety-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', position: 'relative' }}>
                             {SAFETY_FEATURES.map((feat, i) => (
                                 <div
@@ -444,9 +445,7 @@ export default function DriversSection() {
                         </div>
                     </div>
 
-                    {/* Right: Car Seat Image */}
                     <div style={{ flex: '1 1 0', maxWidth: '504px', position: 'relative' }}>
-                        {/* Background decoration */}
                         <div style={{
                             position: 'absolute',
                             top: '-30px', left: '-26px', right: '-6px', bottom: '-2px',
@@ -473,6 +472,7 @@ export default function DriversSection() {
                     </div>
                 </div>
             </div>
+            */}
         </div>
     );
 }
