@@ -926,7 +926,7 @@ export default function MasterData({
                                     Filter
                                 </button>
                             </form>
-
+                        </div>
 
                         {/* Vehicles Grid */}
                         {vehicles && vehicles.length > 0 ? (
