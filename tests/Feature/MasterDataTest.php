@@ -3,6 +3,8 @@
 namespace Tests\Feature;
 
 use App\Enums\DriverStatus;
+use App\Enums\PackageDurationType;
+use App\Enums\PackageType;
 use App\Enums\TransferDirection;
 use App\Enums\VehicleCategory;
 use App\Models\AdminUser;
@@ -10,6 +12,7 @@ use App\Models\Airport;
 use App\Models\Driver;
 use App\Models\Hotel;
 use App\Models\HotelTransferPriceList;
+use App\Models\Package;
 use App\Models\Vehicle;
 use App\Models\VehicleUnit;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -415,5 +418,141 @@ class MasterDataTest extends TestCase
 
         $deleteResponse->assertRedirect(route('admin.master-data.index'));
         $this->assertDatabaseMissing('hotel_transfer_price_lists', ['id' => $pricelist->id]);
+    }
+
+    public function test_admin_can_store_day_tour_package_with_photo_and_highlights(): void
+    {
+        Storage::fake('public');
+
+        $heroImage = UploadedFile::fake()->create('ubud-tour.jpg', 200, 'image/jpeg');
+
+        $response = $this->actingAs($this->admin, 'admin')->post(route('admin.packages.store'), [
+            'name' => 'Ubud Cultural & Nature Day Tour',
+            'subtitle' => 'Explore the serene beauty of Bali cultural center',
+            'description' => 'A complete journey through Ubud sacred monkey forest, rice terraces, and art markets.',
+            'package_type' => PackageType::Ubud->value,
+            'duration_type' => PackageDurationType::FullDay->value,
+            'regular_price' => 650000,
+            'luxury_price' => 1200000,
+            'big_van_price' => 1500000,
+            'display_order' => 1,
+            'hero_image' => $heroImage,
+            'highlights' => [
+                ['title' => 'Tegalalang Rice Terrace', 'description' => 'Iconic valley views and giant swings'],
+                ['title' => 'Sacred Monkey Forest', 'description' => 'Centuries-old banyan trees and playful macaques'],
+            ],
+        ]);
+
+        $response->assertRedirect(route('admin.master-data.index', ['tab' => 'packages']));
+        $response->assertSessionHas('success', 'Paket Day Tour berhasil ditambahkan.');
+
+        $this->assertDatabaseHas('packages', [
+            'name' => 'Ubud Cultural & Nature Day Tour',
+            'slug' => 'ubud-cultural-nature-day-tour',
+            'package_type' => PackageType::Ubud->value,
+            'duration_type' => PackageDurationType::FullDay->value,
+            'regular_price' => 650000,
+            'luxury_price' => 1200000,
+            'big_van_price' => 1500000,
+        ]);
+
+        $package = Package::where('name', 'Ubud Cultural & Nature Day Tour')->first();
+        $this->assertNotNull($package);
+        $this->assertNotNull($package->hero_image);
+        $this->assertCount(2, $package->highlights);
+        $this->assertDatabaseHas('package_highlights', [
+            'package_id' => $package->id,
+            'title' => 'Tegalalang Rice Terrace',
+        ]);
+    }
+
+    public function test_admin_can_store_package_with_custom_free_text_region(): void
+    {
+        $response = $this->actingAs($this->admin, 'admin')->post(route('admin.packages.store'), [
+            'name' => 'Bedugul Lake & Waterfall Tour',
+            'subtitle' => 'Scenic highlands of north-central Bali',
+            'description' => 'Visit Beratan Lake and Banyumala twin waterfalls.',
+            'package_type' => 'Bedugul & Singaraja',
+            'duration_type' => 'Full Day',
+            'regular_price' => 800000,
+            'luxury_price' => 1500000,
+            'big_van_price' => 1700000,
+            'display_order' => 5,
+        ]);
+
+        $response->assertRedirect(route('admin.master-data.index', ['tab' => 'packages']));
+        $this->assertDatabaseHas('packages', [
+            'name' => 'Bedugul Lake & Waterfall Tour',
+            'package_type' => 'Bedugul & Singaraja',
+        ]);
+    }
+
+    public function test_admin_can_update_day_tour_package_and_sync_highlights(): void
+    {
+        $package = Package::create([
+            'name' => 'Uluwatu Sunset Tour',
+            'slug' => 'uluwatu-sunset-tour',
+            'subtitle' => 'Cliffside temple and fire dance',
+            'description' => 'Watch the spectacular Kecak dance.',
+            'package_type' => PackageType::SouthBali->value,
+            'duration_type' => PackageDurationType::HalfDay->value,
+            'regular_price' => 500000,
+            'luxury_price' => 950000,
+            'big_van_price' => 1200000,
+            'display_order' => 1,
+        ]);
+
+        $response = $this->actingAs($this->admin, 'admin')->put(route('admin.packages.update', $package), [
+            'name' => 'Uluwatu Sunset & Kecak Tour',
+            'subtitle' => 'Cliffside temple with Kecak Fire Dance',
+            'description' => 'Watch the spectacular sunset and Kecak dance.',
+            'package_type' => PackageType::SouthBali->value,
+            'duration_type' => PackageDurationType::HalfDay->value,
+            'regular_price' => 550000,
+            'luxury_price' => 1000000,
+            'big_van_price' => 1300000,
+            'display_order' => 2,
+            'highlights' => [
+                ['title' => 'Uluwatu Temple', 'description' => 'Perched on a 70m cliff'],
+            ],
+        ]);
+
+        $response->assertRedirect(route('admin.master-data.index', ['tab' => 'packages']));
+        $response->assertSessionHas('success', 'Paket Day Tour berhasil diperbarui.');
+
+        $this->assertDatabaseHas('packages', [
+            'id' => $package->id,
+            'name' => 'Uluwatu Sunset & Kecak Tour',
+            'regular_price' => 550000,
+        ]);
+
+        $this->assertCount(1, $package->fresh()->highlights);
+        $this->assertDatabaseHas('package_highlights', [
+            'package_id' => $package->id,
+            'title' => 'Uluwatu Temple',
+        ]);
+    }
+
+    public function test_admin_can_delete_day_tour_package(): void
+    {
+        $package = Package::create([
+            'name' => 'East Bali Gate of Heaven',
+            'slug' => 'east-bali-gate-of-heaven',
+            'subtitle' => 'Lempuyang and Tirta Gangga',
+            'description' => 'Iconic photography spots in Karangasem.',
+            'package_type' => PackageType::EastBali->value,
+            'duration_type' => PackageDurationType::FullDay->value,
+            'regular_price' => 750000,
+            'luxury_price' => 1400000,
+            'big_van_price' => 1700000,
+            'display_order' => 1,
+        ]);
+
+        $response = $this->actingAs($this->admin, 'admin')->delete(route('admin.packages.destroy', $package));
+
+        $response->assertRedirect(route('admin.master-data.index', ['tab' => 'packages']));
+        $response->assertSessionHas('success', 'Paket Day Tour berhasil dihapus.');
+
+        $this->assertDatabaseMissing('packages', ['id' => $package->id]);
     }
 }

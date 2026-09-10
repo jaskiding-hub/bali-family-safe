@@ -1,16 +1,19 @@
 import React, { useState, useRef } from 'react';
-import { useForm, router, usePage } from '@inertiajs/react';
+import { useForm, router, usePage, Head } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import Modal from '@/Components/Modal';
 
-const selectClass = "w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-base sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs hover:border-slate-300 transition-colors cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22%2364748b%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M5.22%208.22a.75.75%200%200%201%201.06%200L10%2011.94l3.72-3.72a.75.75%200%201%201%201.06%201.06l-4.25%204.25a.75.75%200%200%201-1.06%200L5.22%209.28a.75.75%200%200%201%200-1.06z%22%20clip-rule%3D%22evenodd%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem_1.25rem] bg-[right_0.75rem_center] bg-no-repeat pr-10";
+const inputBaseClass = "w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#00AEEF]/20 focus:border-[#00AEEF] transition";
+const selectBaseClass = "w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#00AEEF]/20 focus:border-[#00AEEF] transition cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22%2364748b%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M5.22%208.22a.75.75%200%200%201%201.06%200L10%2011.94l3.72-3.72a.75.75%200%201%201%201.06%201.06l-4.25%204.25a.75.75%200%200%201-1.06%200L5.22%209.28a.75.75%200%200%201%200-1.06z%22%20clip-rule%3D%22evenodd%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem_1.25rem] bg-[right_0.75rem_center] bg-no-repeat pr-10";
 
 export default function MasterData({
     active_tab = 'vehicles',
     vehicles = [],
     vehicle_categories = [],
+    packages = [],
+    package_types = [],
+    package_duration_types = [],
     drivers = { data: [], links: [] },
-    available_vehicle_units = [],
     hotels = [],
     airports = [],
     hotel_transfer_price_lists = [],
@@ -19,11 +22,11 @@ export default function MasterData({
     stats = {},
     filters = {},
 }) {
-    const { flash = {}, errors = {} } = usePage().props;
+    const { flash = {} } = usePage().props;
     const [currentTab, setCurrentTab] = useState(active_tab || 'vehicles');
 
     // -------------------------------------------------------------------------
-    // TAB 1: VEHICLES STATE & HANDLERS
+    // TAB 1: VEHICLES (Showcase Fleet)
     // -------------------------------------------------------------------------
     const [vehicleSearch, setVehicleSearch] = useState(filters.search_vehicle || '');
     const [selectedVehicleCategory, setSelectedVehicleCategory] = useState(filters.category_vehicle || 'all');
@@ -40,10 +43,8 @@ export default function MasterData({
         name: '',
         category: vehicle_categories[0] || 'Regular Family SUV',
         model: new Date().getFullYear().toString(),
-        daily_rate: '',
         passenger_capacity: 6,
         luggage_capacity: 4,
-        is_popular: false,
         photo: null,
     });
 
@@ -52,10 +53,8 @@ export default function MasterData({
         name: '',
         category: '',
         model: '',
-        daily_rate: '',
         passenger_capacity: 1,
         luggage_capacity: 0,
-        is_popular: false,
         photo: null,
     });
 
@@ -98,10 +97,8 @@ export default function MasterData({
             name: vehicle.name || '',
             category: vehicle.category || (vehicle_categories[0] || 'Regular Family SUV'),
             model: vehicle.model || '',
-            daily_rate: vehicle.daily_rate || '',
             passenger_capacity: vehicle.passenger_capacity || 6,
             luggage_capacity: vehicle.luggage_capacity || 4,
-            is_popular: Boolean(vehicle.is_popular),
             photo: null,
         });
         setEditVehiclePhotoPreview(vehicle.photo_url || null);
@@ -138,7 +135,136 @@ export default function MasterData({
     };
 
     // -------------------------------------------------------------------------
-    // TAB 2: DRIVERS STATE & HANDLERS
+    // TAB 2: PACKAGES (Day Tour Management)
+    // -------------------------------------------------------------------------
+    const [packageSearch, setPackageSearch] = useState(filters.search_package || '');
+    const [selectedPackageType, setSelectedPackageType] = useState(filters.type_package || 'all');
+    const [selectedPackageDuration, setSelectedPackageDuration] = useState(filters.duration_package || 'all');
+    const [showAddPackageModal, setShowAddPackageModal] = useState(false);
+    const [showEditPackageModal, setShowEditPackageModal] = useState(false);
+    const [showDeletePackageModal, setShowDeletePackageModal] = useState(false);
+    const [selectedPackage, setSelectedPackage] = useState(null);
+    const [addPackagePhotoPreview, setAddPackagePhotoPreview] = useState(null);
+    const [editPackagePhotoPreview, setEditPackagePhotoPreview] = useState(null);
+    const addPackageFileInputRef = useRef(null);
+    const editPackageFileInputRef = useRef(null);
+
+    const addPackageForm = useForm({
+        name: '',
+        subtitle: '',
+        description: '',
+        package_type: package_types[0] || 'Ubud',
+        duration_type: package_duration_types[1] || 'Full Day',
+        regular_price: '',
+        luxury_price: '',
+        big_van_price: '',
+        hero_image: null,
+        highlights: [{ title: '', description: '' }],
+    });
+
+    const editPackageForm = useForm({
+        _method: 'put',
+        name: '',
+        subtitle: '',
+        description: '',
+        package_type: 'Ubud',
+        duration_type: 'Full Day',
+        regular_price: '',
+        luxury_price: '',
+        big_van_price: '',
+        hero_image: null,
+        highlights: [],
+    });
+
+    const handlePackageFilterSubmit = (e) => {
+        e.preventDefault();
+        router.get(
+            '/admin/master-data',
+            {
+                tab: 'packages',
+                search_package: packageSearch,
+                type_package: selectedPackageType,
+                duration_package: selectedPackageDuration,
+            },
+            { preserveState: true, replace: true }
+        );
+    };
+
+    const handlePackagePhotoChange = (file, isEdit = false) => {
+        if (!file) return;
+        if (isEdit) {
+            editPackageForm.setData('hero_image', file);
+            setEditPackagePhotoPreview(URL.createObjectURL(file));
+        } else {
+            addPackageForm.setData('hero_image', file);
+            setAddPackagePhotoPreview(URL.createObjectURL(file));
+        }
+    };
+
+    const handleAddPackageSubmit = (e) => {
+        e.preventDefault();
+        addPackageForm.post('/admin/packages', {
+            forceFormData: true,
+            onSuccess: () => {
+                setShowAddPackageModal(false);
+                addPackageForm.reset();
+                setAddPackagePhotoPreview(null);
+            },
+        });
+    };
+
+    const openEditPackageModal = (pkg) => {
+        setSelectedPackage(pkg);
+        editPackageForm.setData({
+            _method: 'put',
+            name: pkg.name || '',
+            subtitle: pkg.subtitle || '',
+            description: pkg.description || '',
+            package_type: pkg.package_type || 'Ubud',
+            duration_type: pkg.duration_type || 'Full Day',
+            regular_price: pkg.regular_price || '',
+            luxury_price: pkg.luxury_price || '',
+            big_van_price: pkg.big_van_price || '',
+            hero_image: null,
+            highlights: pkg.highlights && pkg.highlights.length > 0
+                ? pkg.highlights.map(h => ({ title: h.title || '', description: h.description || '' }))
+                : [{ title: '', description: '' }],
+        });
+        setEditPackagePhotoPreview(pkg.hero_image || null);
+        setShowEditPackageModal(true);
+    };
+
+    const handleEditPackageSubmit = (e) => {
+        e.preventDefault();
+        if (!selectedPackage) return;
+        editPackageForm.post(`/admin/packages/${selectedPackage.id}`, {
+            forceFormData: true,
+            onSuccess: () => {
+                setShowEditPackageModal(false);
+                editPackageForm.reset();
+                setEditPackagePhotoPreview(null);
+                setSelectedPackage(null);
+            },
+        });
+    };
+
+    const openDeletePackageModal = (pkg) => {
+        setSelectedPackage(pkg);
+        setShowDeletePackageModal(true);
+    };
+
+    const handleDeletePackage = () => {
+        if (!selectedPackage) return;
+        router.delete(`/admin/packages/${selectedPackage.id}`, {
+            onSuccess: () => {
+                setShowDeletePackageModal(false);
+                setSelectedPackage(null);
+            },
+        });
+    };
+
+    // -------------------------------------------------------------------------
+    // TAB 3: DRIVERS
     // -------------------------------------------------------------------------
     const [driverSearch, setDriverSearch] = useState(filters.search_driver || '');
     const [showAddDriverModal, setShowAddDriverModal] = useState(false);
@@ -252,7 +378,7 @@ export default function MasterData({
     };
 
     // -------------------------------------------------------------------------
-    // TAB 3: HOTELS STATE & HANDLERS
+    // TAB 4: HOTELS
     // -------------------------------------------------------------------------
     const [hotelSearch, setHotelSearch] = useState(filters.search_hotel || '');
     const [showAddHotelModal, setShowAddHotelModal] = useState(false);
@@ -328,7 +454,7 @@ export default function MasterData({
     };
 
     // -------------------------------------------------------------------------
-    // TAB 4: DESTINASI / AIRPORT STATE & HANDLERS
+    // TAB 5: AIRPORTS / DESTINASI BANDARA
     // -------------------------------------------------------------------------
     const [airportSearch, setAirportSearch] = useState(filters.search_airport || '');
     const [airportTypeFilter, setAirportTypeFilter] = useState(filters.type_airport || 'all');
@@ -411,7 +537,7 @@ export default function MasterData({
     };
 
     // -------------------------------------------------------------------------
-    // TAB 5: HOTEL PRICELIST STATE & HANDLERS
+    // TAB 6: HOTEL PRICELISTS
     // -------------------------------------------------------------------------
     const [hotelPriceSearch, setHotelPriceSearch] = useState(filters.search_hotel_pricelist || '');
     const [showAddHotelPriceModal, setShowAddHotelPriceModal] = useState(false);
@@ -446,7 +572,7 @@ export default function MasterData({
     const handleAddHotelPriceSubmit = (e) => {
         e.preventDefault();
         if (addHotelPriceForm.data.hotel_id_pickup === addHotelPriceForm.data.hotel_id_dropoff) {
-            alert('Hotel Tujuan tidak boleh sama dengan Hotel Asal.');
+            alert('Hotel tujuan tidak boleh sama dengan hotel asal.');
             return;
         }
         addHotelPriceForm.post('/admin/hotel-transfer-price-lists', {
@@ -473,7 +599,7 @@ export default function MasterData({
         e.preventDefault();
         if (!selectedHotelPrice) return;
         if (editHotelPriceForm.data.hotel_id_pickup === editHotelPriceForm.data.hotel_id_dropoff) {
-            alert('Hotel Tujuan tidak boleh sama dengan Hotel Asal.');
+            alert('Hotel tujuan tidak boleh sama dengan hotel asal.');
             return;
         }
         editHotelPriceForm.put(`/admin/hotel-transfer-price-lists/${selectedHotelPrice.id}`, {
@@ -500,28 +626,27 @@ export default function MasterData({
         });
     };
 
-    // Generic pagination renderer
     const renderPagination = (paginatedData) => {
         if (!paginatedData || paginatedData.total === 0) return null;
         const { from, to, total, links = [] } = paginatedData;
 
         return (
-            <div className="flex flex-col sm:flex-row justify-between items-center px-6 py-4 bg-slate-50/50 border-t border-slate-100 gap-4">
-                <div className="text-xs sm:text-sm font-medium text-slate-500">
-                    Showing <span className="font-semibold text-slate-800">{from}</span> to <span className="font-semibold text-slate-800">{to}</span> of <span className="font-semibold text-slate-800">{total}</span> entries
+            <div className="flex flex-col sm:flex-row justify-between items-center px-6 py-4 bg-slate-50/50 border-t border-slate-200/80 gap-4">
+                <div className="text-xs text-slate-500 font-medium">
+                    Menampilkan <span className="font-semibold text-slate-900">{from}</span>&ndash;<span className="font-semibold text-slate-900">{to}</span> dari <span className="font-semibold text-slate-900">{total}</span> data
                 </div>
 
                 <div className="flex items-center gap-1">
                     {links.map((link, idx) => {
                         let label = link.label;
-                        if (label.includes('&laquo;') || label.includes('Previous')) label = 'Prev';
-                        else if (label.includes('&raquo;') || label.includes('Next')) label = 'Next';
+                        if (label.includes('&laquo;') || label.includes('Previous')) label = 'Sebelumnya';
+                        else if (label.includes('&raquo;') || label.includes('Next')) label = 'Berikutnya';
 
                         if (!link.url) {
                             return (
                                 <span
                                     key={idx}
-                                    className="px-3 py-1.5 border border-slate-200 rounded-lg text-xs font-medium text-slate-400 opacity-50 cursor-not-allowed bg-white"
+                                    className="px-3 py-1.5 border border-slate-200 rounded-lg text-xs font-medium text-slate-400 bg-slate-50 cursor-not-allowed"
                                     dangerouslySetInnerHTML={{ __html: label }}
                                 />
                             );
@@ -532,9 +657,9 @@ export default function MasterData({
                                 key={idx}
                                 type="button"
                                 onClick={() => router.visit(link.url, { preserveState: true })}
-                                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer ${
                                     link.active
-                                        ? 'bg-[#00AEEF] text-white shadow-xs font-semibold'
+                                        ? 'bg-slate-900 text-white font-semibold'
                                         : 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
                                 }`}
                                 dangerouslySetInnerHTML={{ __html: label }}
@@ -546,319 +671,191 @@ export default function MasterData({
         );
     };
 
+    const tabs = [
+        {
+            id: 'vehicles',
+            label: 'Armada Mobil',
+            sublabel: 'Showcase',
+            count: stats.total_vehicles ?? vehicles.length,
+            icon: (
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.5 2.8C2.1 10.7 2 11 2 11.3V16c0 .6.4 1 1 1h2" />
+                    <circle cx="7" cy="17" r="2" />
+                    <path d="M9 17h6" />
+                    <circle cx="17" cy="17" r="2" />
+                </svg>
+            ),
+        },
+        {
+            id: 'packages',
+            label: 'Paket Day Tour',
+            sublabel: 'Wisata Bali',
+            count: stats.total_packages ?? packages.length,
+            icon: (
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="12" r="10" />
+                    <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
+                </svg>
+            ),
+        },
+        {
+            id: 'drivers',
+            label: 'Pengemudi',
+            sublabel: 'Supir & Unit',
+            count: stats.total_drivers ?? 0,
+            icon: (
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                </svg>
+            ),
+        },
+        {
+            id: 'hotels',
+            label: 'Hotel & Resort',
+            sublabel: 'Akomodasi',
+            count: stats.total_hotels ?? hotels.length,
+            icon: (
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z" />
+                    <path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2" />
+                    <path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2" />
+                    <path d="M10 6h4" />
+                    <path d="M10 10h4" />
+                    <path d="M10 14h4" />
+                    <path d="M10 18h4" />
+                </svg>
+            ),
+        },
+        {
+            id: 'airports',
+            label: 'Tarif Bandara',
+            sublabel: 'Transfer Drop/Pick',
+            count: stats.total_airports ?? airports.length,
+            icon: (
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z" />
+                </svg>
+            ),
+        },
+        {
+            id: 'hotel_transfer_price_lists',
+            label: 'Tarif Antar Hotel',
+            sublabel: 'Point to Point',
+            count: stats.total_hotel_pricelists ?? hotel_transfer_price_lists.length,
+            icon: (
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="m16 3 4 4-4 4" />
+                    <path d="M20 7H4" />
+                    <path d="m8 21-4-4 4-4" />
+                    <path d="M4 17h16" />
+                </svg>
+            ),
+        },
+    ];
+
     return (
-        <AdminLayout title="Master Data Management">
+        <AdminLayout title="Master Data">
+            <Head title="Master Data - Bali Family Safe Admin" />
+
             <div className="space-y-6 max-w-[1280px]">
                 {/* Flash Message */}
                 {flash?.success && (
-                    <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-2xl flex items-center gap-3 text-sm font-semibold animate-in fade-in duration-200">
-                        <svg className="w-5 h-5 text-emerald-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-xl flex items-center gap-3 text-sm font-medium animate-in fade-in duration-150">
+                        <svg className="w-5 h-5 text-emerald-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                             <polyline points="20 6 9 17 4 12" />
                         </svg>
                         <span>{flash.success}</span>
                     </div>
                 )}
+                {flash?.error && (
+                    <div className="bg-rose-50 border border-rose-200 text-rose-800 px-4 py-3 rounded-xl flex items-center gap-3 text-sm font-medium animate-in fade-in duration-150">
+                        <svg className="w-5 h-5 text-rose-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <circle cx="12" cy="12" r="10" />
+                            <line x1="12" y1="8" x2="12" y2="12" />
+                            <line x1="12" y1="16" x2="12.01" y2="16" />
+                        </svg>
+                        <span>{flash.error}</span>
+                    </div>
+                )}
 
-                {/* Top Header Card */}
-                <div className="bg-white rounded-2xl shadow-xs border border-slate-200/80 p-5 sm:p-6">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                        <div>
-                            <div className="flex items-center gap-2">
-                                <span className="text-xs font-bold uppercase tracking-wider text-[#00AEEF] bg-sky-50 px-2.5 py-1 rounded-md border border-sky-100">
-                                    Master Data
-                                </span>
-                                <span className="text-xs font-medium text-slate-400">&bull;</span>
-                                <span className="text-xs font-medium text-slate-500">Pusat Data Master Operasional</span>
-                            </div>
-                            <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight mt-1">
-                                Master Data Management
-                            </h2>
-                            <p className="text-xs sm:text-sm text-slate-500 mt-1">
-                                Kelola armada mobil 3-tier, data pengemudi, database hotel, tarif destinasi bandara, dan pricelist transfer antar hotel.
-                            </p>
-                        </div>
+                {/* Page Header & Symmetrical 6-Grid Card Navigation */}
+                <div className="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-6 space-y-5">
+                    <div>
+                        <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
+                            Master Data
+                        </h1>
+                        <p className="text-xs sm:text-sm text-slate-500 mt-1">
+                            Kelola database armada showcase, paket wisata day tour, pengemudi, hotel, tarif bandara, dan tarif antar hotel.
+                        </p>
                     </div>
 
-                    {/* 5 Interactive KPI Overview Cards */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5 mt-6">
-                        {/* KPI 1: Vehicles */}
-                        <button
-                            type="button"
-                            onClick={() => setCurrentTab('vehicles')}
-                            className={`p-4 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between group ${
-                                currentTab === 'vehicles'
-                                    ? 'bg-sky-50/70 border-sky-400/80 ring-2 ring-sky-500/20 shadow-xs'
-                                    : 'bg-white border-slate-200/80 hover:border-sky-300 hover:bg-slate-50/60'
-                            }`}
-                        >
-                            <div className="flex items-center justify-between">
-                                <div className={`w-9 h-9 rounded-lg flex items-center justify-center transition-colors ${
-                                    currentTab === 'vehicles' ? 'bg-[#00AEEF] text-white shadow-xs' : 'bg-sky-100 text-sky-700 group-hover:bg-sky-200'
-                                }`}>
-                                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                        <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2" />
-                                        <circle cx="7" cy="17" r="2" />
-                                        <circle cx="17" cy="17" r="2" />
-                                    </svg>
-                                </div>
-                                <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
-                                    currentTab === 'vehicles' ? 'bg-sky-200/80 text-sky-900' : 'bg-slate-100 text-slate-600'
-                                }`}>
-                                    3 Tiers
-                                </span>
-                            </div>
-                            <div className="mt-3">
-                                <div className="text-2xl font-black text-slate-900 leading-none">
-                                    {stats?.total_vehicles || vehicles.length}
-                                </div>
-                                <div className="text-xs font-bold text-slate-700 mt-1">Armada Mobil</div>
-                                <div className="text-[11px] text-slate-400 truncate">Regular, Luxury, Big Van</div>
-                            </div>
-                        </button>
+                    {/* Symmetrical Balanced Responsive Grid: 6 cols (lg), 3 cols (sm/md), 2 cols (mobile) */}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
+                        {tabs.map((tab) => {
+                            const isActive = currentTab === tab.id;
+                            return (
+                                <button
+                                    key={tab.id}
+                                    type="button"
+                                    onClick={() => {
+                                        setCurrentTab(tab.id);
+                                        router.get('/admin/master-data', { tab: tab.id }, { preserveState: true, replace: true });
+                                    }}
+                                    className={`p-3 rounded-xl text-left transition duration-150 flex flex-col justify-between gap-2.5 cursor-pointer relative ${
+                                        isActive
+                                            ? 'bg-slate-900 text-white shadow-md ring-2 ring-slate-900'
+                                            : 'bg-slate-50/70 hover:bg-slate-100/90 text-slate-700 border border-slate-200/80 hover:border-slate-300'
+                                    }`}
+                                >
+                                    <div className="flex items-center justify-between gap-1 w-full">
+                                        <div className={`p-1.5 rounded-lg ${
+                                            isActive
+                                                ? 'bg-white/15 text-white'
+                                                : 'bg-white text-slate-600 shadow-2xs border border-slate-200/60'
+                                        }`}>
+                                            {tab.icon}
+                                        </div>
+                                        <span className={`px-2 py-0.5 rounded-md text-[11px] font-bold tabular-nums ${
+                                            isActive
+                                                ? 'bg-[#00AEEF] text-white'
+                                                : 'bg-white text-slate-700 border border-slate-200/60 shadow-2xs'
+                                        }`}>
+                                            {tab.count}
+                                        </span>
+                                    </div>
 
-                        {/* KPI 2: Drivers */}
-                        <button
-                            type="button"
-                            onClick={() => setCurrentTab('drivers')}
-                            className={`p-4 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between group ${
-                                currentTab === 'drivers'
-                                    ? 'bg-indigo-50/70 border-indigo-400/80 ring-2 ring-indigo-500/20 shadow-xs'
-                                    : 'bg-white border-slate-200/80 hover:border-indigo-300 hover:bg-slate-50/60'
-                            }`}
-                        >
-                            <div className="flex items-center justify-between">
-                                <div className={`w-9 h-9 rounded-lg flex items-center justify-center transition-colors ${
-                                    currentTab === 'drivers' ? 'bg-indigo-600 text-white shadow-xs' : 'bg-indigo-100 text-indigo-700 group-hover:bg-indigo-200'
-                                }`}>
-                                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                                        <circle cx="9" cy="7" r="4" />
-                                        <polyline points="16 11 18 13 22 9" />
-                                    </svg>
-                                </div>
-                                <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
-                                    currentTab === 'drivers' ? 'bg-indigo-200/80 text-indigo-900' : 'bg-slate-100 text-slate-600'
-                                }`}>
-                                    Driver
-                                </span>
-                            </div>
-                            <div className="mt-3">
-                                <div className="text-2xl font-black text-slate-900 leading-none">
-                                    {stats?.total_drivers || drivers.total || drivers.data?.length || 0}
-                                </div>
-                                <div className="text-xs font-bold text-slate-700 mt-1">Pengemudi Aktif</div>
-                                <div className="text-[11px] text-slate-400 truncate">SIM & WhatsApp</div>
-                            </div>
-                        </button>
-
-                        {/* KPI 3: Hotels */}
-                        <button
-                            type="button"
-                            onClick={() => setCurrentTab('hotels')}
-                            className={`p-4 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between group ${
-                                currentTab === 'hotels'
-                                    ? 'bg-amber-50/70 border-amber-400/80 ring-2 ring-amber-500/20 shadow-xs'
-                                    : 'bg-white border-slate-200/80 hover:border-amber-300 hover:bg-slate-50/60'
-                            }`}
-                        >
-                            <div className="flex items-center justify-between">
-                                <div className={`w-9 h-9 rounded-lg flex items-center justify-center transition-colors ${
-                                    currentTab === 'hotels' ? 'bg-amber-600 text-white shadow-xs' : 'bg-amber-100 text-amber-800 group-hover:bg-amber-200'
-                                }`}>
-                                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                        <path d="M2 20h20" />
-                                        <path d="M4 20V4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v16" />
-                                        <path d="M9 20v-6h6v6" />
-                                        <path d="M9 8h2" />
-                                        <path d="M13 8h2" />
-                                        <path d="M9 12h2" />
-                                        <path d="M13 12h2" />
-                                    </svg>
-                                </div>
-                                <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
-                                    currentTab === 'hotels' ? 'bg-amber-200/80 text-amber-900' : 'bg-slate-100 text-slate-600'
-                                }`}>
-                                    Resort
-                                </span>
-                            </div>
-                            <div className="mt-3">
-                                <div className="text-2xl font-black text-slate-900 leading-none">
-                                    {stats?.total_hotels || hotels.length}
-                                </div>
-                                <div className="text-xs font-bold text-slate-700 mt-1">Database Hotel</div>
-                                <div className="text-[11px] text-slate-400 truncate">Hotel & Resort Bali</div>
-                            </div>
-                        </button>
-
-                        {/* KPI 4: Airports */}
-                        <button
-                            type="button"
-                            onClick={() => setCurrentTab('airports')}
-                            className={`p-4 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between group ${
-                                currentTab === 'airports'
-                                    ? 'bg-emerald-50/70 border-emerald-400/80 ring-2 ring-emerald-500/20 shadow-xs'
-                                    : 'bg-white border-slate-200/80 hover:border-emerald-300 hover:bg-slate-50/60'
-                            }`}
-                        >
-                            <div className="flex items-center justify-between">
-                                <div className={`w-9 h-9 rounded-lg flex items-center justify-center transition-colors ${
-                                    currentTab === 'airports' ? 'bg-emerald-600 text-white shadow-xs' : 'bg-emerald-100 text-emerald-800 group-hover:bg-emerald-200'
-                                }`}>
-                                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                        <path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z" />
-                                    </svg>
-                                </div>
-                                <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
-                                    currentTab === 'airports' ? 'bg-emerald-200/80 text-emerald-900' : 'bg-slate-100 text-slate-600'
-                                }`}>
-                                    Airport
-                                </span>
-                            </div>
-                            <div className="mt-3">
-                                <div className="text-2xl font-black text-slate-900 leading-none">
-                                    {stats?.total_airports || airports.length}
-                                </div>
-                                <div className="text-xs font-bold text-slate-700 mt-1">Destinasi Bandara</div>
-                                <div className="text-[11px] text-slate-400 truncate">Pick-Up & Drop-Off</div>
-                            </div>
-                        </button>
-
-                        {/* KPI 5: Hotel Pricelists */}
-                        <button
-                            type="button"
-                            onClick={() => setCurrentTab('hotel_transfer_price_lists')}
-                            className={`p-4 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between group ${
-                                currentTab === 'hotel_transfer_price_lists'
-                                    ? 'bg-purple-50/70 border-purple-400/80 ring-2 ring-purple-500/20 shadow-xs'
-                                    : 'bg-white border-slate-200/80 hover:border-purple-300 hover:bg-slate-50/60'
-                            }`}
-                        >
-                            <div className="flex items-center justify-between">
-                                <div className={`w-9 h-9 rounded-lg flex items-center justify-center transition-colors ${
-                                    currentTab === 'hotel_transfer_price_lists' ? 'bg-purple-600 text-white shadow-xs' : 'bg-purple-100 text-purple-800 group-hover:bg-purple-200'
-                                }`}>
-                                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                        <rect width="20" height="14" x="2" y="5" rx="2" />
-                                        <line x1="2" x2="22" y1="10" y2="10" />
-                                    </svg>
-                                </div>
-                                <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
-                                    currentTab === 'hotel_transfer_price_lists' ? 'bg-purple-200/80 text-purple-900' : 'bg-slate-100 text-slate-600'
-                                }`}>
-                                    Transfer
-                                </span>
-                            </div>
-                            <div className="mt-3">
-                                <div className="text-2xl font-black text-slate-900 leading-none">
-                                    {stats?.total_hotel_pricelists || hotel_transfer_price_lists.length}
-                                </div>
-                                <div className="text-xs font-bold text-slate-700 mt-1">Tarif Antar Hotel</div>
-                                <div className="text-[11px] text-slate-400 truncate">Rute Antar Hotel</div>
-                            </div>
-                        </button>
-                    </div>
-
-                    {/* Secondary Navigation Tabs Bar */}
-                    <div className="flex items-center gap-2 pt-5 border-t border-slate-100 mt-5 overflow-x-auto no-scrollbar">
-                        <button
-                            type="button"
-                            onClick={() => setCurrentTab('vehicles')}
-                            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 shrink-0 ${
-                                currentTab === 'vehicles'
-                                    ? 'bg-slate-900 text-white shadow-xs'
-                                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                            }`}
-                        >
-                            <span>Armada Mobil</span>
-                            <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
-                                currentTab === 'vehicles' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'
-                            }`}>
-                                {vehicles.length}
-                            </span>
-                        </button>
-
-                        <button
-                            type="button"
-                            onClick={() => setCurrentTab('drivers')}
-                            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 shrink-0 ${
-                                currentTab === 'drivers'
-                                    ? 'bg-slate-900 text-white shadow-xs'
-                                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                            }`}
-                        >
-                            <span>Driver</span>
-                            <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
-                                currentTab === 'drivers' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'
-                            }`}>
-                                {drivers.total || drivers.data?.length || 0}
-                            </span>
-                        </button>
-
-                        <button
-                            type="button"
-                            onClick={() => setCurrentTab('hotels')}
-                            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 shrink-0 ${
-                                currentTab === 'hotels'
-                                    ? 'bg-slate-900 text-white shadow-xs'
-                                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                            }`}
-                        >
-                            <span>Database Hotel</span>
-                            <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
-                                currentTab === 'hotels' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'
-                            }`}>
-                                {hotels.length}
-                            </span>
-                        </button>
-
-                        <button
-                            type="button"
-                            onClick={() => setCurrentTab('airports')}
-                            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 shrink-0 ${
-                                currentTab === 'airports'
-                                    ? 'bg-slate-900 text-white shadow-xs'
-                                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                            }`}
-                        >
-                            <span>Destinasi Bandara</span>
-                            <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
-                                currentTab === 'airports' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'
-                            }`}>
-                                {airports.length}
-                            </span>
-                        </button>
-
-                        <button
-                            type="button"
-                            onClick={() => setCurrentTab('hotel_transfer_price_lists')}
-                            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 shrink-0 ${
-                                currentTab === 'hotel_transfer_price_lists'
-                                    ? 'bg-slate-900 text-white shadow-xs'
-                                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                            }`}
-                        >
-                            <span>Tarif Antar Hotel</span>
-                            <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
-                                currentTab === 'hotel_transfer_price_lists' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'
-                            }`}>
-                                {hotel_transfer_price_lists.length}
-                            </span>
-                        </button>
+                                    <div>
+                                        <span className={`block text-xs font-bold leading-tight ${
+                                            isActive ? 'text-white' : 'text-slate-900'
+                                        }`}>
+                                            {tab.label}
+                                        </span>
+                                        <span className={`block text-[10px] mt-0.5 leading-none ${
+                                            isActive ? 'text-slate-300' : 'text-slate-400'
+                                        }`}>
+                                            {tab.sublabel}
+                                        </span>
+                                    </div>
+                                </button>
+                            );
+                        })}
                     </div>
                 </div>
 
                 {/* ================================================================= */}
-                {/* CONTENT: TAB 1 — VEHICLES                                        */}
+                {/* TAB 1: VEHICLES (Our Cars Showcase)                               */}
                 {/* ================================================================= */}
                 {currentTab === 'vehicles' && (
                     <div className="space-y-6">
-                        {/* Vehicle Section Header & Filter Toolbar */}
-                        <div className="bg-white rounded-2xl shadow-xs border border-slate-200/80 p-5 space-y-4">
+                        <div className="bg-white rounded-2xl border border-slate-200/80 p-5 space-y-4">
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
                                 <div>
-                                    <h3 className="text-lg font-bold text-slate-900">Armada Mobil & 3 Kategori Tier</h3>
+                                    <h2 className="text-base font-bold text-slate-900">Armada Mobil Showcase (Our Cars)</h2>
                                     <p className="text-xs text-slate-500 mt-0.5">
-                                        Armada terbagi atas 3 tier utama: <strong>Regular</strong>, <strong>Luxury</strong>, dan <strong>Big Van</strong>.
+                                        Daftar mobil yang ditampilkan pada galeri Our Cars website. Pelanggan memilih jenis kendaraan berdasarkan 3 tier: <strong>Regular</strong>, <strong>Luxury</strong>, dan <strong>Big Van</strong>.
                                     </p>
                                 </div>
                                 <button
@@ -868,9 +865,9 @@ export default function MasterData({
                                         setAddVehiclePhotoPreview(null);
                                         setShowAddVehicleModal(true);
                                     }}
-                                    className="inline-flex items-center justify-center gap-2 bg-[#00AEEF] hover:bg-[#009cd7] text-white text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-xl transition-all shadow-xs active:scale-[0.98] cursor-pointer min-h-[42px] shrink-0"
+                                    className="inline-flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-white text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-xl transition shadow-xs cursor-pointer shrink-0"
                                 >
-                                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                         <line x1="12" y1="5" x2="12" y2="19" />
                                         <line x1="5" y1="12" x2="19" y2="12" />
                                     </svg>
@@ -885,8 +882,8 @@ export default function MasterData({
                                             type="text"
                                             value={vehicleSearch}
                                             onChange={(e) => setVehicleSearch(e.target.value)}
-                                            placeholder="Cari nama mobil atau model..."
-                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-2 text-base sm:text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 min-h-[42px]"
+                                            placeholder="Cari nama atau model mobil..."
+                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-2 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#00AEEF]/20 focus:border-[#00AEEF] min-h-[40px]"
                                         />
                                         <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
                                             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -896,7 +893,7 @@ export default function MasterData({
                                         </div>
                                     </div>
 
-                                    <div className="w-full sm:w-56">
+                                    <div className="w-full sm:w-60">
                                         <select
                                             value={selectedVehicleCategory}
                                             onChange={(e) => {
@@ -907,21 +904,19 @@ export default function MasterData({
                                                     { preserveState: true, replace: true }
                                                 );
                                             }}
-                                            className={selectClass}
+                                            className={selectBaseClass}
                                         >
                                             <option value="all">Semua Kategori Tier</option>
-                                            {vehicle_categories.map((cat, idx) => (
-                                                <option key={idx} value={cat}>
-                                                    {cat}
-                                                </option>
-                                            ))}
+                                            <option value="Regular Family SUV">Regular (Regular Family SUV)</option>
+                                            <option value="Luxury Touring Van">Luxury (Luxury Touring Van)</option>
+                                            <option value="Family Minibus">Big Van (Family Minibus)</option>
                                         </select>
                                     </div>
                                 </div>
 
                                 <button
                                     type="submit"
-                                    className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition cursor-pointer min-h-[42px]"
+                                    className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition cursor-pointer min-h-[40px]"
                                 >
                                     Filter
                                 </button>
@@ -934,149 +929,351 @@ export default function MasterData({
                                 {vehicles.map((v) => (
                                     <div
                                         key={v.id}
-                                        className="bg-white rounded-2xl shadow-xs border border-slate-200/80 overflow-hidden flex flex-col justify-between hover:shadow-md transition-all group"
+                                        className="bg-white rounded-2xl border border-slate-200/80 overflow-hidden flex flex-col justify-between hover:border-slate-300 transition shadow-2xs"
                                     >
                                         <div>
-                                            <div className="relative h-44 bg-slate-100 overflow-hidden flex items-center justify-center">
+                                            <div className="relative aspect-16/10 bg-slate-100 overflow-hidden flex items-center justify-center border-b border-slate-100">
                                                 {v.photo_url ? (
                                                     <img
                                                         src={v.photo_url}
                                                         alt={v.name}
-                                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                                        className="w-full h-full object-cover"
                                                     />
                                                 ) : (
-                                                    <div className="flex flex-col items-center justify-center text-slate-400">
-                                                        <svg className="w-12 h-12 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                                                    <div className="flex flex-col items-center justify-center text-slate-400 gap-2 text-center p-4">
+                                                        <svg className="w-8 h-8 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                                                             <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2" />
                                                             <circle cx="7" cy="17" r="2" />
+                                                            <path d="M9 17h6" />
                                                             <circle cx="17" cy="17" r="2" />
                                                         </svg>
-                                                        <span className="text-xs font-semibold text-slate-400 mt-1">No Image Preview</span>
+                                                        <span className="text-xs font-medium">Foto belum diunggah</span>
                                                     </div>
                                                 )}
 
-                                                <div className="absolute top-3 left-3 flex items-center gap-1.5 flex-wrap">
-                                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-extrabold shadow-xs border ${
+                                                <div className="absolute top-3 left-3">
+                                                    <span className={`px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider ${
                                                         v.tier === 'Luxury'
-                                                            ? 'bg-indigo-900/90 text-white border-indigo-700/60'
-                                                            : (v.tier === 'Big Van' ? 'bg-emerald-900/90 text-white border-emerald-700/60' : 'bg-sky-900/90 text-white border-sky-700/60')
+                                                            ? 'bg-slate-900 text-white'
+                                                            : v.tier === 'Big Van'
+                                                            ? 'bg-indigo-950 text-white'
+                                                            : 'bg-slate-800 text-white'
                                                     }`}>
-                                                        {v.tier || 'Regular'}
-                                                    </span>
-                                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-white/90 backdrop-blur-xs text-slate-800 shadow-xs border border-white/60">
-                                                        {v.category}
+                                                        {v.tier}
                                                     </span>
                                                 </div>
-
-                                                {v.is_popular && (
-                                                    <div className="absolute top-3 right-3">
-                                                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-400 text-amber-950 shadow-xs">
-                                                            <svg className="w-3 h-3 fill-amber-950" viewBox="0 0 24 24">
-                                                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                                                            </svg>
-                                                            Popular
-                                                        </span>
-                                                    </div>
-                                                )}
                                             </div>
 
-                                            <div className="p-4 sm:p-5 space-y-3">
+                                            <div className="p-5 space-y-3">
                                                 <div>
-                                                    <h3 className="text-base sm:text-lg font-bold text-slate-900 leading-tight">
+                                                    <span className="text-[11px] font-medium text-slate-400 block uppercase tracking-wider">
+                                                        {v.category}
+                                                    </span>
+                                                    <h3 className="text-base font-bold text-slate-900 mt-0.5">
                                                         {v.name}
                                                     </h3>
-                                                    <span className="text-xs font-medium text-slate-400 mt-0.5 block">
-                                                        Model / Tahun: {v.model}
-                                                    </span>
                                                 </div>
 
-                                                <div className="flex items-center gap-2 pt-1 text-xs text-slate-600">
-                                                    <span className="inline-flex items-center gap-1.5 bg-slate-50 border border-slate-200/80 px-2.5 py-1 rounded-lg font-semibold">
-                                                        <svg className="w-3.5 h-3.5 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                                            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
-                                                            <circle cx="12" cy="7" r="4" />
-                                                        </svg>
-                                                        {v.passenger_capacity} Penumpang
-                                                    </span>
-
-                                                    <span className="inline-flex items-center gap-1.5 bg-slate-50 border border-slate-200/80 px-2.5 py-1 rounded-lg font-semibold">
-                                                        <svg className="w-3.5 h-3.5 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                                            <rect width="18" height="14" x="3" y="6" rx="2" />
-                                                            <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                                                        </svg>
-                                                        {v.luggage_capacity} Koper
-                                                    </span>
-                                                </div>
-
-                                                <div className="pt-2 border-t border-slate-100 flex items-baseline justify-between">
-                                                    <span className="text-xs font-semibold text-slate-500">Tarif Harian:</span>
-                                                    <div className="text-right">
-                                                        <span className="text-base font-extrabold text-[#00AEEF]">
-                                                            {v.daily_rate_formatted}
-                                                        </span>
-                                                        <span className="text-[11px] text-slate-400 font-medium ml-1">/ hari</span>
+                                                <div className="grid grid-cols-2 gap-2 bg-slate-50 p-3 rounded-xl border border-slate-100 text-xs">
+                                                    <div>
+                                                        <span className="text-[10px] text-slate-400 font-semibold uppercase block">Kapasitas</span>
+                                                        <span className="font-semibold text-slate-800">{v.passenger_capacity} Penumpang</span>
+                                                    </div>
+                                                    <div>
+                                                        <span className="text-[10px] text-slate-400 font-semibold uppercase block">Bagasi</span>
+                                                        <span className="font-semibold text-slate-800">{v.luggage_capacity} Koper</span>
+                                                    </div>
+                                                    <div>
+                                                        <span className="text-[10px] text-slate-400 font-semibold uppercase block">Model / Tahun</span>
+                                                        <span className="font-semibold text-slate-800">{v.model}</span>
+                                                    </div>
+                                                    <div>
+                                                        <span className="text-[10px] text-slate-400 font-semibold uppercase block">Unit Terdaftar</span>
+                                                        <span className="font-semibold text-slate-800">{v.units_count} Unit</span>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
 
-                                        <div className="p-4 sm:p-5 pt-0 flex items-center justify-end gap-2 border-t border-slate-100 mt-2">
+                                        <div className="p-4 bg-slate-50/50 border-t border-slate-100 flex items-center justify-end gap-2">
                                             <button
                                                 type="button"
                                                 onClick={() => openEditVehicleModal(v)}
-                                                className="flex-1 py-2 px-3 text-xs font-semibold text-slate-700 bg-slate-50 hover:bg-slate-100 border border-slate-200/90 rounded-xl transition flex items-center justify-center gap-1.5 min-h-[38px] cursor-pointer"
+                                                className="px-3 py-1.5 bg-white border border-slate-200 hover:border-slate-300 text-slate-700 text-xs font-semibold rounded-lg transition cursor-pointer"
                                             >
-                                                <svg className="w-3.5 h-3.5 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                                    <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
-                                                    <path d="m15 5 4 4" />
-                                                </svg>
-                                                <span>Edit Mobil</span>
+                                                Edit
                                             </button>
-
                                             <button
                                                 type="button"
                                                 onClick={() => openDeleteVehicleModal(v)}
-                                                className="p-2 text-red-600 hover:bg-red-50 border border-red-200/60 rounded-xl transition flex items-center justify-center min-h-[38px] min-w-[38px] cursor-pointer"
-                                                title="Hapus Mobil"
+                                                className="px-3 py-1.5 bg-white border border-slate-200 hover:border-red-300 hover:text-red-600 text-slate-700 text-xs font-semibold rounded-lg transition cursor-pointer"
                                             >
-                                                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                                    <path d="M3 6h18" />
-                                                    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                                                    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-                                                </svg>
+                                                Hapus
                                             </button>
                                         </div>
                                     </div>
                                 ))}
                             </div>
                         ) : (
-                            <div className="bg-white rounded-2xl shadow-xs border border-slate-200/80 py-16 text-center text-slate-400 p-6">
-                                <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-3 text-slate-400">
-                                    <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                                        <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2" />
-                                        <circle cx="7" cy="17" r="2" />
-                                        <circle cx="17" cy="17" r="2" />
-                                    </svg>
-                                </div>
-                                <h4 className="text-base font-bold text-slate-700">Belum ada armada mobil</h4>
+                            <div className="bg-white rounded-2xl border border-slate-200/80 p-12 text-center">
+                                <h3 className="text-base font-bold text-slate-700">Belum ada armada mobil</h3>
                                 <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
-                                    Klik tombol Tambah Mobil untuk mendaftarkan jenis armada kendaraan baru.
+                                    Klik tombol Tambah Mobil untuk mendaftarkan jenis kendaraan showcase.
                                 </p>
                             </div>
                         )}
                     </div>
-                )}                {/* ================================================================= */}
-                {/* CONTENT: TAB 2 — DRIVERS                                         */}
+                )}
+
+                {/* ================================================================= */}
+                {/* TAB 2: PACKAGES (Day Tour Management)                            */}
+                {/* ================================================================= */}
+                {currentTab === 'packages' && (
+                    <div className="space-y-6">
+                        <div className="bg-white rounded-2xl border border-slate-200/80 p-5 space-y-4">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
+                                <div>
+                                    <h2 className="text-base font-bold text-slate-900">Kelola Paket Wisata Day Tour</h2>
+                                    <p className="text-xs text-slate-500 mt-0.5">
+                                        Kelola katalog paket day tour Bali, foto utama, deskripsi penjelasan, highlight destinasi, dan tarif per tier kendaraan (Regular, Luxury, Big Van).
+                                    </p>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        addPackageForm.reset();
+                                        setAddPackagePhotoPreview(null);
+                                        setShowAddPackageModal(true);
+                                    }}
+                                    className="inline-flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-white text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-xl transition shadow-xs cursor-pointer shrink-0"
+                                >
+                                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                        <line x1="12" y1="5" x2="12" y2="19" />
+                                        <line x1="5" y1="12" x2="19" y2="12" />
+                                    </svg>
+                                    <span>Tambah Paket Tour</span>
+                                </button>
+                            </div>
+
+                            <form onSubmit={handlePackageFilterSubmit} className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-1">
+                                    <div className="relative flex-1 max-w-md">
+                                        <input
+                                            type="text"
+                                            value={packageSearch}
+                                            onChange={(e) => setPackageSearch(e.target.value)}
+                                            placeholder="Cari nama paket, wilayah, atau deskripsi..."
+                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-2 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#00AEEF]/20 focus:border-[#00AEEF] min-h-[40px]"
+                                        />
+                                        <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                                            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                <circle cx="11" cy="11" r="8" />
+                                                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                                            </svg>
+                                        </div>
+                                    </div>
+
+                                    <div className="w-full sm:w-48">
+                                        <select
+                                            value={selectedPackageType}
+                                            onChange={(e) => {
+                                                setSelectedPackageType(e.target.value);
+                                                router.get(
+                                                    '/admin/master-data',
+                                                    {
+                                                        tab: 'packages',
+                                                        search_package: packageSearch,
+                                                        type_package: e.target.value,
+                                                        duration_package: selectedPackageDuration,
+                                                    },
+                                                    { preserveState: true, replace: true }
+                                                );
+                                            }}
+                                            className={selectBaseClass}
+                                        >
+                                            <option value="all">Semua Wilayah</option>
+                                            {package_types.map((type) => (
+                                                <option key={type} value={type}>{type}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <div className="w-full sm:w-48">
+                                        <select
+                                            value={selectedPackageDuration}
+                                            onChange={(e) => {
+                                                setSelectedPackageDuration(e.target.value);
+                                                router.get(
+                                                    '/admin/master-data',
+                                                    {
+                                                        tab: 'packages',
+                                                        search_package: packageSearch,
+                                                        type_package: selectedPackageType,
+                                                        duration_package: e.target.value,
+                                                    },
+                                                    { preserveState: true, replace: true }
+                                                );
+                                            }}
+                                            className={selectBaseClass}
+                                        >
+                                            <option value="all">Semua Durasi</option>
+                                            {package_duration_types.map((dur) => (
+                                                <option key={dur} value={dur}>{dur}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition cursor-pointer min-h-[40px]"
+                                >
+                                    Filter
+                                </button>
+                            </form>
+                        </div>
+
+                        {/* Packages Grid */}
+                        {packages && packages.length > 0 ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                                {packages.map((pkg) => (
+                                    <div
+                                        key={pkg.id}
+                                        className="bg-white rounded-2xl border border-slate-200/80 overflow-hidden flex flex-col justify-between hover:border-slate-300 hover:shadow-xs transition duration-200"
+                                    >
+                                        <div>
+                                            <div className="relative aspect-16/10 bg-slate-100 overflow-hidden flex items-center justify-center border-b border-slate-100">
+                                                {pkg.hero_image ? (
+                                                    <img
+                                                        src={pkg.hero_image}
+                                                        alt={pkg.name}
+                                                        className="w-full h-full object-cover"
+                                                    />
+                                                ) : (
+                                                    <div className="flex flex-col items-center justify-center text-slate-400 gap-2 text-center p-4">
+                                                        <svg className="w-8 h-8 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                                                            <path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z" />
+                                                            <path d="m3.6 9 16.8 0" />
+                                                            <path d="M3.6 15h16.8" />
+                                                            <path d="M11.5 3a17 17 0 0 0 0 18" />
+                                                            <path d="M12.5 3a17 17 0 0 1 0 18" />
+                                                        </svg>
+                                                        <span className="text-xs font-medium text-slate-400">Foto paket belum diunggah</span>
+                                                    </div>
+                                                )}
+
+                                                <div className="absolute top-3 left-3 flex flex-wrap items-center gap-1.5">
+                                                    <span className="px-2.5 py-1 rounded-lg text-[11px] font-bold uppercase tracking-wider bg-slate-900/90 text-white shadow-xs">
+                                                        {pkg.package_type}
+                                                    </span>
+                                                    <span className="px-2.5 py-1 rounded-lg text-[11px] font-bold uppercase tracking-wider bg-[#00AEEF] text-white shadow-xs">
+                                                        {pkg.duration_type}
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <div className="p-5 space-y-3.5">
+                                                <div>
+                                                    <h3 className="text-base font-bold text-slate-900 leading-snug">
+                                                        {pkg.name}
+                                                    </h3>
+                                                    {pkg.subtitle && (
+                                                        <p className="text-xs text-slate-500 mt-1 line-clamp-1">
+                                                            {pkg.subtitle}
+                                                        </p>
+                                                    )}
+                                                </div>
+
+                                                {pkg.description && (
+                                                    <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">
+                                                        {pkg.description}
+                                                    </p>
+                                                )}
+
+                                                {/* Tier Rates Breakdown - Clean Structured List */}
+                                                <div className="bg-slate-50 rounded-xl p-3 border border-slate-200/70 space-y-2">
+                                                    <div className="flex items-center justify-between text-xs">
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="w-2 h-2 rounded-full bg-slate-400"></span>
+                                                            <span className="font-semibold text-slate-600 text-[11px] uppercase tracking-wider">Regular</span>
+                                                        </div>
+                                                        <span className="font-bold text-slate-900 tabular-nums whitespace-nowrap">{pkg.regular_price_formatted}</span>
+                                                    </div>
+                                                    <div className="flex items-center justify-between text-xs border-t border-slate-200/60 pt-2">
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+                                                            <span className="font-semibold text-slate-600 text-[11px] uppercase tracking-wider">Luxury</span>
+                                                        </div>
+                                                        <span className="font-bold text-slate-900 tabular-nums whitespace-nowrap">{pkg.luxury_price_formatted}</span>
+                                                    </div>
+                                                    <div className="flex items-center justify-between text-xs border-t border-slate-200/60 pt-2">
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="w-2 h-2 rounded-full bg-[#00AEEF]"></span>
+                                                            <span className="font-semibold text-slate-600 text-[11px] uppercase tracking-wider">Big Van</span>
+                                                        </div>
+                                                        <span className="font-bold text-slate-900 tabular-nums whitespace-nowrap">{pkg.big_van_price_formatted}</span>
+                                                    </div>
+                                                </div>
+
+                                                {/* Highlights preview */}
+                                                {pkg.highlights && pkg.highlights.length > 0 && (
+                                                    <div className="pt-1">
+                                                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-1.5">
+                                                            Itinerary Destinasi ({pkg.highlights.length})
+                                                        </span>
+                                                        <div className="flex flex-wrap gap-1.5">
+                                                            {pkg.highlights.map((h, hIdx) => (
+                                                                <span key={h.id || hIdx} className="text-[11px] font-medium bg-slate-100 text-slate-700 px-2.5 py-1 rounded-lg border border-slate-200/50 truncate max-w-[220px]">
+                                                                    {h.title}
+                                                                </span>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        <div className="p-3.5 px-5 bg-slate-50/60 border-t border-slate-100 flex items-center justify-end gap-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => openEditPackageModal(pkg)}
+                                                className="px-3.5 py-1.5 bg-white border border-slate-200 hover:border-slate-300 text-slate-700 text-xs font-semibold rounded-xl transition cursor-pointer shadow-2xs"
+                                            >
+                                                Edit
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => openDeletePackageModal(pkg)}
+                                                className="px-3.5 py-1.5 bg-white border border-slate-200 hover:border-red-300 hover:text-red-600 text-slate-700 text-xs font-semibold rounded-xl transition cursor-pointer shadow-2xs"
+                                            >
+                                                Hapus
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="bg-white rounded-2xl border border-slate-200/80 p-12 text-center">
+                                <h3 className="text-base font-bold text-slate-700">Belum ada paket wisata</h3>
+                                <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
+                                    Klik tombol Tambah Paket Tour untuk mendaftarkan rute tour wisata baru.
+                                </p>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* ================================================================= */}
+                {/* TAB 3: DRIVERS                                                   */}
                 {/* ================================================================= */}
                 {currentTab === 'drivers' && (
                     <div className="space-y-6">
-                        {/* Driver Section Header & Search Toolbar */}
-                        <div className="bg-white rounded-2xl shadow-xs border border-slate-200/80 p-5 space-y-4">
+                        <div className="bg-white rounded-2xl border border-slate-200/80 p-5 space-y-4">
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
                                 <div>
-                                    <h3 className="text-lg font-bold text-slate-900">Data Driver & Lisensi Pengemudi</h3>
+                                    <h2 className="text-base font-bold text-slate-900">Data Pengemudi & Driver</h2>
                                     <p className="text-xs text-slate-500 mt-0.5">
-                                        Kelola profil pengemudi, kontak WhatsApp, nomor SIM, masa berlaku, dan status operasional.
+                                        Kelola akun pengemudi, kontak WhatsApp, nomor SIM, dan unit armada yang ditugaskan.
                                     </p>
                                 </div>
                                 <button
@@ -1086,9 +1283,9 @@ export default function MasterData({
                                         setAddDriverPhotoPreview(null);
                                         setShowAddDriverModal(true);
                                     }}
-                                    className="inline-flex items-center justify-center gap-2 bg-[#00AEEF] hover:bg-[#009cd7] text-white text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-xl transition-all shadow-xs active:scale-[0.98] cursor-pointer min-h-[42px] shrink-0"
+                                    className="inline-flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-white text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-xl transition shadow-xs cursor-pointer shrink-0"
                                 >
-                                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                         <line x1="12" y1="5" x2="12" y2="19" />
                                         <line x1="5" y1="12" x2="19" y2="12" />
                                     </svg>
@@ -1096,126 +1293,121 @@ export default function MasterData({
                                 </button>
                             </div>
 
-                            <form onSubmit={handleDriverSearch} className="relative w-full">
-                                <input
-                                    type="text"
-                                    value={driverSearch}
-                                    onChange={(e) => setDriverSearch(e.target.value)}
-                                    placeholder="Cari driver berdasarkan ID, nama, email, nomor SIM, atau WhatsApp..."
-                                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-base sm:text-xs placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all min-h-[42px]"
-                                />
-                                <div className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-                                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                        <circle cx="11" cy="11" r="8" />
-                                        <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                                    </svg>
+                            <form onSubmit={handleDriverSearch} className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                                <div className="relative flex-1 max-w-md">
+                                    <input
+                                        type="text"
+                                        value={driverSearch}
+                                        onChange={(e) => setDriverSearch(e.target.value)}
+                                        placeholder="Cari nama, WhatsApp, email, atau no SIM..."
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-2 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#00AEEF]/20 focus:border-[#00AEEF] min-h-[40px]"
+                                    />
+                                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                            <circle cx="11" cy="11" r="8" />
+                                            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                                        </svg>
+                                    </div>
                                 </div>
+
+                                <button
+                                    type="submit"
+                                    className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition cursor-pointer min-h-[40px]"
+                                >
+                                    Cari Driver
+                                </button>
                             </form>
                         </div>
 
-                        <div className="bg-white border border-slate-200/80 shadow-xs rounded-2xl overflow-hidden">
-                            {/* Desktop Driver Table */}
+                        {/* Driver Table */}
+                        <div className="bg-white rounded-2xl border border-slate-200/80 overflow-hidden">
                             <div className="hidden lg:block overflow-x-auto">
                                 <table className="w-full text-left border-collapse">
                                     <thead>
-                                        <tr className="bg-slate-50/70 border-b border-slate-100 text-slate-500 text-[11px] font-semibold uppercase tracking-wider">
-                                            <th className="w-20 px-6 py-3.5">ID</th>
-                                            <th className="px-6 py-3.5">Driver Info</th>
-                                            <th className="px-6 py-3.5">Contact (WA)</th>
-                                            <th className="px-6 py-3.5">License & Status</th>
-                                            <th className="px-6 py-3.5 text-right">Actions</th>
+                                        <tr className="border-b border-slate-200/80 bg-slate-50/75 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                                            <th className="px-6 py-3.5">ID & Driver</th>
+                                            <th className="px-6 py-3.5">Kontak</th>
+                                            <th className="px-6 py-3.5">Lisensi (SIM)</th>
+                                            <th className="px-6 py-3.5">Unit Mobil</th>
+                                            <th className="px-6 py-3.5">Status</th>
+                                            <th className="px-6 py-3.5 text-right">Aksi</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-slate-100 text-sm">
+                                    <tbody className="divide-y divide-slate-100 text-xs text-slate-700">
                                         {drivers.data && drivers.data.length > 0 ? (
                                             drivers.data.map((driver) => (
                                                 <tr key={driver.raw_id} className="hover:bg-slate-50/60 transition-colors">
-                                                    <td className="w-20 px-6 py-4 font-mono font-medium text-slate-500 whitespace-nowrap">
-                                                        #{driver.id}
-                                                    </td>
                                                     <td className="px-6 py-4">
                                                         <div className="flex items-center gap-3">
-                                                            {driver.profile_photo_url ? (
-                                                                <img
-                                                                    src={driver.profile_photo_url}
-                                                                    alt={driver.full_name}
-                                                                    className="w-10 h-10 rounded-full object-cover border border-slate-200 shrink-0"
-                                                                />
-                                                            ) : (
-                                                                <div className="w-10 h-10 rounded-full bg-sky-100 text-sky-800 flex items-center justify-center text-sm font-bold shrink-0">
-                                                                    {driver.full_name?.charAt(0).toUpperCase() || 'D'}
-                                                                </div>
-                                                            )}
-                                                            <div className="flex flex-col">
-                                                                <span className="font-semibold text-slate-900">{driver.full_name}</span>
-                                                                <span className="text-xs text-slate-500">{driver.email}</span>
+                                                            <div className="w-8 h-8 rounded-full bg-slate-100 overflow-hidden shrink-0 flex items-center justify-center border border-slate-200">
+                                                                {driver.profile_photo_url ? (
+                                                                    <img src={driver.profile_photo_url} alt={driver.full_name} className="w-full h-full object-cover" />
+                                                                ) : (
+                                                                    <span className="font-semibold text-xs text-slate-600">{driver.full_name?.charAt(0) || 'D'}</span>
+                                                                )}
+                                                            </div>
+                                                            <div>
+                                                                <span className="font-mono text-[10px] text-slate-400 block">#{driver.id}</span>
+                                                                <span className="font-bold text-slate-900 text-sm block">{driver.full_name}</span>
                                                             </div>
                                                         </div>
                                                     </td>
-                                                    <td className="px-6 py-4 text-slate-700 whitespace-nowrap">
-                                                        <div className="flex items-center gap-2">
-                                                            <span className="text-xs font-semibold text-slate-800 font-mono">
-                                                                {driver.whatsapp_number}
-                                                            </span>
+                                                    <td className="px-6 py-4">
+                                                        <div className="space-y-0.5">
                                                             {driver.whatsapp_number && (
                                                                 <a
                                                                     href={`https://wa.me/${driver.whatsapp_number.replace(/[^0-9]/g, '')}`}
                                                                     target="_blank"
                                                                     rel="noreferrer"
-                                                                    className="p-1.5 rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-colors inline-flex items-center"
-                                                                    title="Chat WhatsApp"
+                                                                    className="text-slate-800 font-semibold hover:text-[#00AEEF] block"
                                                                 >
-                                                                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                                                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                                                                        <polyline points="15 3 21 3 21 9" />
-                                                                        <line x1="10" y1="14" x2="21" y2="3" />
-                                                                    </svg>
+                                                                    {driver.whatsapp_number}
                                                                 </a>
+                                                            )}
+                                                            <span className="text-slate-400 text-[11px] block">{driver.email}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <div className="space-y-0.5">
+                                                            <span className="font-mono font-medium text-slate-800">{driver.license_number || '-'}</span>
+                                                            {driver.license_expiry_date && (
+                                                                <span className="text-[10px] text-slate-400 block">Exp: {driver.license_expiry_date}</span>
                                                             )}
                                                         </div>
                                                     </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap">
-                                                        <div className="flex flex-col gap-1">
-                                                            <span className="text-xs font-medium text-slate-700">
-                                                                SIM: {driver.license_number} (Exp: {driver.license_expiry_date || '-'})
+                                                    <td className="px-6 py-4">
+                                                        {driver.vehicle_unit_label ? (
+                                                            <span className="inline-flex items-center px-2.5 py-1 rounded-md bg-slate-100 text-slate-800 font-medium text-xs">
+                                                                {driver.vehicle_unit_label}
                                                             </span>
-                                                            <div>
-                                                                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold ${
-                                                                    driver.status === 'Active'
-                                                                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60'
-                                                                        : 'bg-amber-50 text-amber-700 border border-amber-200/60'
-                                                                }`}>
-                                                                    <span className={`w-1.5 h-1.5 rounded-full ${driver.status === 'Active' ? 'bg-emerald-500' : 'bg-amber-500'}`}></span>
-                                                                    {driver.status}
-                                                                </span>
-                                                            </div>
-                                                        </div>
+                                                        ) : (
+                                                            <span className="text-slate-400 italic">Belum ditugaskan</span>
+                                                        )}
                                                     </td>
-                                                    <td className="px-6 py-4 text-right whitespace-nowrap">
+                                                    <td className="px-6 py-4">
+                                                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold ${
+                                                            driver.status === 'Active'
+                                                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                                                : 'bg-slate-100 text-slate-600 border border-slate-200'
+                                                        }`}>
+                                                            {driver.status}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-6 py-4 text-right">
                                                         <div className="flex items-center justify-end gap-1.5">
                                                             <button
                                                                 type="button"
                                                                 onClick={() => openEditDriverModal(driver)}
-                                                                className="p-1.5 text-slate-400 hover:text-sky-600 hover:bg-sky-50 rounded-lg transition-colors cursor-pointer min-w-[36px] min-h-[36px] flex items-center justify-center"
-                                                                title="Edit Driver"
+                                                                className="px-2.5 py-1 text-xs font-semibold text-slate-700 hover:text-slate-900 border border-slate-200 hover:bg-slate-50 rounded-lg transition cursor-pointer"
                                                             >
-                                                                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                                                    <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
-                                                                    <path d="m15 5 4 4" />
-                                                                </svg>
+                                                                Edit
                                                             </button>
-
                                                             <button
                                                                 type="button"
                                                                 onClick={() => openDeleteDriverModal(driver)}
-                                                                className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer min-w-[36px] min-h-[36px] flex items-center justify-center"
-                                                                title="Delete Driver"
+                                                                className="px-2.5 py-1 text-xs font-semibold text-red-700 hover:text-red-900 border border-slate-200 hover:bg-red-50 rounded-lg transition cursor-pointer"
                                                             >
-                                                                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                                                    <path d="M3 6h18" />
-                                                                    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                                                                    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-                                                                </svg>
+                                                                Hapus
                                                             </button>
                                                         </div>
                                                     </td>
@@ -1223,8 +1415,8 @@ export default function MasterData({
                                             ))
                                         ) : (
                                             <tr>
-                                                <td colSpan={5} className="px-6 py-8 text-center text-slate-400 text-sm">
-                                                    Tidak ada driver ditemukan.
+                                                <td colSpan={6} className="px-6 py-8 text-center text-slate-400 text-sm">
+                                                    Belum ada data pengemudi terdaftar.
                                                 </td>
                                             </tr>
                                         )}
@@ -1232,68 +1424,55 @@ export default function MasterData({
                                 </table>
                             </div>
 
-                            {/* Mobile Driver Card List */}
+                            {/* Mobile Driver List */}
                             <div className="block lg:hidden divide-y divide-slate-100">
                                 {drivers.data && drivers.data.length > 0 ? (
                                     drivers.data.map((driver) => (
-                                        <div key={driver.raw_id} className="p-4 flex flex-col gap-3">
+                                        <div key={driver.raw_id} className="p-4 space-y-3">
                                             <div className="flex items-start justify-between gap-3">
-                                                <div className="flex items-center gap-3 min-w-0">
-                                                    {driver.profile_photo_url ? (
-                                                        <img
-                                                            src={driver.profile_photo_url}
-                                                            alt={driver.full_name}
-                                                            className="w-11 h-11 rounded-full object-cover border border-slate-200 shrink-0"
-                                                        />
-                                                    ) : (
-                                                        <div className="w-11 h-11 rounded-full bg-sky-100 text-sky-800 flex items-center justify-center text-sm font-bold shrink-0">
-                                                            {driver.full_name?.charAt(0).toUpperCase() || 'D'}
-                                                        </div>
-                                                    )}
-                                                    <div className="min-w-0">
-                                                        <div className="flex items-center gap-2">
-                                                            <span className="text-xs font-mono font-bold text-slate-400">#{driver.id}</span>
-                                                            <span className="font-bold text-slate-900 text-sm truncate">{driver.full_name}</span>
-                                                        </div>
-                                                        <div className="text-xs text-slate-500 truncate mt-0.5">{driver.email}</div>
+                                                <div className="flex items-center gap-2.5">
+                                                    <div className="w-9 h-9 rounded-full bg-slate-100 overflow-hidden shrink-0 flex items-center justify-center border border-slate-200">
+                                                        {driver.profile_photo_url ? (
+                                                            <img src={driver.profile_photo_url} alt={driver.full_name} className="w-full h-full object-cover" />
+                                                        ) : (
+                                                            <span className="font-semibold text-xs text-slate-600">{driver.full_name?.charAt(0) || 'D'}</span>
+                                                        )}
+                                                    </div>
+                                                    <div>
+                                                        <span className="font-bold text-slate-900 text-sm block">{driver.full_name}</span>
+                                                        <span className="text-xs text-slate-400">{driver.email}</span>
                                                     </div>
                                                 </div>
-
-                                                <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold shrink-0 ${
+                                                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold ${
                                                     driver.status === 'Active'
-                                                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60'
-                                                        : 'bg-amber-50 text-amber-700 border border-amber-200/60'
+                                                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                                        : 'bg-slate-100 text-slate-600 border border-slate-200'
                                                 }`}>
                                                     {driver.status}
                                                 </span>
                                             </div>
 
-                                            <div className="flex items-center justify-between text-xs text-slate-600 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                                                <span className="font-mono font-semibold">{driver.whatsapp_number}</span>
-                                                <span className="text-slate-400">SIM: {driver.license_number}</span>
-                                            </div>
-
-                                            <div className="flex items-center justify-end gap-2 pt-1 border-t border-slate-100">
+                                            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
                                                 <button
                                                     type="button"
                                                     onClick={() => openEditDriverModal(driver)}
-                                                    className="px-3.5 py-2 text-xs font-semibold text-sky-700 bg-sky-50 border border-sky-200/60 rounded-xl"
+                                                    className="px-3 py-1 text-xs font-semibold text-slate-700 border border-slate-200 rounded-lg"
                                                 >
                                                     Edit
                                                 </button>
                                                 <button
                                                     type="button"
                                                     onClick={() => openDeleteDriverModal(driver)}
-                                                    className="px-3.5 py-2 text-xs font-semibold text-red-700 bg-red-50 border border-red-200/60 rounded-xl"
+                                                    className="px-3 py-1 text-xs font-semibold text-red-700 border border-slate-200 rounded-lg"
                                                 >
-                                                    Delete
+                                                    Hapus
                                                 </button>
                                             </div>
                                         </div>
                                     ))
                                 ) : (
                                     <div className="px-6 py-8 text-center text-slate-400 text-sm">
-                                        Tidak ada driver ditemukan.
+                                        Belum ada data pengemudi terdaftar.
                                     </div>
                                 )}
                             </div>
@@ -1304,17 +1483,16 @@ export default function MasterData({
                 )}
 
                 {/* ================================================================= */}
-                {/* CONTENT: TAB 3 — HOTELS                                          */}
+                {/* TAB 4: HOTELS                                                    */}
                 {/* ================================================================= */}
                 {currentTab === 'hotels' && (
                     <div className="space-y-6">
-                        {/* Hotel Section Header & Search Toolbar */}
-                        <div className="bg-white rounded-2xl shadow-xs border border-slate-200/80 p-5 space-y-4">
+                        <div className="bg-white rounded-2xl border border-slate-200/80 p-5 space-y-4">
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
                                 <div>
-                                    <h3 className="text-lg font-bold text-slate-900">Database Hotel & Resort Bali</h3>
+                                    <h2 className="text-base font-bold text-slate-900">Database Hotel & Resort Bali</h2>
                                     <p className="text-xs text-slate-500 mt-0.5">
-                                        Daftar hotel tujuan dan hubungannya dengan wilayah destinasi penjemputan/pengantaran bandara.
+                                        Kelola daftar hotel mitra dan sinkronisasi rute destinasi transfer bandara terkait.
                                     </p>
                                 </div>
                                 <button
@@ -1323,9 +1501,9 @@ export default function MasterData({
                                         addHotelForm.reset();
                                         setShowAddHotelModal(true);
                                     }}
-                                    className="inline-flex items-center justify-center gap-2 bg-[#00AEEF] hover:bg-[#009cd7] text-white text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-xl transition-all shadow-xs active:scale-[0.98] cursor-pointer min-h-[42px] shrink-0"
+                                    className="inline-flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-white text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-xl transition shadow-xs cursor-pointer shrink-0"
                                 >
-                                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                         <line x1="12" y1="5" x2="12" y2="19" />
                                         <line x1="5" y1="12" x2="19" y2="12" />
                                     </svg>
@@ -1333,94 +1511,82 @@ export default function MasterData({
                                 </button>
                             </div>
 
-                            <form onSubmit={handleHotelSearch} className="relative w-full">
-                                <input
-                                    type="text"
-                                    value={hotelSearch}
-                                    onChange={(e) => setHotelSearch(e.target.value)}
-                                    placeholder="Cari nama hotel / resort..."
-                                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-base sm:text-xs placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all min-h-[42px]"
-                                />
-                                <div className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-                                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                        <circle cx="11" cy="11" r="8" />
-                                        <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                                    </svg>
+                            <form onSubmit={handleHotelSearch} className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                                <div className="relative flex-1 max-w-md">
+                                    <input
+                                        type="text"
+                                        value={hotelSearch}
+                                        onChange={(e) => setHotelSearch(e.target.value)}
+                                        placeholder="Cari nama hotel atau resort..."
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-2 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#00AEEF]/20 focus:border-[#00AEEF] min-h-[40px]"
+                                    />
+                                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                            <circle cx="11" cy="11" r="8" />
+                                            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                                        </svg>
+                                    </div>
                                 </div>
+
+                                <button
+                                    type="submit"
+                                    className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition cursor-pointer min-h-[40px]"
+                                >
+                                    Cari Hotel
+                                </button>
                             </form>
                         </div>
 
-                        <div className="bg-white border border-slate-200/80 shadow-xs rounded-2xl overflow-hidden">
-                            {/* Desktop Hotel Table */}
+                        {/* Hotel Table */}
+                        <div className="bg-white rounded-2xl border border-slate-200/80 overflow-hidden">
                             <div className="hidden lg:block overflow-x-auto">
                                 <table className="w-full text-left border-collapse">
                                     <thead>
-                                        <tr className="bg-slate-50/70 border-b border-slate-100 text-slate-500 text-[11px] font-semibold uppercase tracking-wider">
-                                            <th className="w-16 px-6 py-3.5">No</th>
-                                            <th className="px-6 py-3.5">Nama Hotel / Resort</th>
-                                            <th className="px-6 py-3.5">Destinasi / Wilayah Terhubung</th>
-                                            <th className="px-6 py-3.5 text-center">Jumlah Wilayah</th>
-                                            <th className="px-6 py-3.5 text-right">Actions</th>
+                                        <tr className="border-b border-slate-200/80 bg-slate-50/75 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                                            <th className="px-6 py-3.5">Nama Hotel & Resort</th>
+                                            <th className="px-6 py-3.5">Rute Destinasi Bandara Terhubung</th>
+                                            <th className="px-6 py-3.5">Tanggal Dibuat</th>
+                                            <th className="px-6 py-3.5 text-right">Aksi</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-slate-100 text-sm">
+                                    <tbody className="divide-y divide-slate-100 text-xs text-slate-700">
                                         {hotels && hotels.length > 0 ? (
-                                            hotels.map((hotel, idx) => (
+                                            hotels.map((hotel) => (
                                                 <tr key={hotel.id} className="hover:bg-slate-50/60 transition-colors">
-                                                    <td className="px-6 py-4 font-mono text-slate-400 text-xs">
-                                                        {idx + 1}
-                                                    </td>
-                                                    <td className="px-6 py-4 font-bold text-slate-900">
-                                                        {hotel.nama_hotel}
+                                                    <td className="px-6 py-4">
+                                                        <span className="font-bold text-slate-900 text-sm">{hotel.nama_hotel}</span>
                                                     </td>
                                                     <td className="px-6 py-4">
-                                                        <div className="flex flex-wrap gap-1.5 max-w-md">
-                                                            {hotel.airports && hotel.airports.length > 0 ? (
-                                                                hotel.airports.map((ap) => (
-                                                                    <span
-                                                                        key={ap.id}
-                                                                        className="inline-flex items-center px-2.5 py-0.5 rounded-lg text-xs font-semibold bg-sky-50 text-[#00AEEF] border border-sky-200/60"
-                                                                    >
+                                                        {hotel.airports && hotel.airports.length > 0 ? (
+                                                            <div className="flex flex-wrap gap-1.5 max-w-md">
+                                                                {hotel.airports.map((ap) => (
+                                                                    <span key={ap.id} className="text-[11px] font-medium bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md">
                                                                         {ap.destinasi} ({ap.type})
                                                                     </span>
-                                                                ))
-                                                            ) : (
-                                                                <span className="text-xs text-slate-400 italic">
-                                                                    Belum terhubung ke destinasi
-                                                                </span>
-                                                            )}
-                                                        </div>
+                                                                ))}
+                                                            </div>
+                                                        ) : (
+                                                            <span className="text-slate-400 italic">Belum ada rute terhubung</span>
+                                                        )}
                                                     </td>
-                                                    <td className="px-6 py-4 text-center">
-                                                        <span className="inline-flex items-center justify-center px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-700">
-                                                            {hotel.airports_count || 0} Wilayah
-                                                        </span>
+                                                    <td className="px-6 py-4 text-slate-500 font-mono text-[11px]">
+                                                        {hotel.created_at_formatted}
                                                     </td>
-                                                    <td className="px-6 py-4 text-right whitespace-nowrap">
+                                                    <td className="px-6 py-4 text-right">
                                                         <div className="flex items-center justify-end gap-1.5">
                                                             <button
                                                                 type="button"
                                                                 onClick={() => openEditHotelModal(hotel)}
-                                                                className="p-1.5 text-slate-400 hover:text-sky-600 hover:bg-sky-50 rounded-lg transition-colors cursor-pointer min-w-[36px] min-h-[36px] flex items-center justify-center"
-                                                                title="Edit Hotel"
+                                                                className="px-2.5 py-1 text-xs font-semibold text-slate-700 hover:text-slate-900 border border-slate-200 hover:bg-slate-50 rounded-lg transition cursor-pointer"
                                                             >
-                                                                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                                                    <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
-                                                                    <path d="m15 5 4 4" />
-                                                                </svg>
+                                                                Edit
                                                             </button>
-
                                                             <button
                                                                 type="button"
                                                                 onClick={() => openDeleteHotelModal(hotel)}
-                                                                className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer min-w-[36px] min-h-[36px] flex items-center justify-center"
-                                                                title="Delete Hotel"
+                                                                className="px-2.5 py-1 text-xs font-semibold text-red-700 hover:text-red-900 border border-slate-200 hover:bg-red-50 rounded-lg transition cursor-pointer"
                                                             >
-                                                                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                                                    <path d="M3 6h18" />
-                                                                    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                                                                    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-                                                                </svg>
+                                                                Hapus
                                                             </button>
                                                         </div>
                                                     </td>
@@ -1428,7 +1594,7 @@ export default function MasterData({
                                             ))
                                         ) : (
                                             <tr>
-                                                <td colSpan={5} className="px-6 py-8 text-center text-slate-400 text-sm">
+                                                <td colSpan={4} className="px-6 py-8 text-center text-slate-400 text-sm">
                                                     Belum ada hotel terdaftar.
                                                 </td>
                                             </tr>
@@ -1437,28 +1603,25 @@ export default function MasterData({
                                 </table>
                             </div>
 
-                            {/* Mobile Hotel Card List */}
+                            {/* Mobile Hotel List */}
                             <div className="block lg:hidden divide-y divide-slate-100">
                                 {hotels && hotels.length > 0 ? (
                                     hotels.map((hotel) => (
-                                        <div key={hotel.id} className="p-4 flex flex-col gap-3">
+                                        <div key={hotel.id} className="p-4 space-y-2.5">
                                             <div className="flex items-start justify-between gap-2">
-                                                <div>
-                                                    <h4 className="text-base font-bold text-slate-900">{hotel.nama_hotel}</h4>
-                                                    <span className="text-xs text-slate-400">{hotel.airports_count || 0} Wilayah terhubung</span>
-                                                </div>
+                                                <span className="font-bold text-slate-900 text-sm">{hotel.nama_hotel}</span>
                                                 <div className="flex items-center gap-1">
                                                     <button
                                                         type="button"
                                                         onClick={() => openEditHotelModal(hotel)}
-                                                        className="px-3 py-1.5 text-xs font-semibold text-sky-700 bg-sky-50 border border-sky-200/60 rounded-lg"
+                                                        className="px-2.5 py-1 text-xs font-semibold text-slate-700 border border-slate-200 rounded-lg"
                                                     >
                                                         Edit
                                                     </button>
                                                     <button
                                                         type="button"
                                                         onClick={() => openDeleteHotelModal(hotel)}
-                                                        className="px-3 py-1.5 text-xs font-semibold text-red-700 bg-red-50 border border-red-200/60 rounded-lg"
+                                                        className="px-2.5 py-1 text-xs font-semibold text-red-700 border border-slate-200 rounded-lg"
                                                     >
                                                         Hapus
                                                     </button>
@@ -1468,7 +1631,7 @@ export default function MasterData({
                                             {hotel.airports && hotel.airports.length > 0 && (
                                                 <div className="flex flex-wrap gap-1.5 pt-1">
                                                     {hotel.airports.map((ap) => (
-                                                        <span key={ap.id} className="text-[11px] font-semibold bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md">
+                                                        <span key={ap.id} className="text-[11px] font-medium bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md">
                                                             {ap.destinasi} ({ap.type})
                                                         </span>
                                                     ))}
@@ -1487,17 +1650,16 @@ export default function MasterData({
                 )}
 
                 {/* ================================================================= */}
-                {/* CONTENT: TAB 4 — DESTINASI & TARIF AIRPORT                       */}
+                {/* TAB 5: DESTINASI BANDARA                                         */}
                 {/* ================================================================= */}
                 {currentTab === 'airports' && (
                     <div className="space-y-6">
-                        {/* Airport Section Header & Filter Toolbar */}
-                        <div className="bg-white rounded-2xl shadow-xs border border-slate-200/80 p-5 space-y-4">
+                        <div className="bg-white rounded-2xl border border-slate-200/80 p-5 space-y-4">
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
                                 <div>
-                                    <h3 className="text-lg font-bold text-slate-900">Destinasi & Tarif Transfer Bandara</h3>
+                                    <h2 className="text-base font-bold text-slate-900">Destinasi & Tarif Transfer Bandara DPS</h2>
                                     <p className="text-xs text-slate-500 mt-0.5">
-                                        Tarif bandara DPS dibedakan antara <strong>Pick-Up</strong> (jemput di bandara) dan <strong>Drop-Off</strong> (antar ke bandara).
+                                        Tarif bandara dibedakan antara <strong>Pick-Up</strong> (jemput bandara) dan <strong>Drop-Off</strong> (antar bandara).
                                     </p>
                                 </div>
                                 <button
@@ -1506,13 +1668,13 @@ export default function MasterData({
                                         addAirportForm.reset();
                                         setShowAddAirportModal(true);
                                     }}
-                                    className="inline-flex items-center justify-center gap-2 bg-[#00AEEF] hover:bg-[#009cd7] text-white text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-xl transition-all shadow-xs active:scale-[0.98] cursor-pointer min-h-[42px] shrink-0"
+                                    className="inline-flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-white text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-xl transition shadow-xs cursor-pointer shrink-0"
                                 >
-                                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                         <line x1="12" y1="5" x2="12" y2="19" />
                                         <line x1="5" y1="12" x2="19" y2="12" />
                                     </svg>
-                                    <span>Tambah Destinasi</span>
+                                    <span>Tambah Destinasi Bandara</span>
                                 </button>
                             </div>
 
@@ -1523,8 +1685,8 @@ export default function MasterData({
                                             type="text"
                                             value={airportSearch}
                                             onChange={(e) => setAirportSearch(e.target.value)}
-                                            placeholder="Cari nama destinasi / wilayah (mis: Ubud, Seminyak)..."
-                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-2 text-base sm:text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 min-h-[42px]"
+                                            placeholder="Cari wilayah destinasi..."
+                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-2 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#00AEEF]/20 focus:border-[#00AEEF] min-h-[40px]"
                                         />
                                         <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
                                             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -1534,7 +1696,7 @@ export default function MasterData({
                                         </div>
                                     </div>
 
-                                    <div className="w-full sm:w-48">
+                                    <div className="w-full sm:w-56">
                                         <select
                                             value={airportTypeFilter}
                                             onChange={(e) => {
@@ -1545,90 +1707,70 @@ export default function MasterData({
                                                     { preserveState: true, replace: true }
                                                 );
                                             }}
-                                            className={selectClass}
+                                            className={selectBaseClass}
                                         >
-                                            <option value="all">Semua Tipe Transfer</option>
-                                            <option value="Pick-Up">🛬 Pick-Up (Dari Bandara)</option>
-                                            <option value="Drop-Off">🛫 Drop-Off (Ke Bandara)</option>
+                                            <option value="all">Semua Tipe Rute</option>
+                                            <option value="Pick-Up">Pick-Up (Jemput Bandara)</option>
+                                            <option value="Drop-Off">Drop-Off (Antar Bandara)</option>
                                         </select>
                                     </div>
                                 </div>
 
                                 <button
                                     type="submit"
-                                    className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition cursor-pointer min-h-[42px]"
+                                    className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition cursor-pointer min-h-[40px]"
                                 >
                                     Filter
                                 </button>
                             </form>
                         </div>
 
-                        <div className="bg-white border border-slate-200/80 shadow-xs rounded-2xl overflow-hidden">
-                            {/* Desktop Airport Table */}
+                        {/* Airport Table */}
+                        <div className="bg-white rounded-2xl border border-slate-200/80 overflow-hidden">
                             <div className="hidden lg:block overflow-x-auto">
                                 <table className="w-full text-left border-collapse">
                                     <thead>
-                                        <tr className="bg-slate-50/70 border-b border-slate-100 text-slate-500 text-[11px] font-semibold uppercase tracking-wider">
-                                            <th className="px-6 py-3.5">Destinasi / Wilayah</th>
+                                        <tr className="border-b border-slate-200/80 bg-slate-50/75 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                                            <th className="px-6 py-3.5">Wilayah Destinasi</th>
                                             <th className="px-6 py-3.5">Tipe Transfer</th>
                                             <th className="px-6 py-3.5">Tarif Regular</th>
                                             <th className="px-6 py-3.5">Tarif Luxury</th>
-                                            <th className="px-6 py-3.5 text-center">Hotel Terhubung</th>
-                                            <th className="px-6 py-3.5 text-right">Actions</th>
+                                            <th className="px-6 py-3.5 text-right">Aksi</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-slate-100 text-sm">
+                                    <tbody className="divide-y divide-slate-100 text-xs text-slate-700">
                                         {airports && airports.length > 0 ? (
                                             airports.map((ap) => (
                                                 <tr key={ap.id} className="hover:bg-slate-50/60 transition-colors">
-                                                    <td className="px-6 py-4 font-bold text-slate-900">
-                                                        {ap.destinasi}
+                                                    <td className="px-6 py-4">
+                                                        <span className="font-bold text-slate-900 text-sm">{ap.destinasi}</span>
                                                     </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap">
-                                                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold ${
-                                                            ap.type === 'Pick-Up'
-                                                                ? 'bg-blue-50 text-blue-700 border border-blue-200/70'
-                                                                : 'bg-purple-50 text-purple-700 border border-purple-200/70'
-                                                        }`}>
-                                                            {ap.type === 'Pick-Up' ? '🛬 Pick-Up (Dari Bandara)' : '🛫 Drop-Off (Ke Bandara)'}
+                                                    <td className="px-6 py-4">
+                                                        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">
+                                                            {ap.type}
                                                         </span>
                                                     </td>
-                                                    <td className="px-6 py-4 font-semibold text-slate-800 whitespace-nowrap font-mono">
+                                                    <td className="px-6 py-4 font-semibold text-slate-900 font-mono">
                                                         {ap.price_regular_formatted}
                                                     </td>
-                                                    <td className="px-6 py-4 font-semibold text-[#00AEEF] whitespace-nowrap font-mono">
+                                                    <td className="px-6 py-4 font-semibold text-slate-900 font-mono">
                                                         {ap.price_luxury_formatted}
                                                     </td>
-                                                    <td className="px-6 py-4 text-center">
-                                                        <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-600">
-                                                            {ap.hotels_count || 0} Hotel
-                                                        </span>
-                                                    </td>
-                                                    <td className="px-6 py-4 text-right whitespace-nowrap">
+                                                    <td className="px-6 py-4 text-right">
                                                         <div className="flex items-center justify-end gap-1.5">
                                                             <button
                                                                 type="button"
                                                                 onClick={() => openEditAirportModal(ap)}
-                                                                className="p-1.5 text-slate-400 hover:text-sky-600 hover:bg-sky-50 rounded-lg transition-colors cursor-pointer min-w-[36px] min-h-[36px] flex items-center justify-center"
-                                                                title="Edit Destinasi"
+                                                                className="px-2.5 py-1 text-xs font-semibold text-slate-700 hover:text-slate-900 border border-slate-200 hover:bg-slate-50 rounded-lg transition cursor-pointer"
                                                             >
-                                                                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                                                    <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
-                                                                    <path d="m15 5 4 4" />
-                                                                </svg>
+                                                                Edit
                                                             </button>
-
                                                             <button
                                                                 type="button"
                                                                 onClick={() => openDeleteAirportModal(ap)}
-                                                                className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer min-w-[36px] min-h-[36px] flex items-center justify-center"
-                                                                title="Delete Destinasi"
+                                                                className="px-2.5 py-1 text-xs font-semibold text-red-700 hover:text-red-900 border border-slate-200 hover:bg-red-50 rounded-lg transition cursor-pointer"
                                                             >
-                                                                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                                                    <path d="M3 6h18" />
-                                                                    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                                                                    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-                                                                </svg>
+                                                                Hapus
                                                             </button>
                                                         </div>
                                                     </td>
@@ -1636,8 +1778,8 @@ export default function MasterData({
                                             ))
                                         ) : (
                                             <tr>
-                                                <td colSpan={6} className="px-6 py-8 text-center text-slate-400 text-sm">
-                                                    Belum ada tarif destinasi terdaftar.
+                                                <td colSpan={5} className="px-6 py-8 text-center text-slate-400 text-sm">
+                                                    Belum ada data tarif destinasi bandara terdaftar.
                                                 </td>
                                             </tr>
                                         )}
@@ -1645,17 +1787,15 @@ export default function MasterData({
                                 </table>
                             </div>
 
-                            {/* Mobile Airport Card List */}
+                            {/* Mobile Airport List */}
                             <div className="block lg:hidden divide-y divide-slate-100">
                                 {airports && airports.length > 0 ? (
                                     airports.map((ap) => (
-                                        <div key={ap.id} className="p-4 flex flex-col gap-2.5">
+                                        <div key={ap.id} className="p-4 space-y-2.5">
                                             <div className="flex items-start justify-between gap-2">
                                                 <div>
-                                                    <h4 className="text-base font-bold text-slate-900">{ap.destinasi}</h4>
-                                                    <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold mt-1 ${
-                                                        ap.type === 'Pick-Up' ? 'bg-blue-50 text-blue-700' : 'bg-purple-50 text-purple-700'
-                                                    }`}>
+                                                    <span className="font-bold text-slate-900 text-sm block">{ap.destinasi}</span>
+                                                    <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold mt-1 bg-slate-100 text-slate-700 border border-slate-200">
                                                         {ap.type}
                                                     </span>
                                                 </div>
@@ -1663,14 +1803,14 @@ export default function MasterData({
                                                     <button
                                                         type="button"
                                                         onClick={() => openEditAirportModal(ap)}
-                                                        className="px-3 py-1.5 text-xs font-semibold text-sky-700 bg-sky-50 border border-sky-200/60 rounded-lg"
+                                                        className="px-2.5 py-1 text-xs font-semibold text-slate-700 border border-slate-200 rounded-lg"
                                                     >
                                                         Edit
                                                     </button>
                                                     <button
                                                         type="button"
                                                         onClick={() => openDeleteAirportModal(ap)}
-                                                        className="px-3 py-1.5 text-xs font-semibold text-red-700 bg-red-50 border border-red-200/60 rounded-lg"
+                                                        className="px-2.5 py-1 text-xs font-semibold text-red-700 border border-slate-200 rounded-lg"
                                                     >
                                                         Hapus
                                                     </button>
@@ -1679,12 +1819,12 @@ export default function MasterData({
 
                                             <div className="grid grid-cols-2 gap-2 text-xs bg-slate-50 p-2.5 rounded-xl border border-slate-100">
                                                 <div>
-                                                    <span className="text-slate-400 block text-[10px] uppercase">Regular</span>
-                                                    <span className="font-bold text-slate-800">{ap.price_regular_formatted}</span>
+                                                    <span className="text-slate-400 block text-[10px] uppercase font-semibold">Regular</span>
+                                                    <span className="font-semibold text-slate-800">{ap.price_regular_formatted}</span>
                                                 </div>
                                                 <div>
-                                                    <span className="text-slate-400 block text-[10px] uppercase">Luxury</span>
-                                                    <span className="font-bold text-[#00AEEF]">{ap.price_luxury_formatted}</span>
+                                                    <span className="text-slate-400 block text-[10px] uppercase font-semibold">Luxury</span>
+                                                    <span className="font-semibold text-slate-800">{ap.price_luxury_formatted}</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -1700,28 +1840,35 @@ export default function MasterData({
                 )}
 
                 {/* ================================================================= */}
-                {/* CONTENT: TAB 5 — HOTEL TRANSFER PRICELIST                         */}
+                {/* TAB 6: TARIF ANTAR HOTEL                                         */}
                 {/* ================================================================= */}
                 {currentTab === 'hotel_transfer_price_lists' && (
                     <div className="space-y-6">
-                        {/* Hotel Transfer Pricelist Header & Search Toolbar */}
-                        <div className="bg-white rounded-2xl shadow-xs border border-slate-200/80 p-5 space-y-4">
+                        <div className="bg-white rounded-2xl border border-slate-200/80 p-5 space-y-4">
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
                                 <div>
-                                    <h3 className="text-lg font-bold text-slate-900">Tarif Transfer Antar Hotel (Pricelist)</h3>
+                                    <h2 className="text-base font-bold text-slate-900">Tarif Transfer Antar Hotel</h2>
                                     <p className="text-xs text-slate-500 mt-0.5">
-                                        Tentukan tarif perjalanan langsung dari satu hotel/resort ke hotel/resort lainnya untuk opsi armada Regular dan Luxury.
+                                        Pricelist tarif perjalanan langsung dari hotel asal ke hotel tujuan.
                                     </p>
                                 </div>
                                 <button
                                     type="button"
                                     onClick={() => {
                                         addHotelPriceForm.reset();
+                                        if (hotels_list.length > 1) {
+                                            addHotelPriceForm.setData({
+                                                hotel_id_pickup: String(hotels_list[0].id),
+                                                hotel_id_dropoff: String(hotels_list[1].id),
+                                                regular_price: '',
+                                                luxury_price: '',
+                                            });
+                                        }
                                         setShowAddHotelPriceModal(true);
                                     }}
-                                    className="inline-flex items-center justify-center gap-2 bg-[#00AEEF] hover:bg-[#009cd7] text-white text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-xl transition-all shadow-xs active:scale-[0.98] cursor-pointer min-h-[42px] shrink-0"
+                                    className="inline-flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-white text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-xl transition shadow-xs cursor-pointer shrink-0"
                                 >
-                                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                         <line x1="12" y1="5" x2="12" y2="19" />
                                         <line x1="5" y1="12" x2="19" y2="12" />
                                     </svg>
@@ -1729,83 +1876,76 @@ export default function MasterData({
                                 </button>
                             </div>
 
-                            <form onSubmit={handleHotelPriceSearch} className="relative w-full">
-                                <input
-                                    type="text"
-                                    value={hotelPriceSearch}
-                                    onChange={(e) => setHotelPriceSearch(e.target.value)}
-                                    placeholder="Cari rute transfer hotel (nama hotel asal atau tujuan)..."
-                                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-base sm:text-xs placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all min-h-[42px]"
-                                />
-                                <div className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-                                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                        <circle cx="11" cy="11" r="8" />
-                                        <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                                    </svg>
+                            <form onSubmit={handleHotelPriceSearch} className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                                <div className="relative flex-1 max-w-md">
+                                    <input
+                                        type="text"
+                                        value={hotelPriceSearch}
+                                        onChange={(e) => setHotelPriceSearch(e.target.value)}
+                                        placeholder="Cari nama hotel asal atau tujuan..."
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-2 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#00AEEF]/20 focus:border-[#00AEEF] min-h-[40px]"
+                                    />
+                                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                            <circle cx="11" cy="11" r="8" />
+                                            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                                        </svg>
+                                    </div>
                                 </div>
+
+                                <button
+                                    type="submit"
+                                    className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition cursor-pointer min-h-[40px]"
+                                >
+                                    Cari Tarif
+                                </button>
                             </form>
                         </div>
 
-                        <div className="bg-white border border-slate-200/80 shadow-xs rounded-2xl overflow-hidden">
-                            {/* Desktop Hotel Transfer Table */}
+                        {/* Hotel Transfer Table */}
+                        <div className="bg-white rounded-2xl border border-slate-200/80 overflow-hidden">
                             <div className="hidden lg:block overflow-x-auto">
                                 <table className="w-full text-left border-collapse">
                                     <thead>
-                                        <tr className="bg-slate-50/70 border-b border-slate-100 text-slate-500 text-[11px] font-semibold uppercase tracking-wider">
-                                            <th className="px-6 py-3.5">Rute Transfer (Hotel Asal &rarr; Hotel Tujuan)</th>
+                                        <tr className="border-b border-slate-200/80 bg-slate-50/75 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                                            <th className="px-6 py-3.5">Rute Hotel (Asal &rarr; Tujuan)</th>
                                             <th className="px-6 py-3.5">Tarif Regular</th>
                                             <th className="px-6 py-3.5">Tarif Luxury</th>
-                                            <th className="px-6 py-3.5 text-right">Actions</th>
+                                            <th className="px-6 py-3.5 text-right">Aksi</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-slate-100 text-sm">
+                                    <tbody className="divide-y divide-slate-100 text-xs text-slate-700">
                                         {hotel_transfer_price_lists && hotel_transfer_price_lists.length > 0 ? (
                                             hotel_transfer_price_lists.map((item) => (
                                                 <tr key={item.id} className="hover:bg-slate-50/60 transition-colors">
                                                     <td className="px-6 py-4">
-                                                        <div className="flex items-center gap-3">
-                                                            <span className="font-bold text-slate-900">
-                                                                {item.pickup_hotel_name}
-                                                            </span>
-                                                            <div className="flex items-center text-[#00AEEF] px-2.5 py-1 rounded-full bg-sky-50 border border-sky-100 text-xs font-bold">
-                                                                &rarr;
-                                                            </div>
-                                                            <span className="font-bold text-slate-900">
-                                                                {item.dropoff_hotel_name}
-                                                            </span>
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="font-bold text-slate-900">{item.pickup_hotel_name}</span>
+                                                            <span className="text-slate-400">&rarr;</span>
+                                                            <span className="font-bold text-slate-900">{item.dropoff_hotel_name}</span>
                                                         </div>
                                                     </td>
-                                                    <td className="px-6 py-4 font-semibold text-slate-800 whitespace-nowrap font-mono">
+                                                    <td className="px-6 py-4 font-semibold text-slate-900 font-mono">
                                                         {item.regular_price_formatted}
                                                     </td>
-                                                    <td className="px-6 py-4 font-semibold text-[#00AEEF] whitespace-nowrap font-mono">
+                                                    <td className="px-6 py-4 font-semibold text-slate-900 font-mono">
                                                         {item.luxury_price_formatted}
                                                     </td>
-                                                    <td className="px-6 py-4 text-right whitespace-nowrap">
+                                                    <td className="px-6 py-4 text-right">
                                                         <div className="flex items-center justify-end gap-1.5">
                                                             <button
                                                                 type="button"
                                                                 onClick={() => openEditHotelPriceModal(item)}
-                                                                className="p-1.5 text-slate-400 hover:text-sky-600 hover:bg-sky-50 rounded-lg transition-colors cursor-pointer min-w-[36px] min-h-[36px] flex items-center justify-center"
-                                                                title="Edit Tarif"
+                                                                className="px-2.5 py-1 text-xs font-semibold text-slate-700 hover:text-slate-900 border border-slate-200 hover:bg-slate-50 rounded-lg transition cursor-pointer"
                                                             >
-                                                                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                                                    <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
-                                                                    <path d="m15 5 4 4" />
-                                                                </svg>
+                                                                Edit
                                                             </button>
-
                                                             <button
                                                                 type="button"
                                                                 onClick={() => openDeleteHotelPriceModal(item)}
-                                                                className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer min-w-[36px] min-h-[36px] flex items-center justify-center"
-                                                                title="Delete Tarif"
+                                                                className="px-2.5 py-1 text-xs font-semibold text-red-700 hover:text-red-900 border border-slate-200 hover:bg-red-50 rounded-lg transition cursor-pointer"
                                                             >
-                                                                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                                                    <path d="M3 6h18" />
-                                                                    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                                                                    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-                                                                </svg>
+                                                                Hapus
                                                             </button>
                                                         </div>
                                                     </td>
@@ -1814,7 +1954,7 @@ export default function MasterData({
                                         ) : (
                                             <tr>
                                                 <td colSpan={4} className="px-6 py-8 text-center text-slate-400 text-sm">
-                                                    Belum ada pricelist transfer antar hotel terdaftar.
+                                                    Belum ada tarif transfer antar hotel terdaftar.
                                                 </td>
                                             </tr>
                                         )}
@@ -1826,12 +1966,12 @@ export default function MasterData({
                             <div className="block lg:hidden divide-y divide-slate-100">
                                 {hotel_transfer_price_lists && hotel_transfer_price_lists.length > 0 ? (
                                     hotel_transfer_price_lists.map((item) => (
-                                        <div key={item.id} className="p-4 flex flex-col gap-2.5">
+                                        <div key={item.id} className="p-4 space-y-2.5">
                                             <div className="flex items-start justify-between gap-2">
                                                 <div className="text-sm font-bold text-slate-900">
                                                     <div>{item.pickup_hotel_name}</div>
-                                                    <div className="text-xs text-[#00AEEF] flex items-center gap-1 font-semibold mt-0.5">
-                                                        <span>&darr; Transfer ke</span>
+                                                    <div className="text-xs text-slate-400 font-normal">
+                                                        &darr; Menuju ke
                                                     </div>
                                                     <div>{item.dropoff_hotel_name}</div>
                                                 </div>
@@ -1839,14 +1979,14 @@ export default function MasterData({
                                                     <button
                                                         type="button"
                                                         onClick={() => openEditHotelPriceModal(item)}
-                                                        className="px-3 py-1.5 text-xs font-semibold text-sky-700 bg-sky-50 border border-sky-200/60 rounded-lg"
+                                                        className="px-2.5 py-1 text-xs font-semibold text-slate-700 border border-slate-200 rounded-lg"
                                                     >
                                                         Edit
                                                     </button>
                                                     <button
                                                         type="button"
                                                         onClick={() => openDeleteHotelPriceModal(item)}
-                                                        className="px-3 py-1.5 text-xs font-semibold text-red-700 bg-red-50 border border-red-200/60 rounded-lg"
+                                                        className="px-2.5 py-1 text-xs font-semibold text-red-700 border border-slate-200 rounded-lg"
                                                     >
                                                         Hapus
                                                     </button>
@@ -1855,19 +1995,19 @@ export default function MasterData({
 
                                             <div className="grid grid-cols-2 gap-2 text-xs bg-slate-50 p-2.5 rounded-xl border border-slate-100">
                                                 <div>
-                                                    <span className="text-slate-400 block text-[10px] uppercase">Regular</span>
-                                                    <span className="font-bold text-slate-800">{item.regular_price_formatted}</span>
+                                                    <span className="text-slate-400 block text-[10px] uppercase font-semibold">Regular</span>
+                                                    <span className="font-semibold text-slate-800">{item.regular_price_formatted}</span>
                                                 </div>
                                                 <div>
-                                                    <span className="text-slate-400 block text-[10px] uppercase">Luxury</span>
-                                                    <span className="font-bold text-[#00AEEF]">{item.luxury_price_formatted}</span>
+                                                    <span className="text-slate-400 block text-[10px] uppercase font-semibold">Luxury</span>
+                                                    <span className="font-semibold text-slate-800">{item.luxury_price_formatted}</span>
                                                 </div>
                                             </div>
                                         </div>
                                     ))
                                 ) : (
                                     <div className="px-6 py-8 text-center text-slate-400 text-sm">
-                                        Belum ada pricelist transfer antar hotel terdaftar.
+                                        Belum ada tarif transfer antar hotel terdaftar.
                                     </div>
                                 )}
                             </div>
@@ -1884,14 +2024,14 @@ export default function MasterData({
             <Modal
                 show={showAddVehicleModal}
                 onClose={() => setShowAddVehicleModal(false)}
-                title="Tambah Armada Mobil Baru"
-                maxWidth="xl"
+                title="Tambah Mobil Showcase"
+                maxWidth="lg"
                 footer={
                     <>
                         <button
                             type="button"
                             onClick={() => setShowAddVehicleModal(false)}
-                            className="px-5 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition cursor-pointer min-h-[44px]"
+                            className="px-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 transition cursor-pointer min-h-[40px]"
                         >
                             Batal
                         </button>
@@ -1899,7 +2039,7 @@ export default function MasterData({
                             type="submit"
                             form="add-vehicle-form"
                             disabled={addVehicleForm.processing}
-                            className="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-[#00AEEF] hover:bg-[#009cd7] text-white rounded-xl text-sm font-semibold transition shadow-xs disabled:opacity-50 cursor-pointer min-h-[44px]"
+                            className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-semibold transition disabled:opacity-50 cursor-pointer min-h-[40px]"
                         >
                             {addVehicleForm.processing && (
                                 <svg className="w-4 h-4 animate-spin text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -1912,83 +2052,58 @@ export default function MasterData({
                     </>
                 }
             >
-                <form id="add-vehicle-form" onSubmit={handleAddVehicleSubmit} className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="md:col-span-2">
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                                Nama Mobil <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                                type="text"
-                                required
-                                value={addVehicleForm.data.name}
-                                onChange={(e) => addVehicleForm.setData('name', e.target.value)}
-                                placeholder="Contoh: Toyota Innova Zenix"
-                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-base sm:text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
-                            />
-                            {addVehicleForm.errors.name && (
-                                <p className="text-xs text-red-600 mt-1 font-medium">{addVehicleForm.errors.name}</p>
-                            )}
-                        </div>
+                <form id="add-vehicle-form" onSubmit={handleAddVehicleSubmit} className="space-y-4 text-xs">
+                    <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                            Nama Mobil <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            required
+                            placeholder="Contoh: Toyota Innova Reborn, Toyota Alphard Transformer"
+                            value={addVehicleForm.data.name}
+                            onChange={(e) => addVehicleForm.setData('name', e.target.value)}
+                            className={inputBaseClass}
+                        />
+                        {addVehicleForm.errors.name && (
+                            <p className="text-red-500 text-xs mt-1">{addVehicleForm.errors.name}</p>
+                        )}
+                    </div>
 
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                                Kategori <span className="text-red-500">*</span>
+                            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                                Kategori Tier <span className="text-red-500">*</span>
                             </label>
                             <select
                                 value={addVehicleForm.data.category}
                                 onChange={(e) => addVehicleForm.setData('category', e.target.value)}
-                                className={selectClass}
+                                className={selectBaseClass}
                             >
-                                {vehicle_categories.map((cat, idx) => (
-                                    <option key={idx} value={cat}>
-                                        {cat}
-                                    </option>
-                                ))}
+                                <option value="Regular Family SUV">Regular (Regular Family SUV)</option>
+                                <option value="Luxury Touring Van">Luxury (Luxury Touring Van)</option>
+                                <option value="Family Minibus">Big Van (Family Minibus)</option>
                             </select>
-                            {addVehicleForm.errors.category && (
-                                <p className="text-xs text-red-600 mt-1 font-medium">{addVehicleForm.errors.category}</p>
-                            )}
                         </div>
 
                         <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                                Tahun / Model <span className="text-red-500">*</span>
+                            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                                Model / Tahun Rilis <span className="text-red-500">*</span>
                             </label>
                             <input
                                 type="text"
                                 required
+                                placeholder="Contoh: 2024"
                                 value={addVehicleForm.data.model}
                                 onChange={(e) => addVehicleForm.setData('model', e.target.value)}
-                                placeholder="Contoh: 2024"
-                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-base sm:text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
+                                className={inputBaseClass}
                             />
-                            {addVehicleForm.errors.model && (
-                                <p className="text-xs text-red-600 mt-1 font-medium">{addVehicleForm.errors.model}</p>
-                            )}
                         </div>
+                    </div>
 
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                                Tarif Sewa / Hari (Rp) <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                                type="number"
-                                required
-                                min="0"
-                                step="10000"
-                                value={addVehicleForm.data.daily_rate}
-                                onChange={(e) => addVehicleForm.setData('daily_rate', e.target.value)}
-                                placeholder="Contoh: 850000"
-                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-base sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
-                            />
-                            {addVehicleForm.errors.daily_rate && (
-                                <p className="text-xs text-red-600 mt-1 font-medium">{addVehicleForm.errors.daily_rate}</p>
-                            )}
-                        </div>
-
-                        <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                                 Kapasitas Penumpang <span className="text-red-500">*</span>
                             </label>
                             <input
@@ -1997,14 +2112,14 @@ export default function MasterData({
                                 min="1"
                                 max="50"
                                 value={addVehicleForm.data.passenger_capacity}
-                                onChange={(e) => addVehicleForm.setData('passenger_capacity', parseInt(e.target.value, 10) || 1)}
-                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-base sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
+                                onChange={(e) => addVehicleForm.setData('passenger_capacity', parseInt(e.target.value) || 1)}
+                                className={inputBaseClass}
                             />
                         </div>
 
                         <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                                Kapasitas Koper <span className="text-red-500">*</span>
+                            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                                Kapasitas Bagasi (Koper) <span className="text-red-500">*</span>
                             </label>
                             <input
                                 type="number"
@@ -2012,81 +2127,41 @@ export default function MasterData({
                                 min="0"
                                 max="50"
                                 value={addVehicleForm.data.luggage_capacity}
-                                onChange={(e) => addVehicleForm.setData('luggage_capacity', parseInt(e.target.value, 10) || 0)}
-                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-base sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
+                                onChange={(e) => addVehicleForm.setData('luggage_capacity', parseInt(e.target.value) || 0)}
+                                className={inputBaseClass}
                             />
-                        </div>
-
-                        <div className="flex items-center gap-3 pt-6">
-                            <input
-                                type="checkbox"
-                                id="add_is_popular_m"
-                                checked={addVehicleForm.data.is_popular}
-                                onChange={(e) => addVehicleForm.setData('is_popular', e.target.checked)}
-                                className="w-4 h-4 text-[#00AEEF] rounded border-slate-300 focus:ring-sky-500 cursor-pointer"
-                            />
-                            <label htmlFor="add_is_popular_m" className="text-xs sm:text-sm font-semibold text-slate-800 cursor-pointer">
-                                Mobil Populer / Unggulan
-                            </label>
                         </div>
                     </div>
 
                     <div>
-                        <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                            Foto Mobil (Opsional)
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                            Foto Mobil
                         </label>
                         <input
-                            type="file"
                             ref={addVehicleFileInputRef}
+                            type="file"
                             accept="image/*"
+                            onChange={(e) => handleVehiclePhotoChange(e.target.files[0], false)}
                             className="hidden"
-                            onChange={(e) => {
-                                if (e.target.files && e.target.files[0]) {
-                                    handleVehiclePhotoChange(e.target.files[0], false);
-                                }
-                            }}
                         />
-
-                        {addVehiclePhotoPreview ? (
-                            <div className="flex items-center gap-4 p-4 border border-slate-200 rounded-2xl bg-slate-50">
-                                <img
-                                    src={addVehiclePhotoPreview}
-                                    alt="Preview"
-                                    className="w-20 h-14 rounded-xl object-cover border-2 border-white shadow-xs"
-                                />
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-xs font-semibold text-slate-800 truncate">Foto armada dipilih</p>
+                        <div className="flex items-center gap-4">
+                            {addVehiclePhotoPreview ? (
+                                <div className="relative w-24 h-16 rounded-xl overflow-hidden border border-slate-200 shrink-0">
+                                    <img src={addVehiclePhotoPreview} alt="Preview" className="w-full h-full object-cover" />
                                 </div>
-                                <div className="flex items-center gap-2">
-                                    <button
-                                        type="button"
-                                        onClick={() => addVehicleFileInputRef.current?.click()}
-                                        className="text-xs font-semibold text-sky-600 bg-sky-50 px-3 py-1.5 rounded-lg"
-                                    >
-                                        Ganti
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            addVehicleForm.setData('photo', null);
-                                            setAddVehiclePhotoPreview(null);
-                                        }}
-                                        className="text-xs font-semibold text-red-600 bg-red-50 px-3 py-1.5 rounded-lg"
-                                    >
-                                        Hapus
-                                    </button>
+                            ) : (
+                                <div className="w-24 h-16 rounded-xl border border-dashed border-slate-300 flex items-center justify-center text-slate-400 text-xs shrink-0">
+                                    Belum ada foto
                                 </div>
-                            </div>
-                        ) : (
-                            <div
+                            )}
+                            <button
+                                type="button"
                                 onClick={() => addVehicleFileInputRef.current?.click()}
-                                className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-slate-200 rounded-2xl hover:border-sky-400 hover:bg-sky-50/30 transition-all cursor-pointer bg-slate-50/50"
+                                className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-medium transition cursor-pointer"
                             >
-                                <p className="text-xs font-semibold text-slate-700">
-                                    <span className="text-[#00AEEF]">Klik untuk unggah</span> foto mobil
-                                </p>
-                            </div>
-                        )}
+                                Pilih Berkas Foto
+                            </button>
+                        </div>
                     </div>
                 </form>
             </Modal>
@@ -2095,14 +2170,14 @@ export default function MasterData({
             <Modal
                 show={showEditVehicleModal}
                 onClose={() => setShowEditVehicleModal(false)}
-                title={`Edit Armada (${selectedVehicle?.name || ''})`}
-                maxWidth="xl"
+                title="Edit Mobil Showcase"
+                maxWidth="lg"
                 footer={
                     <>
                         <button
                             type="button"
                             onClick={() => setShowEditVehicleModal(false)}
-                            className="px-5 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition cursor-pointer min-h-[44px]"
+                            className="px-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 transition cursor-pointer min-h-[40px]"
                         >
                             Batal
                         </button>
@@ -2110,7 +2185,7 @@ export default function MasterData({
                             type="submit"
                             form="edit-vehicle-form"
                             disabled={editVehicleForm.processing}
-                            className="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-[#00AEEF] hover:bg-[#009cd7] text-white rounded-xl text-sm font-semibold transition shadow-xs disabled:opacity-50 cursor-pointer min-h-[44px]"
+                            className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-semibold transition disabled:opacity-50 cursor-pointer min-h-[40px]"
                         >
                             {editVehicleForm.processing && (
                                 <svg className="w-4 h-4 animate-spin text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -2118,73 +2193,58 @@ export default function MasterData({
                                     <path fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" className="opacity-75" />
                                 </svg>
                             )}
-                            <span>Perbarui Mobil</span>
+                            <span>Simpan Perubahan</span>
                         </button>
                     </>
                 }
             >
-                <form id="edit-vehicle-form" onSubmit={handleEditVehicleSubmit} className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="md:col-span-2">
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                                Nama Mobil <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                                type="text"
-                                required
-                                value={editVehicleForm.data.name}
-                                onChange={(e) => editVehicleForm.setData('name', e.target.value)}
-                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-base sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
-                            />
-                        </div>
+                <form id="edit-vehicle-form" onSubmit={handleEditVehicleSubmit} className="space-y-4 text-xs">
+                    <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                            Nama Mobil <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            required
+                            value={editVehicleForm.data.name}
+                            onChange={(e) => editVehicleForm.setData('name', e.target.value)}
+                            className={inputBaseClass}
+                        />
+                    </div>
 
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                                Kategori <span className="text-red-500">*</span>
+                            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                                Kategori Tier <span className="text-red-500">*</span>
                             </label>
                             <select
                                 value={editVehicleForm.data.category}
                                 onChange={(e) => editVehicleForm.setData('category', e.target.value)}
-                                className={selectClass}
+                                className={selectBaseClass}
                             >
-                                {vehicle_categories.map((cat, idx) => (
-                                    <option key={idx} value={cat}>
-                                        {cat}
-                                    </option>
-                                ))}
+                                <option value="Regular Family SUV">Regular (Regular Family SUV)</option>
+                                <option value="Luxury Touring Van">Luxury (Luxury Touring Van)</option>
+                                <option value="Family Minibus">Big Van (Family Minibus)</option>
                             </select>
                         </div>
 
                         <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                                Tahun / Model <span className="text-red-500">*</span>
+                            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                                Model / Tahun Rilis <span className="text-red-500">*</span>
                             </label>
                             <input
                                 type="text"
                                 required
                                 value={editVehicleForm.data.model}
                                 onChange={(e) => editVehicleForm.setData('model', e.target.value)}
-                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-base sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
+                                className={inputBaseClass}
                             />
                         </div>
+                    </div>
 
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                                Tarif Sewa / Hari (Rp) <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                                type="number"
-                                required
-                                min="0"
-                                step="10000"
-                                value={editVehicleForm.data.daily_rate}
-                                onChange={(e) => editVehicleForm.setData('daily_rate', e.target.value)}
-                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-base sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
-                            />
-                        </div>
-
-                        <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                                 Kapasitas Penumpang <span className="text-red-500">*</span>
                             </label>
                             <input
@@ -2193,14 +2253,14 @@ export default function MasterData({
                                 min="1"
                                 max="50"
                                 value={editVehicleForm.data.passenger_capacity}
-                                onChange={(e) => editVehicleForm.setData('passenger_capacity', parseInt(e.target.value, 10) || 1)}
-                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-base sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
+                                onChange={(e) => editVehicleForm.setData('passenger_capacity', parseInt(e.target.value) || 1)}
+                                className={inputBaseClass}
                             />
                         </div>
 
                         <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                                Kapasitas Koper <span className="text-red-500">*</span>
+                            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                                Kapasitas Bagasi (Koper) <span className="text-red-500">*</span>
                             </label>
                             <input
                                 type="number"
@@ -2208,71 +2268,41 @@ export default function MasterData({
                                 min="0"
                                 max="50"
                                 value={editVehicleForm.data.luggage_capacity}
-                                onChange={(e) => editVehicleForm.setData('luggage_capacity', parseInt(e.target.value, 10) || 0)}
-                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-base sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
+                                onChange={(e) => editVehicleForm.setData('luggage_capacity', parseInt(e.target.value) || 0)}
+                                className={inputBaseClass}
                             />
-                        </div>
-
-                        <div className="flex items-center gap-3 pt-6">
-                            <input
-                                type="checkbox"
-                                id="edit_is_popular_m"
-                                checked={editVehicleForm.data.is_popular}
-                                onChange={(e) => editVehicleForm.setData('is_popular', e.target.checked)}
-                                className="w-4 h-4 text-[#00AEEF] rounded border-slate-300 focus:ring-sky-500 cursor-pointer"
-                            />
-                            <label htmlFor="edit_is_popular_m" className="text-xs sm:text-sm font-semibold text-slate-800 cursor-pointer">
-                                Mobil Populer / Unggulan
-                            </label>
                         </div>
                     </div>
 
                     <div>
-                        <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                            Foto Mobil (Opsional)
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                            Ganti Foto Mobil
                         </label>
                         <input
-                            type="file"
                             ref={editVehicleFileInputRef}
+                            type="file"
                             accept="image/*"
+                            onChange={(e) => handleVehiclePhotoChange(e.target.files[0], true)}
                             className="hidden"
-                            onChange={(e) => {
-                                if (e.target.files && e.target.files[0]) {
-                                    handleVehiclePhotoChange(e.target.files[0], true);
-                                }
-                            }}
                         />
-
-                        {editVehiclePhotoPreview || selectedVehicle?.photo_url ? (
-                            <div className="flex items-center gap-4 p-4 border border-slate-200 rounded-2xl bg-slate-50">
-                                <img
-                                    src={editVehiclePhotoPreview || selectedVehicle?.photo_url}
-                                    alt="Preview"
-                                    className="w-20 h-14 rounded-xl object-cover border-2 border-white shadow-xs"
-                                />
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-xs font-semibold text-slate-800 truncate">Foto armada mobil</p>
+                        <div className="flex items-center gap-4">
+                            {editVehiclePhotoPreview ? (
+                                <div className="relative w-24 h-16 rounded-xl overflow-hidden border border-slate-200 shrink-0">
+                                    <img src={editVehiclePhotoPreview} alt="Preview" className="w-full h-full object-cover" />
                                 </div>
-                                <div className="flex items-center gap-2">
-                                    <button
-                                        type="button"
-                                        onClick={() => editVehicleFileInputRef.current?.click()}
-                                        className="text-xs font-semibold text-sky-600 bg-sky-50 px-3 py-1.5 rounded-lg"
-                                    >
-                                        Ganti
-                                    </button>
+                            ) : (
+                                <div className="w-24 h-16 rounded-xl border border-dashed border-slate-300 flex items-center justify-center text-slate-400 text-xs shrink-0">
+                                    Belum ada foto
                                 </div>
-                            </div>
-                        ) : (
-                            <div
+                            )}
+                            <button
+                                type="button"
                                 onClick={() => editVehicleFileInputRef.current?.click()}
-                                className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-slate-200 rounded-2xl hover:border-sky-400 hover:bg-sky-50/30 transition-all cursor-pointer bg-slate-50/50"
+                                className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-medium transition cursor-pointer"
                             >
-                                <p className="text-xs font-semibold text-slate-700">
-                                    <span className="text-[#00AEEF]">Klik untuk unggah</span> foto mobil
-                                </p>
-                            </div>
-                        )}
+                                Ubah Foto
+                            </button>
+                        </div>
                     </div>
                 </form>
             </Modal>
@@ -2281,29 +2311,600 @@ export default function MasterData({
             <Modal
                 show={showDeleteVehicleModal}
                 onClose={() => setShowDeleteVehicleModal(false)}
-                title="Hapus Armada Mobil"
+                title="Hapus Mobil Showcase"
                 maxWidth="md"
                 footer={
                     <>
                         <button
                             type="button"
                             onClick={() => setShowDeleteVehicleModal(false)}
-                            className="px-4 py-2 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition cursor-pointer"
+                            className="px-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 transition cursor-pointer"
                         >
                             Batal
                         </button>
                         <button
                             type="button"
                             onClick={handleDeleteVehicle}
-                            className="px-4 py-2 bg-red-600 text-white rounded-xl text-sm font-semibold hover:bg-red-700 transition cursor-pointer"
+                            className="px-4 py-2 bg-red-600 text-white rounded-xl text-xs font-semibold hover:bg-red-700 transition cursor-pointer"
                         >
                             Hapus Mobil
                         </button>
                     </>
                 }
             >
-                <p className="text-sm text-slate-600">
-                    Apakah Anda yakin ingin menghapus armada <strong>{selectedVehicle?.name}</strong>?
+                <p className="text-xs text-slate-600">
+                    Apakah Anda yakin ingin menghapus mobil showcase <strong>{selectedVehicle?.name}</strong>?
+                </p>
+            </Modal>
+
+            {/* ========================================================================= */}
+            {/* DAY TOUR PACKAGE MODALS                                                   */}
+            {/* ========================================================================= */}
+
+            {/* ADD PACKAGE MODAL */}
+            <Modal
+                show={showAddPackageModal}
+                onClose={() => setShowAddPackageModal(false)}
+                title="Tambah Paket Wisata Day Tour"
+                maxWidth="2xl"
+                footer={
+                    <>
+                        <button
+                            type="button"
+                            onClick={() => setShowAddPackageModal(false)}
+                            className="px-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 transition cursor-pointer min-h-[40px]"
+                        >
+                            Batal
+                        </button>
+                        <button
+                            type="submit"
+                            form="add-package-form"
+                            disabled={addPackageForm.processing}
+                            className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-semibold transition disabled:opacity-50 cursor-pointer min-h-[40px]"
+                        >
+                            {addPackageForm.processing && (
+                                <svg className="w-4 h-4 animate-spin text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <circle cx="12" cy="12" r="10" strokeWidth="4" className="opacity-25" />
+                                    <path fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" className="opacity-75" />
+                                </svg>
+                            )}
+                            <span>Simpan Paket Tour</span>
+                        </button>
+                    </>
+                }
+            >
+                <form id="add-package-form" onSubmit={handleAddPackageSubmit} className="space-y-4 text-xs">
+                    <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                            Nama Paket Tour <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            required
+                            placeholder="Contoh: Ubud Cultural & Waterfall Experience"
+                            value={addPackageForm.data.name}
+                            onChange={(e) => addPackageForm.setData('name', e.target.value)}
+                            className={inputBaseClass}
+                        />
+                        {addPackageForm.errors.name && (
+                            <p className="text-red-500 text-xs mt-1">{addPackageForm.errors.name}</p>
+                        )}
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                                Wilayah / Region <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                                type="text"
+                                required
+                                list="add-package-type-suggestions"
+                                placeholder="Contoh: Ubud, Bedugul, Kintamani, Nusa Penida, dll."
+                                value={addPackageForm.data.package_type}
+                                onChange={(e) => addPackageForm.setData('package_type', e.target.value)}
+                                className={inputBaseClass}
+                            />
+                            <datalist id="add-package-type-suggestions">
+                                {package_types.map((t) => (
+                                    <option key={t} value={t} />
+                                ))}
+                            </datalist>
+                            {addPackageForm.errors.package_type && (
+                                <p className="text-red-500 text-xs mt-1">{addPackageForm.errors.package_type}</p>
+                            )}
+                        </div>
+
+                        <div>
+                            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                                Tipe Durasi <span className="text-red-500">*</span>
+                            </label>
+                            <select
+                                value={addPackageForm.data.duration_type}
+                                onChange={(e) => addPackageForm.setData('duration_type', e.target.value)}
+                                className={selectBaseClass}
+                            >
+                                {package_duration_types.map((d) => (
+                                    <option key={d} value={d}>{d}</option>
+                                ))}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                            Tagline / Subtitle Singkat
+                        </label>
+                        <input
+                            type="text"
+                            placeholder="Contoh: Eksplorasi air terjun tersembunyi dan puri seni Ubud"
+                            value={addPackageForm.data.subtitle}
+                            onChange={(e) => addPackageForm.setData('subtitle', e.target.value)}
+                            className={inputBaseClass}
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                            Penjelasan & Deskripsi Paket
+                        </label>
+                        <textarea
+                            rows="3"
+                            placeholder="Tuliskan gambaran lengkap perjalanan dan fasilitas tour..."
+                            value={addPackageForm.data.description}
+                            onChange={(e) => addPackageForm.setData('description', e.target.value)}
+                            className={`${inputBaseClass} resize-none`}
+                        />
+                    </div>
+
+                    {/* Tier Rates */}
+                    <div className="p-3.5 bg-slate-50 border border-slate-200/80 rounded-xl space-y-3">
+                        <span className="text-xs font-bold text-slate-900 block">
+                            Tarif Harga Paket per Tier Mobil
+                        </span>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <div>
+                                <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                                    Tarif Regular (Rp) <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="number"
+                                    required
+                                    min="0"
+                                    step="10000"
+                                    placeholder="650000"
+                                    value={addPackageForm.data.regular_price}
+                                    onChange={(e) => addPackageForm.setData('regular_price', e.target.value)}
+                                    className={inputBaseClass}
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                                    Tarif Luxury (Rp) <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="number"
+                                    required
+                                    min="0"
+                                    step="10000"
+                                    placeholder="1200000"
+                                    value={addPackageForm.data.luxury_price}
+                                    onChange={(e) => addPackageForm.setData('luxury_price', e.target.value)}
+                                    className={inputBaseClass}
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                                    Tarif Big Van (Rp) <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="number"
+                                    required
+                                    min="0"
+                                    step="10000"
+                                    placeholder="1500000"
+                                    value={addPackageForm.data.big_van_price}
+                                    onChange={(e) => addPackageForm.setData('big_van_price', e.target.value)}
+                                    className={inputBaseClass}
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Photo Upload */}
+                    <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                            Foto Utama Paket
+                        </label>
+                        <input
+                            ref={addPackageFileInputRef}
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => handlePackagePhotoChange(e.target.files[0], false)}
+                            className="hidden"
+                        />
+                        <div className="flex items-center gap-4">
+                            {addPackagePhotoPreview ? (
+                                <div className="relative w-28 aspect-16/10 rounded-xl overflow-hidden border border-slate-200 shrink-0">
+                                    <img src={addPackagePhotoPreview} alt="Preview" className="w-full h-full object-cover" />
+                                </div>
+                            ) : (
+                                <div className="w-28 aspect-16/10 rounded-xl border border-dashed border-slate-300 flex items-center justify-center text-slate-400 text-xs shrink-0">
+                                    Belum ada foto
+                                </div>
+                            )}
+                            <button
+                                type="button"
+                                onClick={() => addPackageFileInputRef.current?.click()}
+                                className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-medium transition cursor-pointer"
+                            >
+                                Pilih Berkas Foto
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Highlights / Destinations List */}
+                    <div className="space-y-2 pt-2 border-t border-slate-100">
+                        <div className="flex items-center justify-between">
+                            <label className="block text-xs font-bold text-slate-900">
+                                Poin Destinasi & Itinerary Tour
+                            </label>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    addPackageForm.setData('highlights', [
+                                        ...addPackageForm.data.highlights,
+                                        { title: '', description: '' },
+                                    ]);
+                                }}
+                                className="text-xs text-[#00AEEF] hover:text-[#008dbf] font-semibold cursor-pointer"
+                            >
+                                + Tambah Destinasi
+                            </button>
+                        </div>
+
+                        <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                            {addPackageForm.data.highlights.map((hl, idx) => (
+                                <div key={idx} className="flex items-start gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-200/80">
+                                    <div className="flex-1 space-y-1.5">
+                                        <input
+                                            type="text"
+                                            placeholder={`Destinasi #${idx + 1} (contoh: Tegenungan Waterfall)`}
+                                            value={hl.title}
+                                            onChange={(e) => {
+                                                const newHl = [...addPackageForm.data.highlights];
+                                                newHl[idx].title = e.target.value;
+                                                addPackageForm.setData('highlights', newHl);
+                                            }}
+                                            className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#00AEEF]"
+                                        />
+                                        <input
+                                            type="text"
+                                            placeholder="Deskripsi singkat kegiatan (opsional)"
+                                            value={hl.description}
+                                            onChange={(e) => {
+                                                const newHl = [...addPackageForm.data.highlights];
+                                                newHl[idx].description = e.target.value;
+                                                addPackageForm.setData('highlights', newHl);
+                                            }}
+                                            className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-xs text-slate-600 placeholder-slate-400 focus:outline-none focus:border-[#00AEEF]"
+                                        />
+                                    </div>
+                                    {addPackageForm.data.highlights.length > 1 && (
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                const newHl = addPackageForm.data.highlights.filter((_, i) => i !== idx);
+                                                addPackageForm.setData('highlights', newHl);
+                                            }}
+                                            className="p-1.5 text-slate-400 hover:text-red-500 rounded-lg hover:bg-red-50 cursor-pointer"
+                                        >
+                                            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                <line x1="18" y1="6" x2="6" y2="18" />
+                                                <line x1="6" y1="6" x2="18" y2="18" />
+                                            </svg>
+                                        </button>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </form>
+            </Modal>
+
+            {/* EDIT PACKAGE MODAL */}
+            <Modal
+                show={showEditPackageModal}
+                onClose={() => setShowEditPackageModal(false)}
+                title="Edit Paket Wisata Day Tour"
+                maxWidth="2xl"
+                footer={
+                    <>
+                        <button
+                            type="button"
+                            onClick={() => setShowEditPackageModal(false)}
+                            className="px-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 transition cursor-pointer min-h-[40px]"
+                        >
+                            Batal
+                        </button>
+                        <button
+                            type="submit"
+                            form="edit-package-form"
+                            disabled={editPackageForm.processing}
+                            className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-semibold transition disabled:opacity-50 cursor-pointer min-h-[40px]"
+                        >
+                            {editPackageForm.processing && (
+                                <svg className="w-4 h-4 animate-spin text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <circle cx="12" cy="12" r="10" strokeWidth="4" className="opacity-25" />
+                                    <path fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" className="opacity-75" />
+                                </svg>
+                            )}
+                            <span>Simpan Perubahan</span>
+                        </button>
+                    </>
+                }
+            >
+                <form id="edit-package-form" onSubmit={handleEditPackageSubmit} className="space-y-4 text-xs">
+                    <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                            Nama Paket Tour <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            required
+                            value={editPackageForm.data.name}
+                            onChange={(e) => editPackageForm.setData('name', e.target.value)}
+                            className={inputBaseClass}
+                        />
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                                Wilayah / Region <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                                type="text"
+                                required
+                                list="edit-package-type-suggestions"
+                                placeholder="Contoh: Ubud, Bedugul, Kintamani, Nusa Penida, dll."
+                                value={editPackageForm.data.package_type}
+                                onChange={(e) => editPackageForm.setData('package_type', e.target.value)}
+                                className={inputBaseClass}
+                            />
+                            <datalist id="edit-package-type-suggestions">
+                                {package_types.map((t) => (
+                                    <option key={t} value={t} />
+                                ))}
+                            </datalist>
+                            {editPackageForm.errors.package_type && (
+                                <p className="text-red-500 text-xs mt-1">{editPackageForm.errors.package_type}</p>
+                            )}
+                        </div>
+
+                        <div>
+                            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                                Tipe Durasi <span className="text-red-500">*</span>
+                            </label>
+                            <select
+                                value={editPackageForm.data.duration_type}
+                                onChange={(e) => editPackageForm.setData('duration_type', e.target.value)}
+                                className={selectBaseClass}
+                            >
+                                {package_duration_types.map((d) => (
+                                    <option key={d} value={d}>{d}</option>
+                                ))}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                            Tagline / Subtitle Singkat
+                        </label>
+                        <input
+                            type="text"
+                            value={editPackageForm.data.subtitle}
+                            onChange={(e) => editPackageForm.setData('subtitle', e.target.value)}
+                            className={inputBaseClass}
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                            Penjelasan & Deskripsi Paket
+                        </label>
+                        <textarea
+                            rows="3"
+                            value={editPackageForm.data.description}
+                            onChange={(e) => editPackageForm.setData('description', e.target.value)}
+                            className={`${inputBaseClass} resize-none`}
+                        />
+                    </div>
+
+                    {/* Tier Rates */}
+                    <div className="p-3.5 bg-slate-50 border border-slate-200/80 rounded-xl space-y-3">
+                        <span className="text-xs font-bold text-slate-900 block">
+                            Tarif Harga Paket per Tier Mobil
+                        </span>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <div>
+                                <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                                    Tarif Regular (Rp) <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="number"
+                                    required
+                                    min="0"
+                                    step="10000"
+                                    value={editPackageForm.data.regular_price}
+                                    onChange={(e) => editPackageForm.setData('regular_price', e.target.value)}
+                                    className={inputBaseClass}
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                                    Tarif Luxury (Rp) <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="number"
+                                    required
+                                    min="0"
+                                    step="10000"
+                                    value={editPackageForm.data.luxury_price}
+                                    onChange={(e) => editPackageForm.setData('luxury_price', e.target.value)}
+                                    className={inputBaseClass}
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                                    Tarif Big Van (Rp) <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="number"
+                                    required
+                                    min="0"
+                                    step="10000"
+                                    value={editPackageForm.data.big_van_price}
+                                    onChange={(e) => editPackageForm.setData('big_van_price', e.target.value)}
+                                    className={inputBaseClass}
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Photo Upload */}
+                    <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                            Ganti Foto Utama Paket
+                        </label>
+                        <input
+                            ref={editPackageFileInputRef}
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => handlePackagePhotoChange(e.target.files[0], true)}
+                            className="hidden"
+                        />
+                        <div className="flex items-center gap-4">
+                            {editPackagePhotoPreview ? (
+                                <div className="relative w-28 aspect-16/10 rounded-xl overflow-hidden border border-slate-200 shrink-0">
+                                    <img src={editPackagePhotoPreview} alt="Preview" className="w-full h-full object-cover" />
+                                </div>
+                            ) : (
+                                <div className="w-28 aspect-16/10 rounded-xl border border-dashed border-slate-300 flex items-center justify-center text-slate-400 text-xs shrink-0">
+                                    Belum ada foto
+                                </div>
+                            )}
+                            <button
+                                type="button"
+                                onClick={() => editPackageFileInputRef.current?.click()}
+                                className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-medium transition cursor-pointer"
+                            >
+                                Ubah Foto
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Highlights / Destinations List */}
+                    <div className="space-y-2 pt-2 border-t border-slate-100">
+                        <div className="flex items-center justify-between">
+                            <label className="block text-xs font-bold text-slate-900">
+                                Poin Destinasi & Itinerary Tour
+                            </label>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    editPackageForm.setData('highlights', [
+                                        ...editPackageForm.data.highlights,
+                                        { title: '', description: '' },
+                                    ]);
+                                }}
+                                className="text-xs text-[#00AEEF] hover:text-[#008dbf] font-semibold cursor-pointer"
+                            >
+                                + Tambah Destinasi
+                            </button>
+                        </div>
+
+                        <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                            {editPackageForm.data.highlights.map((hl, idx) => (
+                                <div key={idx} className="flex items-start gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-200/80">
+                                    <div className="flex-1 space-y-1.5">
+                                        <input
+                                            type="text"
+                                            placeholder={`Destinasi #${idx + 1}`}
+                                            value={hl.title}
+                                            onChange={(e) => {
+                                                const newHl = [...editPackageForm.data.highlights];
+                                                newHl[idx].title = e.target.value;
+                                                editPackageForm.setData('highlights', newHl);
+                                            }}
+                                            className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#00AEEF]"
+                                        />
+                                        <input
+                                            type="text"
+                                            placeholder="Deskripsi singkat kegiatan (opsional)"
+                                            value={hl.description || ''}
+                                            onChange={(e) => {
+                                                const newHl = [...editPackageForm.data.highlights];
+                                                newHl[idx].description = e.target.value;
+                                                editPackageForm.setData('highlights', newHl);
+                                            }}
+                                            className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-xs text-slate-600 placeholder-slate-400 focus:outline-none focus:border-[#00AEEF]"
+                                        />
+                                    </div>
+                                    {editPackageForm.data.highlights.length > 1 && (
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                const newHl = editPackageForm.data.highlights.filter((_, i) => i !== idx);
+                                                editPackageForm.setData('highlights', newHl);
+                                            }}
+                                            className="p-1.5 text-slate-400 hover:text-red-500 rounded-lg hover:bg-red-50 cursor-pointer"
+                                        >
+                                            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                <line x1="18" y1="6" x2="6" y2="18" />
+                                                <line x1="6" y1="6" x2="18" y2="18" />
+                                            </svg>
+                                        </button>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </form>
+            </Modal>
+
+            {/* DELETE PACKAGE MODAL */}
+            <Modal
+                show={showDeletePackageModal}
+                onClose={() => setShowDeletePackageModal(false)}
+                title="Hapus Paket Wisata Day Tour"
+                maxWidth="md"
+                footer={
+                    <>
+                        <button
+                            type="button"
+                            onClick={() => setShowDeletePackageModal(false)}
+                            className="px-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 transition cursor-pointer"
+                        >
+                            Batal
+                        </button>
+                        <button
+                            type="button"
+                            onClick={handleDeletePackage}
+                            className="px-4 py-2 bg-red-600 text-white rounded-xl text-xs font-semibold hover:bg-red-700 transition cursor-pointer"
+                        >
+                            Hapus Paket
+                        </button>
+                    </>
+                }
+            >
+                <p className="text-xs text-slate-600">
+                    Apakah Anda yakin ingin menghapus paket tour <strong>{selectedPackage?.name}</strong>?
                 </p>
             </Modal>
 
@@ -2311,22 +2912,22 @@ export default function MasterData({
             <Modal
                 show={showAddDriverModal}
                 onClose={() => setShowAddDriverModal(false)}
-                title="Tambah Driver Baru"
-                maxWidth="xl"
+                title="Tambah Pengemudi Baru"
+                maxWidth="lg"
                 footer={
                     <>
                         <button
                             type="button"
                             onClick={() => setShowAddDriverModal(false)}
-                            className="px-5 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition cursor-pointer min-h-[44px]"
+                            className="px-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 transition cursor-pointer min-h-[40px]"
                         >
                             Batal
                         </button>
                         <button
                             type="submit"
-                            form="add-driver-form-m"
+                            form="add-driver-form"
                             disabled={addDriverForm.processing}
-                            className="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-[#00AEEF] hover:bg-[#009cd7] text-white rounded-xl text-sm font-semibold transition shadow-xs disabled:opacity-50 cursor-pointer min-h-[44px]"
+                            className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-semibold transition disabled:opacity-50 cursor-pointer min-h-[40px]"
                         >
                             {addDriverForm.processing && (
                                 <svg className="w-4 h-4 animate-spin text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -2339,80 +2940,98 @@ export default function MasterData({
                     </>
                 }
             >
-                <form id="add-driver-form-m" onSubmit={handleAddDriverSubmit} className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                                Nama Lengkap <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                                type="text"
-                                required
-                                value={addDriverForm.data.full_name}
-                                onChange={(e) => addDriverForm.setData('full_name', e.target.value)}
-                                placeholder="Contoh: Wayan Sudira"
-                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-base sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
-                            />
-                        </div>
+                <form id="add-driver-form" onSubmit={handleAddDriverSubmit} className="space-y-4 text-xs">
+                    <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                            Nama Lengkap <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            required
+                            placeholder="Contoh: I Wayan Sudira"
+                            value={addDriverForm.data.full_name}
+                            onChange={(e) => addDriverForm.setData('full_name', e.target.value)}
+                            className={inputBaseClass}
+                        />
+                    </div>
 
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                                WhatsApp / No. HP <span className="text-red-500">*</span>
+                            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                                Nomor WhatsApp <span className="text-red-500">*</span>
                             </label>
                             <input
                                 type="text"
                                 required
+                                placeholder="081234567890"
                                 value={addDriverForm.data.whatsapp_number}
                                 onChange={(e) => addDriverForm.setData('whatsapp_number', e.target.value)}
-                                placeholder="+62 812-3456-7890"
-                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-base sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
+                                className={inputBaseClass}
                             />
                         </div>
 
                         <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                                Email <span className="text-red-500">*</span>
+                            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                                Email Login <span className="text-red-500">*</span>
                             </label>
                             <input
                                 type="email"
                                 required
+                                placeholder="driver@bfs.test"
                                 value={addDriverForm.data.email}
                                 onChange={(e) => addDriverForm.setData('email', e.target.value)}
-                                placeholder="driver@balifamilysafe.com"
-                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-base sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
+                                className={inputBaseClass}
                             />
                         </div>
+                    </div>
 
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                                Password Sementara <span className="text-red-500">*</span>
+                            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                                Password Login Driver <span className="text-red-500">*</span>
                             </label>
                             <input
                                 type="password"
                                 required
+                                placeholder="Minimal 6 karakter"
                                 value={addDriverForm.data.password}
                                 onChange={(e) => addDriverForm.setData('password', e.target.value)}
-                                placeholder="Min. 6 karakter"
-                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-base sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
+                                className={inputBaseClass}
                             />
                         </div>
 
                         <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                                Nomor SIM <span className="text-red-500">*</span>
+                            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                                Status Driver
+                            </label>
+                            <select
+                                value={addDriverForm.data.status}
+                                onChange={(e) => addDriverForm.setData('status', e.target.value)}
+                                className={selectBaseClass}
+                            >
+                                <option value="Active">Active</option>
+                                <option value="Inactive">Inactive</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                                Nomor Lisensi / SIM <span className="text-red-500">*</span>
                             </label>
                             <input
                                 type="text"
                                 required
+                                placeholder="Contoh: SIM-A-981726"
                                 value={addDriverForm.data.license_number}
                                 onChange={(e) => addDriverForm.setData('license_number', e.target.value)}
-                                placeholder="SIM-12345678"
-                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-base sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
+                                className={inputBaseClass}
                             />
                         </div>
 
                         <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                                 Masa Berlaku SIM <span className="text-red-500">*</span>
                             </label>
                             <input
@@ -2420,72 +3039,40 @@ export default function MasterData({
                                 required
                                 value={addDriverForm.data.license_expiry_date}
                                 onChange={(e) => addDriverForm.setData('license_expiry_date', e.target.value)}
-                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-base sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
+                                className={inputBaseClass}
                             />
-                        </div>
-
-                        <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                                Status <span className="text-red-500">*</span>
-                            </label>
-                            <select
-                                value={addDriverForm.data.status}
-                                onChange={(e) => addDriverForm.setData('status', e.target.value)}
-                                className={selectClass}
-                            >
-                                <option value="Active">Active</option>
-                                <option value="On Leave">On Leave</option>
-                            </select>
                         </div>
                     </div>
 
                     <div>
-                        <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                            Foto Profil (Opsional)
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                            Foto Profil Driver
                         </label>
                         <input
-                            type="file"
                             ref={addDriverFileInputRef}
+                            type="file"
                             accept="image/*"
+                            onChange={(e) => handleDriverFileChange(e.target.files[0], false)}
                             className="hidden"
-                            onChange={(e) => {
-                                if (e.target.files && e.target.files[0]) {
-                                    handleDriverFileChange(e.target.files[0], false);
-                                }
-                            }}
                         />
-
-                        {addDriverPhotoPreview ? (
-                            <div className="flex items-center gap-4 p-4 border border-slate-200 rounded-2xl bg-slate-50">
-                                <img
-                                    src={addDriverPhotoPreview}
-                                    alt="Preview"
-                                    className="w-16 h-16 rounded-full object-cover border-2 border-white shadow-xs"
-                                />
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-xs font-semibold text-slate-800 truncate">Foto driver dipilih</p>
+                        <div className="flex items-center gap-4">
+                            {addDriverPhotoPreview ? (
+                                <div className="w-12 h-12 rounded-full overflow-hidden border border-slate-200 shrink-0">
+                                    <img src={addDriverPhotoPreview} alt="Preview" className="w-full h-full object-cover" />
                                 </div>
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        addDriverForm.setData('profile_photo', null);
-                                        setAddDriverPhotoPreview(null);
-                                    }}
-                                    className="text-xs font-semibold text-red-600 bg-red-50 px-3 py-1.5 rounded-lg"
-                                >
-                                    Hapus
-                                </button>
-                            </div>
-                        ) : (
-                            <div
+                            ) : (
+                                <div className="w-12 h-12 rounded-full border border-dashed border-slate-300 flex items-center justify-center text-slate-400 text-xs shrink-0">
+                                    Foto
+                                </div>
+                            )}
+                            <button
+                                type="button"
                                 onClick={() => addDriverFileInputRef.current?.click()}
-                                className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-slate-200 rounded-2xl hover:border-sky-400 hover:bg-sky-50/30 transition-all cursor-pointer bg-slate-50/50"
+                                className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-medium transition cursor-pointer"
                             >
-                                <p className="text-xs font-semibold text-slate-700">
-                                    <span className="text-[#00AEEF]">Klik untuk unggah</span> foto driver
-                                </p>
-                            </div>
-                        )}
+                                Pilih Berkas Foto
+                            </button>
+                        </div>
                     </div>
                 </form>
             </Modal>
@@ -2494,22 +3081,22 @@ export default function MasterData({
             <Modal
                 show={showEditDriverModal}
                 onClose={() => setShowEditDriverModal(false)}
-                title={`Edit Driver ${selectedDriver ? `(${selectedDriver.full_name})` : ''}`}
-                maxWidth="xl"
+                title="Edit Data Pengemudi"
+                maxWidth="lg"
                 footer={
                     <>
                         <button
                             type="button"
                             onClick={() => setShowEditDriverModal(false)}
-                            className="px-5 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition cursor-pointer min-h-[44px]"
+                            className="px-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 transition cursor-pointer min-h-[40px]"
                         >
                             Batal
                         </button>
                         <button
                             type="submit"
-                            form="edit-driver-form-m"
+                            form="edit-driver-form"
                             disabled={editDriverForm.processing}
-                            className="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-[#00AEEF] hover:bg-[#009cd7] text-white rounded-xl text-sm font-semibold transition shadow-xs disabled:opacity-50 cursor-pointer min-h-[44px]"
+                            className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-semibold transition disabled:opacity-50 cursor-pointer min-h-[40px]"
                         >
                             {editDriverForm.processing && (
                                 <svg className="w-4 h-4 animate-spin text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -2517,80 +3104,98 @@ export default function MasterData({
                                     <path fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" className="opacity-75" />
                                 </svg>
                             )}
-                            <span>Perbarui Driver</span>
+                            <span>Simpan Perubahan</span>
                         </button>
                     </>
                 }
             >
-                <form id="edit-driver-form-m" onSubmit={handleEditDriverSubmit} className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                                Nama Lengkap <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                                type="text"
-                                required
-                                value={editDriverForm.data.full_name}
-                                onChange={(e) => editDriverForm.setData('full_name', e.target.value)}
-                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-base sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
-                            />
-                        </div>
+                <form id="edit-driver-form" onSubmit={handleEditDriverSubmit} className="space-y-4 text-xs">
+                    <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                            Nama Lengkap <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            required
+                            value={editDriverForm.data.full_name}
+                            onChange={(e) => editDriverForm.setData('full_name', e.target.value)}
+                            className={inputBaseClass}
+                        />
+                    </div>
 
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                                WhatsApp / No. HP <span className="text-red-500">*</span>
+                            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                                Nomor WhatsApp <span className="text-red-500">*</span>
                             </label>
                             <input
                                 type="text"
                                 required
                                 value={editDriverForm.data.whatsapp_number}
                                 onChange={(e) => editDriverForm.setData('whatsapp_number', e.target.value)}
-                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-base sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
+                                className={inputBaseClass}
                             />
                         </div>
 
                         <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                                Email <span className="text-red-500">*</span>
+                            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                                Email Login <span className="text-red-500">*</span>
                             </label>
                             <input
                                 type="email"
                                 required
                                 value={editDriverForm.data.email}
                                 onChange={(e) => editDriverForm.setData('email', e.target.value)}
-                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-base sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
+                                className={inputBaseClass}
                             />
                         </div>
+                    </div>
 
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                                Ganti Password (Opsional)
+                            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                                Password Baru (Opsional)
                             </label>
                             <input
                                 type="password"
+                                placeholder="Kosongkan bila tidak diubah"
                                 value={editDriverForm.data.password}
                                 onChange={(e) => editDriverForm.setData('password', e.target.value)}
-                                placeholder="Kosongkan jika tidak diubah"
-                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-base sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
+                                className={inputBaseClass}
                             />
                         </div>
 
                         <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                                Nomor SIM <span className="text-red-500">*</span>
+                            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                                Status Driver
+                            </label>
+                            <select
+                                value={editDriverForm.data.status}
+                                onChange={(e) => editDriverForm.setData('status', e.target.value)}
+                                className={selectBaseClass}
+                            >
+                                <option value="Active">Active</option>
+                                <option value="Inactive">Inactive</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                                Nomor Lisensi / SIM <span className="text-red-500">*</span>
                             </label>
                             <input
                                 type="text"
                                 required
                                 value={editDriverForm.data.license_number}
                                 onChange={(e) => editDriverForm.setData('license_number', e.target.value)}
-                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-base sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
+                                className={inputBaseClass}
                             />
                         </div>
 
                         <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                                 Masa Berlaku SIM <span className="text-red-500">*</span>
                             </label>
                             <input
@@ -2598,69 +3203,40 @@ export default function MasterData({
                                 required
                                 value={editDriverForm.data.license_expiry_date}
                                 onChange={(e) => editDriverForm.setData('license_expiry_date', e.target.value)}
-                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-base sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
+                                className={inputBaseClass}
                             />
-                        </div>
-
-                        <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                                Status <span className="text-red-500">*</span>
-                            </label>
-                            <select
-                                value={editDriverForm.data.status}
-                                onChange={(e) => editDriverForm.setData('status', e.target.value)}
-                                className={selectClass}
-                            >
-                                <option value="Active">Active</option>
-                                <option value="On Leave">On Leave</option>
-                            </select>
                         </div>
                     </div>
 
                     <div>
-                        <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                            Foto Profil (Opsional)
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                            Ganti Foto Profil
                         </label>
                         <input
-                            type="file"
                             ref={editDriverFileInputRef}
+                            type="file"
                             accept="image/*"
+                            onChange={(e) => handleDriverFileChange(e.target.files[0], true)}
                             className="hidden"
-                            onChange={(e) => {
-                                if (e.target.files && e.target.files[0]) {
-                                    handleDriverFileChange(e.target.files[0], true);
-                                }
-                            }}
                         />
-
-                        {editDriverPhotoPreview || selectedDriver?.profile_photo_url ? (
-                            <div className="flex items-center gap-4 p-4 border border-slate-200 rounded-2xl bg-slate-50">
-                                <img
-                                    src={editDriverPhotoPreview || selectedDriver?.profile_photo_url}
-                                    alt="Preview"
-                                    className="w-16 h-16 rounded-full object-cover border-2 border-white shadow-xs"
-                                />
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-xs font-semibold text-slate-800 truncate">Foto profil driver</p>
+                        <div className="flex items-center gap-4">
+                            {editDriverPhotoPreview ? (
+                                <div className="w-12 h-12 rounded-full overflow-hidden border border-slate-200 shrink-0">
+                                    <img src={editDriverPhotoPreview} alt="Preview" className="w-full h-full object-cover" />
                                 </div>
-                                <button
-                                    type="button"
-                                    onClick={() => editDriverFileInputRef.current?.click()}
-                                    className="text-xs font-semibold text-sky-600 bg-sky-50 px-3 py-1.5 rounded-lg"
-                                >
-                                    Ganti
-                                </button>
-                            </div>
-                        ) : (
-                            <div
+                            ) : (
+                                <div className="w-12 h-12 rounded-full border border-dashed border-slate-300 flex items-center justify-center text-slate-400 text-xs shrink-0">
+                                    Foto
+                                </div>
+                            )}
+                            <button
+                                type="button"
                                 onClick={() => editDriverFileInputRef.current?.click()}
-                                className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-slate-200 rounded-2xl hover:border-sky-400 hover:bg-sky-50/30 transition-all cursor-pointer bg-slate-50/50"
+                                className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-medium transition cursor-pointer"
                             >
-                                <p className="text-xs font-semibold text-slate-700">
-                                    <span className="text-[#00AEEF]">Klik untuk unggah</span> foto profil
-                                </p>
-                            </div>
-                        )}
+                                Ubah Foto
+                            </button>
+                        </div>
                     </div>
                 </form>
             </Modal>
@@ -2669,29 +3245,29 @@ export default function MasterData({
             <Modal
                 show={showDeleteDriverModal}
                 onClose={() => setShowDeleteDriverModal(false)}
-                title="Hapus Driver"
+                title="Hapus Pengemudi"
                 maxWidth="md"
                 footer={
                     <>
                         <button
                             type="button"
                             onClick={() => setShowDeleteDriverModal(false)}
-                            className="px-4 py-2 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition cursor-pointer"
+                            className="px-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 transition cursor-pointer"
                         >
                             Batal
                         </button>
                         <button
                             type="button"
                             onClick={handleDeleteDriver}
-                            className="px-4 py-2 bg-red-600 text-white rounded-xl text-sm font-semibold hover:bg-red-700 transition cursor-pointer"
+                            className="px-4 py-2 bg-red-600 text-white rounded-xl text-xs font-semibold hover:bg-red-700 transition cursor-pointer"
                         >
                             Hapus Driver
                         </button>
                     </>
                 }
             >
-                <p className="text-sm text-slate-600">
-                    Apakah Anda yakin ingin menghapus driver <strong>{selectedDriver?.full_name}</strong>?
+                <p className="text-xs text-slate-600">
+                    Apakah Anda yakin ingin menghapus akun pengemudi <strong>{selectedDriver?.full_name}</strong>?
                 </p>
             </Modal>
 
@@ -2700,13 +3276,13 @@ export default function MasterData({
                 show={showAddHotelModal}
                 onClose={() => setShowAddHotelModal(false)}
                 title="Tambah Hotel Baru"
-                maxWidth="xl"
+                maxWidth="lg"
                 footer={
                     <>
                         <button
                             type="button"
                             onClick={() => setShowAddHotelModal(false)}
-                            className="px-5 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition cursor-pointer min-h-[44px]"
+                            className="px-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 transition cursor-pointer min-h-[40px]"
                         >
                             Batal
                         </button>
@@ -2714,7 +3290,7 @@ export default function MasterData({
                             type="submit"
                             form="add-hotel-form"
                             disabled={addHotelForm.processing}
-                            className="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-[#00AEEF] hover:bg-[#009cd7] text-white rounded-xl text-sm font-semibold transition shadow-xs disabled:opacity-50 cursor-pointer min-h-[44px]"
+                            className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-semibold transition disabled:opacity-50 cursor-pointer min-h-[40px]"
                         >
                             {addHotelForm.processing && (
                                 <svg className="w-4 h-4 animate-spin text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -2727,62 +3303,50 @@ export default function MasterData({
                     </>
                 }
             >
-                <form id="add-hotel-form" onSubmit={handleAddHotelSubmit} className="space-y-4">
+                <form id="add-hotel-form" onSubmit={handleAddHotelSubmit} className="space-y-4 text-xs">
                     <div>
-                        <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                            Nama Hotel / Resort <span className="text-red-500">*</span>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                            Nama Hotel & Resort <span className="text-red-500">*</span>
                         </label>
                         <input
                             type="text"
                             required
+                            placeholder="Contoh: Padma Resort Ubud, W Bali Seminyak"
                             value={addHotelForm.data.nama_hotel}
                             onChange={(e) => addHotelForm.setData('nama_hotel', e.target.value)}
-                            placeholder="Contoh: The Kayon Resort Ubud"
-                            className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-base sm:text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
+                            className={inputBaseClass}
                         />
-                        {addHotelForm.errors.nama_hotel && (
-                            <p className="text-xs text-red-600 mt-1 font-medium">{addHotelForm.errors.nama_hotel}</p>
-                        )}
                     </div>
 
                     <div>
-                        <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                            Hubungkan ke Destinasi / Wilayah Tarif Bandara
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                            Hubungkan ke Destinasi Bandara DPS
                         </label>
-                        <p className="text-xs text-slate-500 mb-2">
-                            Centang wilayah destinasi yang mencakup area hotel ini:
-                        </p>
-                        <div className="max-h-56 overflow-y-auto border border-slate-200 rounded-xl p-3 bg-slate-50/50 space-y-2">
+                        <div className="max-h-48 overflow-y-auto border border-slate-200 rounded-xl p-3 bg-slate-50/50 space-y-2">
                             {airports_list && airports_list.length > 0 ? (
                                 airports_list.map((ap) => {
-                                    const checked = addHotelForm.data.airport_ids.includes(ap.id);
+                                    const isChecked = addHotelForm.data.airport_ids.includes(ap.id);
                                     return (
-                                        <label
-                                            key={ap.id}
-                                            className={`flex items-center gap-3 p-2 rounded-xl transition cursor-pointer ${
-                                                checked ? 'bg-sky-50 border border-sky-200/80 text-[#00AEEF]' : 'hover:bg-slate-100 text-slate-700'
-                                            }`}
-                                        >
+                                        <label key={ap.id} className="flex items-center gap-2.5 cursor-pointer text-xs">
                                             <input
                                                 type="checkbox"
-                                                value={ap.id}
-                                                checked={checked}
+                                                checked={isChecked}
                                                 onChange={(e) => {
-                                                    const val = ap.id;
+                                                    const current = [...addHotelForm.data.airport_ids];
                                                     if (e.target.checked) {
-                                                        addHotelForm.setData('airport_ids', [...addHotelForm.data.airport_ids, val]);
+                                                        addHotelForm.setData('airport_ids', [...current, ap.id]);
                                                     } else {
-                                                        addHotelForm.setData('airport_ids', addHotelForm.data.airport_ids.filter((id) => id !== val));
+                                                        addHotelForm.setData('airport_ids', current.filter((id) => id !== ap.id));
                                                     }
                                                 }}
-                                                className="w-4 h-4 text-[#00AEEF] rounded border-slate-300 focus:ring-sky-500 cursor-pointer"
+                                                className="w-4 h-4 rounded text-[#00AEEF] focus:ring-[#00AEEF] border-slate-300"
                                             />
-                                            <span className="text-xs font-semibold">{ap.label}</span>
+                                            <span className="text-slate-700">{ap.label}</span>
                                         </label>
                                     );
                                 })
                             ) : (
-                                <p className="text-xs text-slate-400 italic">Belum ada daftar destinasi bandara terdaftar.</p>
+                                <p className="text-xs text-slate-400 italic">Belum ada daftar destinasi bandara.</p>
                             )}
                         </div>
                     </div>
@@ -2793,14 +3357,14 @@ export default function MasterData({
             <Modal
                 show={showEditHotelModal}
                 onClose={() => setShowEditHotelModal(false)}
-                title={`Edit Hotel (${selectedHotel?.nama_hotel || ''})`}
-                maxWidth="xl"
+                title="Edit Data Hotel"
+                maxWidth="lg"
                 footer={
                     <>
                         <button
                             type="button"
                             onClick={() => setShowEditHotelModal(false)}
-                            className="px-5 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition cursor-pointer min-h-[44px]"
+                            className="px-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 transition cursor-pointer min-h-[40px]"
                         >
                             Batal
                         </button>
@@ -2808,7 +3372,7 @@ export default function MasterData({
                             type="submit"
                             form="edit-hotel-form"
                             disabled={editHotelForm.processing}
-                            className="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-[#00AEEF] hover:bg-[#009cd7] text-white rounded-xl text-sm font-semibold transition shadow-xs disabled:opacity-50 cursor-pointer min-h-[44px]"
+                            className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-semibold transition disabled:opacity-50 cursor-pointer min-h-[40px]"
                         >
                             {editHotelForm.processing && (
                                 <svg className="w-4 h-4 animate-spin text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -2816,63 +3380,54 @@ export default function MasterData({
                                     <path fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" className="opacity-75" />
                                 </svg>
                             )}
-                            <span>Perbarui Hotel</span>
+                            <span>Simpan Perubahan</span>
                         </button>
                     </>
                 }
             >
-                <form id="edit-hotel-form" onSubmit={handleEditHotelSubmit} className="space-y-4">
+                <form id="edit-hotel-form" onSubmit={handleEditHotelSubmit} className="space-y-4 text-xs">
                     <div>
-                        <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                            Nama Hotel / Resort <span className="text-red-500">*</span>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                            Nama Hotel & Resort <span className="text-red-500">*</span>
                         </label>
                         <input
                             type="text"
                             required
                             value={editHotelForm.data.nama_hotel}
                             onChange={(e) => editHotelForm.setData('nama_hotel', e.target.value)}
-                            className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-base sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
+                            className={inputBaseClass}
                         />
-                        {editHotelForm.errors.nama_hotel && (
-                            <p className="text-xs text-red-600 mt-1 font-medium">{editHotelForm.errors.nama_hotel}</p>
-                        )}
                     </div>
 
                     <div>
-                        <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                            Hubungkan ke Destinasi / Wilayah Tarif Bandara
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                            Hubungkan ke Destinasi Bandara DPS
                         </label>
-                        <div className="max-h-56 overflow-y-auto border border-slate-200 rounded-xl p-3 bg-slate-50/50 space-y-2">
+                        <div className="max-h-48 overflow-y-auto border border-slate-200 rounded-xl p-3 bg-slate-50/50 space-y-2">
                             {airports_list && airports_list.length > 0 ? (
                                 airports_list.map((ap) => {
-                                    const checked = editHotelForm.data.airport_ids.includes(ap.id);
+                                    const isChecked = editHotelForm.data.airport_ids.includes(ap.id);
                                     return (
-                                        <label
-                                            key={ap.id}
-                                            className={`flex items-center gap-3 p-2 rounded-xl transition cursor-pointer ${
-                                                checked ? 'bg-sky-50 border border-sky-200/80 text-[#00AEEF]' : 'hover:bg-slate-100 text-slate-700'
-                                            }`}
-                                        >
+                                        <label key={ap.id} className="flex items-center gap-2.5 cursor-pointer text-xs">
                                             <input
                                                 type="checkbox"
-                                                value={ap.id}
-                                                checked={checked}
+                                                checked={isChecked}
                                                 onChange={(e) => {
-                                                    const val = ap.id;
+                                                    const current = [...editHotelForm.data.airport_ids];
                                                     if (e.target.checked) {
-                                                        editHotelForm.setData('airport_ids', [...editHotelForm.data.airport_ids, val]);
+                                                        editHotelForm.setData('airport_ids', [...current, ap.id]);
                                                     } else {
-                                                        editHotelForm.setData('airport_ids', editHotelForm.data.airport_ids.filter((id) => id !== val));
+                                                        editHotelForm.setData('airport_ids', current.filter((id) => id !== ap.id));
                                                     }
                                                 }}
-                                                className="w-4 h-4 text-[#00AEEF] rounded border-slate-300 focus:ring-sky-500 cursor-pointer"
+                                                className="w-4 h-4 rounded text-[#00AEEF] focus:ring-[#00AEEF] border-slate-300"
                                             />
-                                            <span className="text-xs font-semibold">{ap.label}</span>
+                                            <span className="text-slate-700">{ap.label}</span>
                                         </label>
                                     );
                                 })
                             ) : (
-                                <p className="text-xs text-slate-400 italic">Belum ada daftar destinasi bandara terdaftar.</p>
+                                <p className="text-xs text-slate-400 italic">Belum ada daftar destinasi bandara.</p>
                             )}
                         </div>
                     </div>
@@ -2883,28 +3438,28 @@ export default function MasterData({
             <Modal
                 show={showDeleteHotelModal}
                 onClose={() => setShowDeleteHotelModal(false)}
-                title="Hapus Hotel"
+                title="Hapus Data Hotel"
                 maxWidth="md"
                 footer={
                     <>
                         <button
                             type="button"
                             onClick={() => setShowDeleteHotelModal(false)}
-                            className="px-4 py-2 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition cursor-pointer"
+                            className="px-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 transition cursor-pointer"
                         >
                             Batal
                         </button>
                         <button
                             type="button"
                             onClick={handleDeleteHotel}
-                            className="px-4 py-2 bg-red-600 text-white rounded-xl text-sm font-semibold hover:bg-red-700 transition cursor-pointer"
+                            className="px-4 py-2 bg-red-600 text-white rounded-xl text-xs font-semibold hover:bg-red-700 transition cursor-pointer"
                         >
                             Hapus Hotel
                         </button>
                     </>
                 }
             >
-                <p className="text-sm text-slate-600">
+                <p className="text-xs text-slate-600">
                     Apakah Anda yakin ingin menghapus hotel <strong>{selectedHotel?.nama_hotel}</strong>?
                 </p>
             </Modal>
@@ -2913,14 +3468,14 @@ export default function MasterData({
             <Modal
                 show={showAddAirportModal}
                 onClose={() => setShowAddAirportModal(false)}
-                title="Tambah Destinasi & Tarif Bandara"
+                title="Tambah Destinasi Bandara DPS"
                 maxWidth="lg"
                 footer={
                     <>
                         <button
                             type="button"
                             onClick={() => setShowAddAirportModal(false)}
-                            className="px-5 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition cursor-pointer min-h-[44px]"
+                            className="px-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 transition cursor-pointer min-h-[40px]"
                         >
                             Batal
                         </button>
@@ -2928,7 +3483,7 @@ export default function MasterData({
                             type="submit"
                             form="add-airport-form"
                             disabled={addAirportForm.processing}
-                            className="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-[#00AEEF] hover:bg-[#009cd7] text-white rounded-xl text-sm font-semibold transition shadow-xs disabled:opacity-50 cursor-pointer min-h-[44px]"
+                            className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-semibold transition disabled:opacity-50 cursor-pointer min-h-[40px]"
                         >
                             {addAirportForm.processing && (
                                 <svg className="w-4 h-4 animate-spin text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -2941,78 +3496,68 @@ export default function MasterData({
                     </>
                 }
             >
-                <form id="add-airport-form" onSubmit={handleAddAirportSubmit} className="space-y-4">
-                    <div>
-                        <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                            Nama Destinasi / Wilayah <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                            type="text"
-                            required
-                            value={addAirportForm.data.destinasi}
-                            onChange={(e) => addAirportForm.setData('destinasi', e.target.value)}
-                            placeholder="Contoh: Ubud / Seminyak / Canggu"
-                            className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-base sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
-                        />
-                        {addAirportForm.errors.destinasi && (
-                            <p className="text-xs text-red-600 mt-1 font-medium">{addAirportForm.errors.destinasi}</p>
-                        )}
-                    </div>
+                <form id="add-airport-form" onSubmit={handleAddAirportSubmit} className="space-y-4 text-xs">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                                Wilayah Destinasi <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                                type="text"
+                                required
+                                placeholder="Contoh: Ubud, Seminyak, Nusa Dua"
+                                value={addAirportForm.data.destinasi}
+                                onChange={(e) => addAirportForm.setData('destinasi', e.target.value)}
+                                className={inputBaseClass}
+                            />
+                        </div>
 
-                    <div>
-                        <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                            Tipe Transfer Bandara <span className="text-red-500">*</span>
-                        </label>
-                        <select
-                            value={addAirportForm.data.type}
-                            onChange={(e) => addAirportForm.setData('type', e.target.value)}
-                            className={selectClass}
-                        >
-                            <option value="Pick-Up">Pick-Up (Penjemputan dari Bandara DPS)</option>
-                            <option value="Drop-Off">Drop-Off (Pengantaran menuju Bandara DPS)</option>
-                        </select>
-                        {addAirportForm.errors.type && (
-                            <p className="text-xs text-red-600 mt-1 font-medium">{addAirportForm.errors.type}</p>
-                        )}
+                        <div>
+                            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                                Tipe Transfer <span className="text-red-500">*</span>
+                            </label>
+                            <select
+                                value={addAirportForm.data.type}
+                                onChange={(e) => addAirportForm.setData('type', e.target.value)}
+                                className={selectBaseClass}
+                            >
+                                <option value="Pick-Up">Pick-Up (Jemput di Bandara)</option>
+                                <option value="Drop-Off">Drop-Off (Antar ke Bandara)</option>
+                            </select>
+                        </div>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                                 Tarif Regular (Rp) <span className="text-red-500">*</span>
                             </label>
                             <input
                                 type="number"
                                 required
                                 min="0"
-                                step="5000"
+                                step="10000"
+                                placeholder="350000"
                                 value={addAirportForm.data.price_regular}
                                 onChange={(e) => addAirportForm.setData('price_regular', e.target.value)}
-                                placeholder="Contoh: 350000"
-                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-base sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
+                                className={inputBaseClass}
                             />
-                            {addAirportForm.errors.price_regular && (
-                                <p className="text-xs text-red-600 mt-1 font-medium">{addAirportForm.errors.price_regular}</p>
-                            )}
                         </div>
 
                         <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                                 Tarif Luxury (Rp) <span className="text-red-500">*</span>
                             </label>
                             <input
                                 type="number"
                                 required
                                 min="0"
-                                step="5000"
+                                step="10000"
+                                placeholder="700000"
                                 value={addAirportForm.data.price_luxury}
                                 onChange={(e) => addAirportForm.setData('price_luxury', e.target.value)}
-                                placeholder="Contoh: 650000"
-                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-base sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
+                                className={inputBaseClass}
                             />
-                            {addAirportForm.errors.price_luxury && (
-                                <p className="text-xs text-red-600 mt-1 font-medium">{addAirportForm.errors.price_luxury}</p>
-                            )}
                         </div>
                     </div>
                 </form>
@@ -3022,14 +3567,14 @@ export default function MasterData({
             <Modal
                 show={showEditAirportModal}
                 onClose={() => setShowEditAirportModal(false)}
-                title={`Edit Destinasi (${selectedAirport?.destinasi || ''})`}
+                title="Edit Destinasi Bandara DPS"
                 maxWidth="lg"
                 footer={
                     <>
                         <button
                             type="button"
                             onClick={() => setShowEditAirportModal(false)}
-                            className="px-5 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition cursor-pointer min-h-[44px]"
+                            className="px-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 transition cursor-pointer min-h-[40px]"
                         >
                             Batal
                         </button>
@@ -3037,7 +3582,7 @@ export default function MasterData({
                             type="submit"
                             form="edit-airport-form"
                             disabled={editAirportForm.processing}
-                            className="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-[#00AEEF] hover:bg-[#009cd7] text-white rounded-xl text-sm font-semibold transition shadow-xs disabled:opacity-50 cursor-pointer min-h-[44px]"
+                            className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-semibold transition disabled:opacity-50 cursor-pointer min-h-[40px]"
                         >
                             {editAirportForm.processing && (
                                 <svg className="w-4 h-4 animate-spin text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -3045,67 +3590,69 @@ export default function MasterData({
                                     <path fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" className="opacity-75" />
                                 </svg>
                             )}
-                            <span>Perbarui Destinasi</span>
+                            <span>Simpan Perubahan</span>
                         </button>
                     </>
                 }
             >
-                <form id="edit-airport-form" onSubmit={handleEditAirportSubmit} className="space-y-4">
-                    <div>
-                        <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                            Nama Destinasi / Wilayah <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                            type="text"
-                            required
-                            value={editAirportForm.data.destinasi}
-                            onChange={(e) => editAirportForm.setData('destinasi', e.target.value)}
-                            className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-base sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
-                        />
-                    </div>
+                <form id="edit-airport-form" onSubmit={handleEditAirportSubmit} className="space-y-4 text-xs">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                                Wilayah Destinasi <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                                type="text"
+                                required
+                                value={editAirportForm.data.destinasi}
+                                onChange={(e) => editAirportForm.setData('destinasi', e.target.value)}
+                                className={inputBaseClass}
+                            />
+                        </div>
 
-                    <div>
-                        <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                            Tipe Transfer Bandara <span className="text-red-500">*</span>
-                        </label>
-                        <select
-                            value={editAirportForm.data.type}
-                            onChange={(e) => editAirportForm.setData('type', e.target.value)}
-                            className={selectClass}
-                        >
-                            <option value="Pick-Up">Pick-Up (Penjemputan dari Bandara DPS)</option>
-                            <option value="Drop-Off">Drop-Off (Pengantaran menuju Bandara DPS)</option>
-                        </select>
+                        <div>
+                            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                                Tipe Transfer <span className="text-red-500">*</span>
+                            </label>
+                            <select
+                                value={editAirportForm.data.type}
+                                onChange={(e) => editAirportForm.setData('type', e.target.value)}
+                                className={selectBaseClass}
+                            >
+                                <option value="Pick-Up">Pick-Up (Jemput di Bandara)</option>
+                                <option value="Drop-Off">Drop-Off (Antar ke Bandara)</option>
+                            </select>
+                        </div>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                                 Tarif Regular (Rp) <span className="text-red-500">*</span>
                             </label>
                             <input
                                 type="number"
                                 required
                                 min="0"
-                                step="5000"
+                                step="10000"
                                 value={editAirportForm.data.price_regular}
                                 onChange={(e) => editAirportForm.setData('price_regular', e.target.value)}
-                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-base sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
+                                className={inputBaseClass}
                             />
                         </div>
 
                         <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                                 Tarif Luxury (Rp) <span className="text-red-500">*</span>
                             </label>
                             <input
                                 type="number"
                                 required
                                 min="0"
-                                step="5000"
+                                step="10000"
                                 value={editAirportForm.data.price_luxury}
                                 onChange={(e) => editAirportForm.setData('price_luxury', e.target.value)}
-                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-base sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
+                                className={inputBaseClass}
                             />
                         </div>
                     </div>
@@ -3116,28 +3663,28 @@ export default function MasterData({
             <Modal
                 show={showDeleteAirportModal}
                 onClose={() => setShowDeleteAirportModal(false)}
-                title="Hapus Destinasi"
+                title="Hapus Destinasi Bandara"
                 maxWidth="md"
                 footer={
                     <>
                         <button
                             type="button"
                             onClick={() => setShowDeleteAirportModal(false)}
-                            className="px-4 py-2 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition cursor-pointer"
+                            className="px-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 transition cursor-pointer"
                         >
                             Batal
                         </button>
                         <button
                             type="button"
                             onClick={handleDeleteAirport}
-                            className="px-4 py-2 bg-red-600 text-white rounded-xl text-sm font-semibold hover:bg-red-700 transition cursor-pointer"
+                            className="px-4 py-2 bg-red-600 text-white rounded-xl text-xs font-semibold hover:bg-red-700 transition cursor-pointer"
                         >
                             Hapus Destinasi
                         </button>
                     </>
                 }
             >
-                <p className="text-sm text-slate-600">
+                <p className="text-xs text-slate-600">
                     Apakah Anda yakin ingin menghapus destinasi <strong>{selectedAirport?.destinasi} ({selectedAirport?.type})</strong>?
                 </p>
             </Modal>
@@ -3146,14 +3693,14 @@ export default function MasterData({
             <Modal
                 show={showAddHotelPriceModal}
                 onClose={() => setShowAddHotelPriceModal(false)}
-                title="Tambah Tarif Transfer Antar Hotel"
+                title="Tambah Tarif Antar Hotel"
                 maxWidth="lg"
                 footer={
                     <>
                         <button
                             type="button"
                             onClick={() => setShowAddHotelPriceModal(false)}
-                            className="px-5 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition cursor-pointer min-h-[44px]"
+                            className="px-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 transition cursor-pointer min-h-[40px]"
                         >
                             Batal
                         </button>
@@ -3161,7 +3708,7 @@ export default function MasterData({
                             type="submit"
                             form="add-hotel-price-form"
                             disabled={addHotelPriceForm.processing}
-                            className="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-[#00AEEF] hover:bg-[#009cd7] text-white rounded-xl text-sm font-semibold transition shadow-xs disabled:opacity-50 cursor-pointer min-h-[44px]"
+                            className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-semibold transition disabled:opacity-50 cursor-pointer min-h-[40px]"
                         >
                             {addHotelPriceForm.processing && (
                                 <svg className="w-4 h-4 animate-spin text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -3169,61 +3716,47 @@ export default function MasterData({
                                     <path fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" className="opacity-75" />
                                 </svg>
                             )}
-                            <span>Simpan Tarif Rute</span>
+                            <span>Simpan Tarif</span>
                         </button>
                     </>
                 }
             >
-                <form id="add-hotel-price-form" onSubmit={handleAddHotelPriceSubmit} className="space-y-4">
+                <form id="add-hotel-price-form" onSubmit={handleAddHotelPriceSubmit} className="space-y-4 text-xs">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                                Hotel Asal (Pick-Up) <span className="text-red-500">*</span>
+                            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                                Hotel Asal <span className="text-red-500">*</span>
                             </label>
                             <select
                                 value={addHotelPriceForm.data.hotel_id_pickup}
                                 onChange={(e) => addHotelPriceForm.setData('hotel_id_pickup', e.target.value)}
-                                className={selectClass}
-                                required
+                                className={selectBaseClass}
                             >
-                                <option value="">-- Pilih Hotel Asal --</option>
-                                {hotels_list.map((h) => (
-                                    <option key={h.id} value={h.id}>
-                                        {h.name}
-                                    </option>
+                                {hotels_list && hotels_list.map((h) => (
+                                    <option key={h.id} value={h.id}>{h.name}</option>
                                 ))}
                             </select>
-                            {addHotelPriceForm.errors.hotel_id_pickup && (
-                                <p className="text-xs text-red-600 mt-1 font-medium">{addHotelPriceForm.errors.hotel_id_pickup}</p>
-                            )}
                         </div>
 
                         <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                                Hotel Tujuan (Drop-Off) <span className="text-red-500">*</span>
+                            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                                Hotel Tujuan <span className="text-red-500">*</span>
                             </label>
                             <select
                                 value={addHotelPriceForm.data.hotel_id_dropoff}
                                 onChange={(e) => addHotelPriceForm.setData('hotel_id_dropoff', e.target.value)}
-                                className={selectClass}
-                                required
+                                className={selectBaseClass}
                             >
-                                <option value="">-- Pilih Hotel Tujuan --</option>
-                                {hotels_list.map((h) => (
-                                    <option key={h.id} value={h.id}>
-                                        {h.name}
-                                    </option>
+                                {hotels_list && hotels_list.map((h) => (
+                                    <option key={h.id} value={h.id}>{h.name}</option>
                                 ))}
                             </select>
-                            {addHotelPriceForm.errors.hotel_id_dropoff && (
-                                <p className="text-xs text-red-600 mt-1 font-medium">{addHotelPriceForm.errors.hotel_id_dropoff}</p>
-                            )}
                         </div>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                                 Tarif Regular (Rp) <span className="text-red-500">*</span>
                             </label>
                             <input
@@ -3231,18 +3764,15 @@ export default function MasterData({
                                 required
                                 min="0"
                                 step="10000"
+                                placeholder="450000"
                                 value={addHotelPriceForm.data.regular_price}
                                 onChange={(e) => addHotelPriceForm.setData('regular_price', e.target.value)}
-                                placeholder="Contoh: 400000"
-                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-base sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
+                                className={inputBaseClass}
                             />
-                            {addHotelPriceForm.errors.regular_price && (
-                                <p className="text-xs text-red-600 mt-1 font-medium">{addHotelPriceForm.errors.regular_price}</p>
-                            )}
                         </div>
 
                         <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                                 Tarif Luxury (Rp) <span className="text-red-500">*</span>
                             </label>
                             <input
@@ -3250,14 +3780,11 @@ export default function MasterData({
                                 required
                                 min="0"
                                 step="10000"
+                                placeholder="900000"
                                 value={addHotelPriceForm.data.luxury_price}
                                 onChange={(e) => addHotelPriceForm.setData('luxury_price', e.target.value)}
-                                placeholder="Contoh: 750000"
-                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-base sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
+                                className={inputBaseClass}
                             />
-                            {addHotelPriceForm.errors.luxury_price && (
-                                <p className="text-xs text-red-600 mt-1 font-medium">{addHotelPriceForm.errors.luxury_price}</p>
-                            )}
                         </div>
                     </div>
                 </form>
@@ -3267,14 +3794,14 @@ export default function MasterData({
             <Modal
                 show={showEditHotelPriceModal}
                 onClose={() => setShowEditHotelPriceModal(false)}
-                title="Edit Tarif Transfer Antar Hotel"
+                title="Edit Tarif Antar Hotel"
                 maxWidth="lg"
                 footer={
                     <>
                         <button
                             type="button"
                             onClick={() => setShowEditHotelPriceModal(false)}
-                            className="px-5 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition cursor-pointer min-h-[44px]"
+                            className="px-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 transition cursor-pointer min-h-[40px]"
                         >
                             Batal
                         </button>
@@ -3282,7 +3809,7 @@ export default function MasterData({
                             type="submit"
                             form="edit-hotel-price-form"
                             disabled={editHotelPriceForm.processing}
-                            className="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-[#00AEEF] hover:bg-[#009cd7] text-white rounded-xl text-sm font-semibold transition shadow-xs disabled:opacity-50 cursor-pointer min-h-[44px]"
+                            className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-semibold transition disabled:opacity-50 cursor-pointer min-h-[40px]"
                         >
                             {editHotelPriceForm.processing && (
                                 <svg className="w-4 h-4 animate-spin text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -3290,47 +3817,39 @@ export default function MasterData({
                                     <path fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" className="opacity-75" />
                                 </svg>
                             )}
-                            <span>Perbarui Tarif Rute</span>
+                            <span>Simpan Perubahan</span>
                         </button>
                     </>
                 }
             >
-                <form id="edit-hotel-price-form" onSubmit={handleEditHotelPriceSubmit} className="space-y-4">
+                <form id="edit-hotel-price-form" onSubmit={handleEditHotelPriceSubmit} className="space-y-4 text-xs">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                                Hotel Asal (Pick-Up) <span className="text-red-500">*</span>
+                            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                                Hotel Asal <span className="text-red-500">*</span>
                             </label>
                             <select
                                 value={editHotelPriceForm.data.hotel_id_pickup}
                                 onChange={(e) => editHotelPriceForm.setData('hotel_id_pickup', e.target.value)}
-                                className={selectClass}
-                                required
+                                className={selectBaseClass}
                             >
-                                <option value="">-- Pilih Hotel Asal --</option>
-                                {hotels_list.map((h) => (
-                                    <option key={h.id} value={h.id}>
-                                        {h.name}
-                                    </option>
+                                {hotels_list && hotels_list.map((h) => (
+                                    <option key={h.id} value={h.id}>{h.name}</option>
                                 ))}
                             </select>
                         </div>
 
                         <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                                Hotel Tujuan (Drop-Off) <span className="text-red-500">*</span>
+                            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                                Hotel Tujuan <span className="text-red-500">*</span>
                             </label>
                             <select
                                 value={editHotelPriceForm.data.hotel_id_dropoff}
                                 onChange={(e) => editHotelPriceForm.setData('hotel_id_dropoff', e.target.value)}
-                                className={selectClass}
-                                required
+                                className={selectBaseClass}
                             >
-                                <option value="">-- Pilih Hotel Tujuan --</option>
-                                {hotels_list.map((h) => (
-                                    <option key={h.id} value={h.id}>
-                                        {h.name}
-                                    </option>
+                                {hotels_list && hotels_list.map((h) => (
+                                    <option key={h.id} value={h.id}>{h.name}</option>
                                 ))}
                             </select>
                         </div>
@@ -3338,7 +3857,7 @@ export default function MasterData({
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                                 Tarif Regular (Rp) <span className="text-red-500">*</span>
                             </label>
                             <input
@@ -3348,12 +3867,12 @@ export default function MasterData({
                                 step="10000"
                                 value={editHotelPriceForm.data.regular_price}
                                 onChange={(e) => editHotelPriceForm.setData('regular_price', e.target.value)}
-                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-base sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
+                                className={inputBaseClass}
                             />
                         </div>
 
                         <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                                 Tarif Luxury (Rp) <span className="text-red-500">*</span>
                             </label>
                             <input
@@ -3363,7 +3882,7 @@ export default function MasterData({
                                 step="10000"
                                 value={editHotelPriceForm.data.luxury_price}
                                 onChange={(e) => editHotelPriceForm.setData('luxury_price', e.target.value)}
-                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-base sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
+                                className={inputBaseClass}
                             />
                         </div>
                     </div>
@@ -3374,29 +3893,29 @@ export default function MasterData({
             <Modal
                 show={showDeleteHotelPriceModal}
                 onClose={() => setShowDeleteHotelPriceModal(false)}
-                title="Hapus Tarif Transfer Hotel"
+                title="Hapus Tarif Antar Hotel"
                 maxWidth="md"
                 footer={
                     <>
                         <button
                             type="button"
                             onClick={() => setShowDeleteHotelPriceModal(false)}
-                            className="px-4 py-2 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition cursor-pointer"
+                            className="px-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 transition cursor-pointer"
                         >
                             Batal
                         </button>
                         <button
                             type="button"
                             onClick={handleDeleteHotelPrice}
-                            className="px-4 py-2 bg-red-600 text-white rounded-xl text-sm font-semibold hover:bg-red-700 transition cursor-pointer"
+                            className="px-4 py-2 bg-red-600 text-white rounded-xl text-xs font-semibold hover:bg-red-700 transition cursor-pointer"
                         >
                             Hapus Tarif
                         </button>
                     </>
                 }
             >
-                <p className="text-sm text-slate-600">
-                    Apakah Anda yakin ingin menghapus tarif rute transfer dari <strong>{selectedHotelPrice?.pickup_hotel_name}</strong> ke <strong>{selectedHotelPrice?.dropoff_hotel_name}</strong>?
+                <p className="text-xs text-slate-600">
+                    Apakah Anda yakin ingin menghapus rute <strong>{selectedHotelPrice?.pickup_hotel_name}</strong> ke <strong>{selectedHotelPrice?.dropoff_hotel_name}</strong>?
                 </p>
             </Modal>
         </AdminLayout>

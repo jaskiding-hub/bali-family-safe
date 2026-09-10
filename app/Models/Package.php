@@ -26,7 +26,6 @@ class Package extends Model
     ];
 
     protected $casts = [
-        'package_type' => PackageType::class,
         'duration_type' => PackageDurationType::class,
         'regular_price' => 'decimal:2',
         'luxury_price' => 'decimal:2',

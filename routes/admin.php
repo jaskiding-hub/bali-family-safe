@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\FinancialReportController;
 use App\Http\Controllers\Admin\HotelController;
 use App\Http\Controllers\Admin\HotelTransferPriceListController;
 use App\Http\Controllers\Admin\MasterDataController;
+use App\Http\Controllers\Admin\PackageController;
 use App\Http\Controllers\Admin\VehicleController;
 use App\Http\Controllers\Admin\WebsiteContentController;
 use Illuminate\Support\Facades\Route;
@@ -29,6 +30,7 @@ Route::middleware('auth:admin')->prefix('admin')->name('admin.')->group(function
     Route::resource('airports', AirportController::class)->except(['index','create','show','edit']);
     Route::resource('hotel-transfer-price-lists', HotelTransferPriceListController::class)->except(['index','create','show','edit']);
     Route::resource('vehicles', VehicleController::class)->except(['index','create','show','edit']);
+    Route::resource('packages', PackageController::class)->except(['index','create','show','edit']);
 
     Route::get('/website-content', [WebsiteContentController::class, 'index'])->name('website-content');
 });

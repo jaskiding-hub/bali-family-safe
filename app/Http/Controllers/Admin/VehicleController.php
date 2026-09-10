@@ -18,12 +18,14 @@ class VehicleController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'category' => ['required', Rule::enum(VehicleCategory::class)],
             'model' => ['required', 'string', 'max:50'],
-            'daily_rate' => ['required', 'numeric', 'min:0'],
+            'daily_rate' => ['nullable', 'numeric', 'min:0'],
             'passenger_capacity' => ['required', 'integer', 'min:1', 'max:50'],
             'luggage_capacity' => ['required', 'integer', 'min:0', 'max:50'],
             'is_popular' => ['boolean'],
             'photo' => ['nullable', 'file', 'mimes:svg,png,jpg,jpeg,webp,gif', 'max:2048'],
         ]);
+
+        $validated['daily_rate'] = $validated['daily_rate'] ?? 0;
 
         if ($request->hasFile('photo')) {
             $path = $request->file('photo')->store('vehicles', 'public');
@@ -44,12 +46,16 @@ class VehicleController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'category' => ['required', Rule::enum(VehicleCategory::class)],
             'model' => ['required', 'string', 'max:50'],
-            'daily_rate' => ['required', 'numeric', 'min:0'],
+            'daily_rate' => ['nullable', 'numeric', 'min:0'],
             'passenger_capacity' => ['required', 'integer', 'min:1', 'max:50'],
             'luggage_capacity' => ['required', 'integer', 'min:0', 'max:50'],
             'is_popular' => ['boolean'],
             'photo' => ['nullable', 'file', 'mimes:svg,png,jpg,jpeg,webp,gif', 'max:2048'],
         ]);
+
+        if (array_key_exists('daily_rate', $validated)) {
+            $validated['daily_rate'] = $validated['daily_rate'] ?? 0;
+        }
 
         if ($request->hasFile('photo')) {
             $path = $request->file('photo')->store('vehicles', 'public');

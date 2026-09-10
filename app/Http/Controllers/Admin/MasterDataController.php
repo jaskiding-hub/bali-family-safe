@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\PackageDurationType;
+use App\Enums\PackageType;
 use App\Enums\VehicleCategory;
 use App\Http\Controllers\Controller;
 use App\Models\Airport;
 use App\Models\Driver;
 use App\Models\Hotel;
 use App\Models\HotelTransferPriceList;
+use App\Models\Package;
 use App\Models\Vehicle;
 use App\Models\VehicleUnit;
 use Illuminate\Http\Request;
@@ -66,7 +69,79 @@ class MasterDataController extends Controller
 
         $vehicleCategories = array_map(fn (VehicleCategory $c) => $c->value, VehicleCategory::cases());
 
-        // 2. Drivers Query
+        // 2. Packages (Day Tour) Query
+        $packageSearch = $request->input('search_package');
+        $packageTypeFilter = $request->input('type_package');
+        $packageDurationFilter = $request->input('duration_package');
+
+        $packagesQuery = Package::with(['highlights' => function ($q) {
+            $q->orderBy('display_order', 'asc');
+        }, 'tags'])->orderBy('display_order', 'asc')->orderBy('id', 'desc');
+
+        if ($packageSearch) {
+            $packagesQuery->where(function ($q) use ($packageSearch) {
+                $q->where('name', 'like', "%{$packageSearch}%")
+                    ->orWhere('subtitle', 'like', "%{$packageSearch}%")
+                    ->orWhere('description', 'like', "%{$packageSearch}%");
+            });
+        }
+
+        if ($packageTypeFilter && $packageTypeFilter !== 'all') {
+            $packagesQuery->where('package_type', $packageTypeFilter);
+        }
+
+        if ($packageDurationFilter && $packageDurationFilter !== 'all') {
+            $packagesQuery->where('duration_type', $packageDurationFilter);
+        }
+
+        $packages = $packagesQuery->get()->map(function (Package $p) {
+            $pkgType = $p->package_type instanceof \BackedEnum ? $p->package_type->value : (string) ($p->package_type ?? 'Ubud');
+            $durType = $p->duration_type instanceof \BackedEnum ? $p->duration_type->value : (string) ($p->duration_type ?? 'Full Day');
+            $regPrice = (float) $p->regular_price;
+            $luxPrice = (float) $p->luxury_price;
+            $bigPrice = (float) $p->big_van_price;
+
+            return [
+                'id' => $p->id,
+                'name' => $p->name,
+                'slug' => $p->slug,
+                'subtitle' => $p->subtitle,
+                'description' => $p->description,
+                'hero_image' => $p->hero_image,
+                'package_type' => $pkgType,
+                'duration_type' => $durType,
+                'regular_price' => $regPrice,
+                'regular_price_formatted' => 'Rp ' . number_format($regPrice, 0, ',', '.'),
+                'luxury_price' => $luxPrice,
+                'luxury_price_formatted' => 'Rp ' . number_format($luxPrice, 0, ',', '.'),
+                'big_van_price' => $bigPrice,
+                'big_van_price_formatted' => 'Rp ' . number_format($bigPrice, 0, ',', '.'),
+                'display_order' => $p->display_order,
+                'highlights' => $p->highlights->map(fn ($h) => [
+                    'id' => $h->id,
+                    'title' => $h->title,
+                    'description' => $h->description,
+                    'display_order' => $h->display_order,
+                ])->all(),
+                'tags' => $p->tags->pluck('tag_name')->all(),
+                'created_at_formatted' => $p->created_at ? $p->created_at->format('d M Y') : '-',
+            ];
+        });
+
+        $existingPackageTypes = Package::query()
+            ->whereNotNull('package_type')
+            ->where('package_type', '!=', '')
+            ->distinct()
+            ->orderBy('package_type', 'asc')
+            ->pluck('package_type')
+            ->all();
+        $defaultTypes = ['Ubud', 'East Bali', 'South Bali', 'Bedugul', 'Kintamani', 'Nusa Penida', 'Karangasem', 'Singaraja'];
+        $mergedTypes = array_values(array_unique(array_merge($defaultTypes, $existingPackageTypes)));
+        sort($mergedTypes);
+        $packageTypes = $mergedTypes;
+        $packageDurationTypes = array_map(fn (PackageDurationType $d) => $d->value, PackageDurationType::cases());
+
+        // 3. Drivers Query
         $driverSearch = $request->input('search_driver');
         $driversQuery = Driver::with('currentVehicleUnit.vehicle');
 
@@ -99,7 +174,7 @@ class MasterDataController extends Controller
                     'status' => $driver->status instanceof \BackedEnum ? $driver->status->value : (string) $driver->status,
                     'vehicle_unit_id' => $driver->vehicle_unit_id,
                     'vehicle_unit_label' => $driver->currentVehicleUnit
-                        ? ($driver->currentVehicleUnit->plate_number . ($driver->currentVehicleUnit->vehicle ? ' — ' . $driver->currentVehicleUnit->vehicle->name : ''))
+                        ? ($driver->currentVehicleUnit->plate_number . ($driver->currentVehicleUnit->vehicle ? ' - ' . $driver->currentVehicleUnit->vehicle->name : ''))
                         : null,
                     'profile_photo_url' => $driver->profile_photo_url,
                 ];
@@ -121,11 +196,11 @@ class MasterDataController extends Controller
             ->map(function ($unit) {
                 return [
                     'id' => $unit->id,
-                    'label' => $unit->plate_number . ($unit->vehicle ? ' — ' . $unit->vehicle->name : ''),
+                    'label' => $unit->plate_number . ($unit->vehicle ? ' - ' . $unit->vehicle->name : ''),
                 ];
             });
 
-        // 3. Hotels Query
+        // 4. Hotels Query
         $hotelSearch = $request->input('search_hotel');
         $hotelsQuery = Hotel::with('airports')->withCount('airports')->orderBy('nama_hotel', 'asc');
 
@@ -150,7 +225,7 @@ class MasterDataController extends Controller
             ];
         });
 
-        // 4. Airports (Destinasi & Tarif Transfer) Query
+        // 5. Airports (Destinasi & Tarif Transfer) Query
         $airportSearch = $request->input('search_airport');
         $airportTypeFilter = $request->input('type_airport');
         $airportsQuery = Airport::withCount('hotels')->orderBy('destinasi', 'asc')->orderBy('type', 'asc');
@@ -181,7 +256,7 @@ class MasterDataController extends Controller
             ];
         });
 
-        // 5. Hotel Transfer Price Lists Query
+        // 6. Hotel Transfer Price Lists Query
         $hotelPriceSearch = $request->input('search_hotel_pricelist');
         $hotelPriceQuery = HotelTransferPriceList::with(['pickupHotel', 'dropoffHotel'])
             ->orderBy('id', 'desc');
@@ -227,7 +302,7 @@ class MasterDataController extends Controller
                 'id' => $a->id,
                 'destinasi' => $a->destinasi,
                 'type' => $typeStr,
-                'label' => "{$a->destinasi} ({$typeStr}) — Reg: Rp " . number_format((float) $a->price_regular, 0, ',', '.') . ' / Lux: Rp ' . number_format((float) $a->price_luxury, 0, ',', '.'),
+                'label' => "{$a->destinasi} ({$typeStr}) - Reg: Rp " . number_format((float) $a->price_regular, 0, ',', '.') . ' / Lux: Rp ' . number_format((float) $a->price_luxury, 0, ',', '.'),
             ];
         });
 
@@ -235,6 +310,9 @@ class MasterDataController extends Controller
             'active_tab' => $activeTab,
             'vehicles' => $vehicles,
             'vehicle_categories' => $vehicleCategories,
+            'packages' => $packages,
+            'package_types' => $packageTypes,
+            'package_duration_types' => $packageDurationTypes,
             'drivers' => $driversData,
             'available_vehicle_units' => $availableVehicleUnits,
             'hotels' => $hotels,
@@ -244,6 +322,7 @@ class MasterDataController extends Controller
             'airports_list' => $airportsList,
             'stats' => [
                 'total_vehicles' => $vehicles->count(),
+                'total_packages' => $packages->count(),
                 'total_drivers' => $driversPaginated->total(),
                 'total_hotels' => $hotels->count(),
                 'total_airports' => $airports->count(),
@@ -253,6 +332,9 @@ class MasterDataController extends Controller
                 'tab' => $activeTab,
                 'search_vehicle' => $vehicleSearch ?? '',
                 'category_vehicle' => $vehicleCategoryFilter ?? 'all',
+                'search_package' => $packageSearch ?? '',
+                'type_package' => $packageTypeFilter ?? 'all',
+                'duration_package' => $packageDurationFilter ?? 'all',
                 'search_driver' => $driverSearch ?? '',
                 'search_hotel' => $hotelSearch ?? '',
                 'search_airport' => $airportSearch ?? '',
