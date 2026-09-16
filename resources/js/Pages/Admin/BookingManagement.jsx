@@ -402,6 +402,33 @@ export default function BookingManagement({
         );
     };
 
+    // Booking Type Badge Component
+    const renderBookingTypeBadge = (type) => {
+        const t = (type || '').toLowerCase();
+        if (t.includes('pick-up') || t.includes('pickup')) {
+            return (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-sky-50 text-sky-700 border border-sky-200/60 whitespace-nowrap">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#00AEEF]"></span>
+                    {type}
+                </span>
+            );
+        }
+        if (t.includes('drop-off') || t.includes('dropoff')) {
+            return (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200/60 whitespace-nowrap">
+                    <span className="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
+                    {type}
+                </span>
+            );
+        }
+        return (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/60 whitespace-nowrap">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                {type}
+            </span>
+        );
+    };
+
     // Generic Pagination Component
     const renderPagination = (paginatedData) => {
         if (!paginatedData || paginatedData.total === 0) return null;
@@ -1379,69 +1406,115 @@ export default function BookingManagement({
                             </button>
                         </div>
 
-                        {/* Desktop Bookings Table */}
+                        {/* Desktop Bookings Table (No horizontal scroll, fully fitted) */}
                         <div className="hidden lg:block overflow-x-auto">
-                            <table className="w-full text-left border-collapse">
+                            <table className="w-full text-left border-collapse table-fixed">
                                 <thead>
-                                    <tr className="bg-slate-50/70 border-b border-slate-100 text-slate-500 text-[11px] font-semibold uppercase tracking-wider">
-                                        <th className="px-6 py-3.5">ID</th>
-                                        <th className="px-6 py-3.5">Date</th>
-                                        <th className="px-6 py-3.5">Guest Name</th>
-                                        <th className="px-6 py-3.5">Booking Type</th>
-                                        <th className="px-6 py-3.5">Detail</th>
-                                        <th className="px-6 py-3.5">Payment</th>
-                                        <th className="px-6 py-3.5">Status</th>
-                                        <th className="px-6 py-3.5 text-right">Actions</th>
+                                    <tr className="bg-slate-50/80 border-b border-slate-100 text-slate-500 text-[11px] font-semibold uppercase tracking-wider">
+                                        <th className="px-4 py-3.5 w-[14%]">ID & Date</th>
+                                        <th className="px-4 py-3.5 w-[19%]">Guest</th>
+                                        <th className="px-4 py-3.5 w-[27%]">Service & Route</th>
+                                        <th className="px-4 py-3.5 w-[13%]">Payment</th>
+                                        <th className="px-4 py-3.5 w-[12%]">Status</th>
+                                        <th className="px-4 py-3.5 w-[15%] text-right">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-100 text-sm">
                                     {bookings.data && bookings.data.length > 0 ? (
                                         bookings.data.map((booking) => (
-                                            <tr key={booking.raw_id} className="hover:bg-slate-50/60 transition-colors">
-                                                {/* ID */}
-                                                <td className="px-6 py-4 font-mono font-medium text-slate-500 whitespace-nowrap">
-                                                    #{booking.id}
+                                            <tr key={booking.raw_id} className="hover:bg-slate-50/70 transition-colors">
+                                                {/* ID & Date */}
+                                                <td className="px-4 py-3.5 align-middle">
+                                                    <div className="font-mono font-bold text-slate-900 text-xs sm:text-sm">
+                                                        #{booking.id}
+                                                    </div>
+                                                    <div className="text-xs text-slate-600 font-medium mt-0.5 whitespace-nowrap">
+                                                        {booking.date}
+                                                    </div>
+                                                    {booking.raw_pickup_time && (
+                                                        <div className="text-[11px] text-slate-400 font-normal flex items-center gap-1 mt-0.5 whitespace-nowrap">
+                                                            <svg className="w-3 h-3 text-slate-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                                <circle cx="12" cy="12" r="10" />
+                                                                <polyline points="12 6 12 12 16 14" />
+                                                            </svg>
+                                                            <span>{booking.raw_pickup_time}</span>
+                                                        </div>
+                                                    )}
                                                 </td>
 
-                                                {/* Date */}
-                                                <td className="px-6 py-4 text-slate-700 whitespace-nowrap font-medium">
-                                                    {booking.date}
+                                                {/* Guest Name & WhatsApp */}
+                                                <td className="px-4 py-3.5 align-middle">
+                                                    <div className="font-bold text-slate-900 text-sm leading-snug truncate" title={booking.guest_name}>
+                                                        {booking.guest_name}
+                                                    </div>
+                                                    {booking.whatsapp_number ? (
+                                                        <a
+                                                            href={`https://wa.me/${booking.whatsapp_number.replace(/[^0-9]/g, '')}`}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="inline-flex items-center gap-1 text-[11px] text-emerald-600 hover:text-emerald-700 hover:underline mt-1 font-medium group truncate max-w-full"
+                                                            title="Hubungi via WhatsApp"
+                                                            onClick={(e) => e.stopPropagation()}
+                                                        >
+                                                            <svg className="w-3 h-3 text-emerald-500 shrink-0 group-hover:scale-110 transition-transform" viewBox="0 0 24 24" fill="currentColor">
+                                                                <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/>
+                                                            </svg>
+                                                            <span className="truncate">{booking.whatsapp_number}</span>
+                                                        </a>
+                                                    ) : booking.email ? (
+                                                        <div className="text-[11px] text-slate-400 font-normal truncate mt-0.5" title={booking.email}>
+                                                            {booking.email}
+                                                        </div>
+                                                    ) : null}
                                                 </td>
 
-                                                {/* Guest Name */}
-                                                <td className="px-6 py-4 font-semibold text-slate-900 whitespace-nowrap">
-                                                    {booking.guest_name}
-                                                </td>
-
-                                                {/* Booking Type */}
-                                                <td className="px-6 py-4 text-slate-600 whitespace-nowrap">
-                                                    <span className="bg-slate-100 text-slate-700 text-xs px-2.5 py-1 rounded-md font-medium">
-                                                        {booking.booking_type}
-                                                    </span>
-                                                </td>
-
-                                                {/* Detail */}
-                                                <td className="px-6 py-4 text-slate-600 whitespace-nowrap">
-                                                    {booking.detail}
+                                                {/* Service & Route */}
+                                                <td className="px-4 py-3.5 align-middle">
+                                                    <div className="flex flex-col gap-1">
+                                                        <div>
+                                                            {renderBookingTypeBadge(booking.booking_type)}
+                                                        </div>
+                                                        <div className="text-xs text-slate-600 font-medium line-clamp-2 leading-relaxed" title={booking.detail}>
+                                                            {booking.detail}
+                                                        </div>
+                                                        {booking.driver ? (
+                                                            <div className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-700 bg-slate-100/90 px-2 py-0.5 rounded-md w-fit mt-0.5">
+                                                                <svg className="w-3 h-3 text-slate-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                                                                    <circle cx="9" cy="7" r="4" />
+                                                                </svg>
+                                                                <span className="truncate max-w-[150px]">{booking.driver.name}</span>
+                                                            </div>
+                                                        ) : (
+                                                            !['Completed', 'Cancelled'].includes(booking.status) ? (
+                                                                <span className="text-[11px] text-amber-600 font-medium inline-flex items-center gap-1 mt-0.5">
+                                                                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                                                                    Belum ada driver
+                                                                </span>
+                                                            ) : null
+                                                        )}
+                                                    </div>
                                                 </td>
 
                                                 {/* Payment */}
-                                                <td className="px-6 py-4 font-semibold text-slate-900 whitespace-nowrap">
-                                                    {booking.payment}
+                                                <td className="px-4 py-3.5 align-middle whitespace-nowrap">
+                                                    <span className="font-bold text-slate-900 text-sm sm:text-base tabular-nums">
+                                                        {booking.payment}
+                                                    </span>
                                                 </td>
 
                                                 {/* Status */}
-                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                <td className="px-4 py-3.5 align-middle whitespace-nowrap">
                                                     {renderStatusBadge(booking.status)}
                                                 </td>
 
                                                 {/* Actions */}
-                                                <td className="px-6 py-4 text-right whitespace-nowrap">
+                                                <td className="px-4 py-3.5 align-middle text-right whitespace-nowrap">
                                                     <div className="flex items-center justify-end gap-1.5">
                                                         {/* Assign Driver Action */}
                                                         {['Completed', 'Cancelled'].includes(booking.status) ? (
                                                             <span
-                                                                className="p-1.5 text-slate-300 rounded-lg min-w-[36px] min-h-[36px] flex items-center justify-center cursor-not-allowed opacity-50"
+                                                                className="p-1.5 sm:p-2 text-slate-300 bg-slate-50 border border-slate-100 rounded-xl cursor-not-allowed opacity-50 flex items-center justify-center min-w-[32px] min-h-[32px] sm:min-w-[36px] sm:min-h-[36px]"
                                                                 title={`Booking ${booking.status} tidak dapat di-assign driver`}
                                                             >
                                                                 <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -1455,8 +1528,8 @@ export default function BookingManagement({
                                                             <button
                                                                 type="button"
                                                                 onClick={() => openAssignDriver(booking)}
-                                                                className="p-1.5 text-slate-400 hover:text-sky-600 hover:bg-sky-50 rounded-lg transition-colors cursor-pointer min-w-[36px] min-h-[36px] flex items-center justify-center"
-                                                                title="Assign Driver"
+                                                                className="p-1.5 sm:p-2 text-sky-600 bg-sky-50 hover:bg-sky-100 border border-sky-200/60 rounded-xl transition-all cursor-pointer flex items-center justify-center min-w-[32px] min-h-[32px] sm:min-w-[36px] sm:min-h-[36px] shadow-2xs hover:scale-105 active:scale-95"
+                                                                title={booking.driver ? `Ganti Driver (${booking.driver.name})` : "Assign Driver"}
                                                             >
                                                                 <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                                                     <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
@@ -1471,7 +1544,7 @@ export default function BookingManagement({
                                                         <button
                                                             type="button"
                                                             onClick={() => openEditBooking(booking)}
-                                                            className="p-1.5 text-slate-400 hover:text-sky-600 hover:bg-sky-50 rounded-lg transition-colors cursor-pointer min-w-[36px] min-h-[36px] flex items-center justify-center"
+                                                            className="p-1.5 sm:p-2 text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200/70 rounded-xl transition-all cursor-pointer flex items-center justify-center min-w-[32px] min-h-[32px] sm:min-w-[36px] sm:min-h-[36px] shadow-2xs hover:scale-105 active:scale-95"
                                                             title="Edit Booking"
                                                         >
                                                             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -1484,8 +1557,8 @@ export default function BookingManagement({
                                                         <button
                                                             type="button"
                                                             onClick={() => openDeleteBooking(booking)}
-                                                            className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer min-w-[36px] min-h-[36px] flex items-center justify-center"
-                                                            title="Delete Booking"
+                                                            className="p-1.5 sm:p-2 text-red-600 bg-red-50 hover:bg-red-100 border border-red-200/60 rounded-xl transition-all cursor-pointer flex items-center justify-center min-w-[32px] min-h-[32px] sm:min-w-[36px] sm:min-h-[36px] shadow-2xs hover:scale-105 active:scale-95"
+                                                            title="Hapus Booking"
                                                         >
                                                             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                                                 <path d="M3 6h18" />
@@ -1499,7 +1572,7 @@ export default function BookingManagement({
                                         ))
                                     ) : (
                                         <tr>
-                                            <td colSpan={8} className="px-6 py-8 text-center text-slate-400 text-sm">
+                                            <td colSpan={6} className="px-6 py-8 text-center text-slate-400 text-sm">
                                                 No bookings found.
                                             </td>
                                         </tr>
@@ -1517,10 +1590,10 @@ export default function BookingManagement({
                                         <div className="flex items-start justify-between gap-2">
                                             <div>
                                                 <div className="flex items-center gap-2">
-                                                    <span className="text-xs font-mono font-bold text-slate-500">ID : {booking.id}</span>
+                                                    <span className="text-xs font-mono font-bold text-slate-500">ID : #{booking.id}</span>
                                                 </div>
                                                 <div className="text-xs text-slate-400 font-medium mt-0.5">
-                                                    {booking.date}
+                                                    {booking.date} {booking.raw_pickup_time ? `• ${booking.raw_pickup_time}` : ''}
                                                 </div>
                                             </div>
                                             <div>
@@ -1528,22 +1601,39 @@ export default function BookingManagement({
                                             </div>
                                         </div>
 
-                                        {/* Guest Name */}
+                                        {/* Guest Name & WhatsApp */}
                                         <div>
                                             <h4 className="text-base font-bold text-slate-900 leading-tight">
                                                 {booking.guest_name}
                                             </h4>
+                                            {booking.whatsapp_number && (
+                                                <a
+                                                    href={`https://wa.me/${booking.whatsapp_number.replace(/[^0-9]/g, '')}`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="inline-flex items-center gap-1 text-xs text-emerald-600 hover:text-emerald-700 mt-1 font-medium"
+                                                >
+                                                    <svg className="w-3.5 h-3.5 text-emerald-500" viewBox="0 0 24 24" fill="currentColor">
+                                                        <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/>
+                                                    </svg>
+                                                    <span>{booking.whatsapp_number}</span>
+                                                </a>
+                                            )}
                                         </div>
 
                                         {/* Details info */}
                                         <div className="space-y-1.5 text-xs text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-100">
                                             <div className="flex items-center justify-between">
                                                 <span className="text-slate-500">Booking Type:</span>
-                                                <span className="font-semibold text-slate-800">{booking.booking_type}</span>
+                                                <div>{renderBookingTypeBadge(booking.booking_type)}</div>
                                             </div>
                                             <div className="flex items-center justify-between">
                                                 <span className="text-slate-500">Detail :</span>
                                                 <span className="font-medium text-slate-700 truncate max-w-[200px]">{booking.detail}</span>
+                                            </div>
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-slate-500">Driver :</span>
+                                                <span className="font-semibold text-slate-800">{booking.driver ? booking.driver.name : (['Completed', 'Cancelled'].includes(booking.status) ? '-' : 'Belum di-assign')}</span>
                                             </div>
                                             <div className="flex items-center justify-between pt-1 border-t border-slate-200/60">
                                                 <span className="text-slate-500 font-medium">Total Fee:</span>
@@ -1572,9 +1662,9 @@ export default function BookingManagement({
                                                 <button
                                                     type="button"
                                                     onClick={() => openAssignDriver(booking)}
-                                                    className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors cursor-pointer min-h-[44px]"
+                                                    className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 text-xs font-semibold text-sky-700 bg-sky-50 hover:bg-sky-100 border border-sky-200/60 rounded-xl transition-colors cursor-pointer min-h-[44px]"
                                                 >
-                                                    <svg className="w-3.5 h-3.5 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                    <svg className="w-3.5 h-3.5 text-sky-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                                         <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
                                                         <circle cx="9" cy="7" r="4" />
                                                         <line x1="19" x2="19" y1="8" y2="14" />
@@ -1587,9 +1677,9 @@ export default function BookingManagement({
                                             <button
                                                 type="button"
                                                 onClick={() => openEditBooking(booking)}
-                                                className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 text-xs font-semibold text-sky-700 bg-sky-50 hover:bg-sky-100 border border-sky-200/60 rounded-xl transition-colors cursor-pointer min-h-[44px]"
+                                                className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200/60 rounded-xl transition-colors cursor-pointer min-h-[44px]"
                                             >
-                                                <svg className="w-3.5 h-3.5 text-sky-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                <svg className="w-3.5 h-3.5 text-slate-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                                     <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
                                                     <path d="m15 5 4 4" />
                                                 </svg>
