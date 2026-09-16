@@ -41,7 +41,7 @@ class BookingController extends Controller
 
         // 2. Bookings Query
         $bookingSearch = $request->input('search_booking');
-        $bookingsQuery = Booking::with(['driver', 'pickupHotel', 'dropoffHotel', 'airport']);
+        $bookingsQuery = Booking::with(['driver', 'pickupHotel', 'dropoffHotel', 'airport', 'package', 'vehicle']);
 
         if ($bookingSearch) {
             $bookingsQuery->where(function ($q) use ($bookingSearch) {
@@ -61,6 +61,7 @@ class BookingController extends Controller
             'data' => collect($bookingsPaginated->items())->map(function (Booking $booking) {
                 $pickup = $booking->pickupHotel?->nama_hotel ?? ($booking->airport?->destinasi ?? '-');
                 $dropoff = $booking->dropoffHotel?->nama_hotel ?? ($booking->airport?->destinasi ?? '-');
+
                 if ($pickup !== '-' && $dropoff !== '-') {
                     $detail = "{$pickup}-{$dropoff}";
                 } elseif ($pickup !== '-') {
@@ -87,6 +88,8 @@ class BookingController extends Controller
                     'package_id' => $booking->package_id,
                     'vehicle_id' => $booking->vehicle_id,
                     'vehicle_unit_id' => $booking->vehicle_unit_id,
+                    'pickup_location_name' => $pickup,
+                    'dropoff_location_name' => $dropoff,
                     'pickup_location' => $pickup,
                     'dropoff_location' => $dropoff,
                     'pickup_hotel_id' => $booking->pickup_hotel_id,

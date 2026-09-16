@@ -246,15 +246,32 @@ export default function BookingManagement({
         let hotelDropoffId = '';
 
         if (typeUi === 'Airport Pick-Up' || typeUi === 'Airport Drop-Off') {
-            const hotelTargetName = typeUi === 'Airport Pick-Up' ? booking.dropoff_location : booking.pickup_location;
-            const matchedHotel = hotels.find((h) => h.nama_hotel?.toLowerCase() === hotelTargetName?.toLowerCase());
+            const hotelTargetId = typeUi === 'Airport Pick-Up' ? booking.dropoff_hotel_id : booking.pickup_hotel_id;
+            const hotelTargetName = typeUi === 'Airport Pick-Up' ? (booking.dropoff_location_name || booking.dropoff_location) : (booking.pickup_location_name || booking.pickup_location);
+
+            let matchedHotel = null;
+            if (hotelTargetId) {
+                matchedHotel = hotels.find((h) => String(h.id) === String(hotelTargetId));
+            }
+            if (!matchedHotel && hotelTargetName) {
+                matchedHotel = hotels.find((h) => h.nama_hotel?.toLowerCase() === hotelTargetName?.toLowerCase());
+            }
+
             if (matchedHotel) {
                 selectedHotelId = String(matchedHotel.id);
                 if (matchedHotel.airports && matchedHotel.airports.length > 0) {
                     selectedDest = matchedHotel.airports[0].destinasi;
                 }
             }
-            if (!selectedDest) {
+
+            if (!selectedDest && booking.airport_id) {
+                const matchedAirport = airports.find((a) => String(a.id) === String(booking.airport_id));
+                if (matchedAirport) {
+                    selectedDest = matchedAirport.destinasi;
+                }
+            }
+
+            if (!selectedDest && hotelTargetName) {
                 const dir = typeUi === 'Airport Pick-Up' ? 'Pick-Up' : 'Drop-Off';
                 const availDests = getDestinations(dir);
                 const foundDest = availDests.find((d) => hotelTargetName?.toLowerCase()?.includes(d.toLowerCase()));
@@ -263,10 +280,21 @@ export default function BookingManagement({
                 }
             }
         } else if (typeUi === 'Hotel Transfer') {
-            const hPickup = hotels.find((h) => h.nama_hotel?.toLowerCase() === booking.pickup_location?.toLowerCase());
-            const hDropoff = hotels.find((h) => h.nama_hotel?.toLowerCase() === booking.dropoff_location?.toLowerCase());
-            if (hPickup) hotelPickupId = String(hPickup.id);
-            if (hDropoff) hotelDropoffId = String(hDropoff.id);
+            if (booking.pickup_hotel_id) {
+                hotelPickupId = String(booking.pickup_hotel_id);
+            } else if (booking.pickup_location_name || booking.pickup_location) {
+                const loc = (booking.pickup_location_name || booking.pickup_location).toLowerCase();
+                const hPickup = hotels.find((h) => h.nama_hotel?.toLowerCase() === loc);
+                if (hPickup) hotelPickupId = String(hPickup.id);
+            }
+
+            if (booking.dropoff_hotel_id) {
+                hotelDropoffId = String(booking.dropoff_hotel_id);
+            } else if (booking.dropoff_location_name || booking.dropoff_location) {
+                const loc = (booking.dropoff_location_name || booking.dropoff_location).toLowerCase();
+                const hDropoff = hotels.find((h) => h.nama_hotel?.toLowerCase() === loc);
+                if (hDropoff) hotelDropoffId = String(hDropoff.id);
+            }
         }
 
         editBookingForm.setData({
@@ -287,8 +315,8 @@ export default function BookingManagement({
             vehicle_id: booking.vehicle_id ? String(booking.vehicle_id) : (vehicles[0]?.id ? String(vehicles[0].id) : ''),
             booking_date: booking.raw_booking_date || '',
             pickup_time: booking.raw_pickup_time || '09:00',
-            pickup_location: booking.pickup_location || '',
-            dropoff_location: booking.dropoff_location || '',
+            pickup_location: booking.pickup_location_name || booking.pickup_location || '',
+            dropoff_location: booking.dropoff_location_name || booking.dropoff_location || '',
             adults: booking.adults ?? 1,
             children: booking.children ?? 0,
             total_fee: booking.total_fee ? String(Number(booking.total_fee)) : '',

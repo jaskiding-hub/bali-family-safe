@@ -21,3 +21,4 @@ Route::get('/our-team', function () {
 require __DIR__.'/auth.php';
 require __DIR__.'/admin.php';
 require __DIR__.'/driver.php';
+require __DIR__.'/public.php';
