@@ -16,7 +16,18 @@ import Footer from '../../Components/User/Footer';
 import FloatingWhatsApp from '../../Components/User/FloatingWhatsApp';
 import ScrollReveal from '../../Components/User/ScrollReveal';
 
-export default function Home() {
+export default function Home({
+    packages = [],
+    services = [],
+    vehicles = [],
+    testimonials = [],
+    faqs = [],
+    gallery = [],
+    site_features = [],
+    site_settings = null,
+    team_members = [],
+    child_seat_types = [],
+}) {
     return (
         <div style={{
             fontFamily: "'Inter', sans-serif",
@@ -26,7 +37,7 @@ export default function Home() {
             MozOsxFontSmoothing: 'grayscale',
         }}>
             <Head>
-                <title>Bali Family Safe – Airport Transfers &amp; Private Tours with Free Child Car Seats</title>
+                <title>{site_settings?.hero_headline ? `${site_settings.hero_headline} – Bali Family Safe Tours` : 'Bali Family Safe – Airport Transfers & Private Tours with Free Child Car Seats'}</title>
                 <meta
                     name="description"
                     content="Reliable, sanitized family transfers and private drivers in Bali with complimentary certified child car seats (capsule, toddler, booster). Police-cleared English-speaking drivers."
@@ -42,27 +53,32 @@ export default function Home() {
             <Navbar />
 
             {/* Hero — includes BookingWidget */}
-            <Hero />
+            <Hero
+                siteSettings={site_settings}
+                packages={packages}
+                childSeatTypes={child_seat_types}
+                vehicles={vehicles}
+            />
 
             {/* Main content sections */}
             <main>
                 <ScrollReveal><CarSeatsSection /></ScrollReveal>
                 <ScrollReveal><AboutSection /></ScrollReveal>
-                <ScrollReveal><WhyChooseUsSection /></ScrollReveal>
-                <ScrollReveal><DriversSection /></ScrollReveal>
-                <ScrollReveal><ServicesSection /></ScrollReveal>
-                <ScrollReveal><TourPackagesSection /></ScrollReveal>
-                <ScrollReveal><FleetSection /></ScrollReveal>
-                <ScrollReveal><GallerySection /></ScrollReveal>
-                <ScrollReveal><TestimonialsSection /></ScrollReveal>
-                <ScrollReveal><FaqSection /></ScrollReveal>
+                <ScrollReveal><WhyChooseUsSection siteFeatures={site_features} /></ScrollReveal>
+                <ScrollReveal><DriversSection teamMembers={team_members} /></ScrollReveal>
+                <ScrollReveal><ServicesSection services={services} /></ScrollReveal>
+                <ScrollReveal><TourPackagesSection packages={packages} /></ScrollReveal>
+                <ScrollReveal><FleetSection vehicles={vehicles} /></ScrollReveal>
+                <ScrollReveal><GallerySection gallery={gallery} /></ScrollReveal>
+                <ScrollReveal><TestimonialsSection testimonials={testimonials} /></ScrollReveal>
+                <ScrollReveal><FaqSection faqs={faqs} /></ScrollReveal>
             </main>
 
             {/* Footer */}
-            <Footer />
+            <Footer siteSettings={site_settings} />
 
             {/* Floating WhatsApp button */}
-            <FloatingWhatsApp />
+            <FloatingWhatsApp siteSettings={site_settings} />
         </div>
     );
 }

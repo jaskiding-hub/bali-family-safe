@@ -197,8 +197,35 @@ function ServiceModal({ service, onClose }) {
     );
 }
 
-export default function ServicesSection() {
+export default function ServicesSection({ services = [] }) {
     const [selectedService, setSelectedService] = useState(null);
+
+    const displayServices = services && services.length > 0
+        ? services.map((srv, i) => ({
+            title: srv.name,
+            shortDesc: srv.short_description || srv.long_description || '',
+            icon: srv.image_url ? (
+                <img src={srv.image_url} alt={srv.name} className="w-8 h-8 rounded-full object-cover" />
+            ) : (
+                SERVICES[i % SERVICES.length]?.icon || (
+                    <svg width="21" height="24" viewBox="0 0 24 24" fill="#00658D">
+                        <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/>
+                    </svg>
+                )
+            ),
+            details: {
+                heading: srv.name,
+                description: srv.long_description || srv.short_description || 'Professional family transfer and private tour service.',
+                includes: (srv.features && srv.features.length > 0)
+                    ? srv.features.map((f) => f.feature_text)
+                    : ['Free certified child car seats', 'Cold bottled water', 'English-speaking driver', 'Door-to-door service'],
+                vehicles: 'Toyota Avanza, Toyota Innova Reborn, Toyota HiAce',
+                capacity: 'Up to 5–12 passengers per vehicle',
+                duration: 'Flexible / As required',
+                price: srv.category ? `Category: ${srv.category}` : 'Starting from Rp 350,000',
+            },
+        }))
+        : SERVICES;
 
     return (
         <section
@@ -255,7 +282,7 @@ export default function ServicesSection() {
                     marginRight: 'auto',
                     width: '100%',
                 }}>
-                    {SERVICES.map((srv, i) => (
+                    {displayServices.map((srv, i) => (
                         <div
                             key={i}
                             style={{

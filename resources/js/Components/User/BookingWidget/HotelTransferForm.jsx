@@ -1,6 +1,15 @@
-import React, { useState } from 'react';
-import { BookingFooter, FieldWithIcon, inputStyle, selectStyle, textareaStyle, VehicleSelect } from './FormShared';
-import { BALI_DESTINATIONS } from '../../../data/user/destinationsHotels';
+import React, { useState, useEffect } from 'react';
+import { useForm, usePage } from '@inertiajs/react';
+import axios from 'axios';
+import {
+    BookingFooter,
+    ChildSeatsSelector,
+    FieldWithIcon,
+    inputStyle,
+    selectStyle,
+    textareaStyle,
+    VehicleSelect,
+} from './FormShared';
 
 const IconUser = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>;
 const IconPhone = () => <svg width="15" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>;
@@ -10,53 +19,145 @@ const IconCalendar = () => <svg width="16" height="18" viewBox="0 0 24 24" fill=
 const IconClock = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z"/></svg>;
 const IconNote = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>;
 
-export default function HotelTransferForm() {
-    const [form, setForm] = useState({
-        name: '',
-        phone: '',
+export default function HotelTransferForm({ vehicles = [], childSeatTypes = [] }) {
+    const { flash = {} } = usePage().props;
+    const [hotels, setHotels] = useState([]);
+    const [selectedSeats, setSelectedSeats] = useState({});
+    const [estimatedFee, setEstimatedFee] = useState(null);
+    const [loadingEstimate, setLoadingEstimate] = useState(false);
+
+    const defaultVehicle = vehicles.find((v) => !v.category?.includes('Minibus')) || vehicles[0];
+
+    const { data, setData, post, processing, errors, reset } = useForm({
+        guest_name: '',
+        whatsapp_number: '',
         email: '',
-        adults: '2',
-        children: '1',
-        pickupHotel: '',
-        customPickupHotel: '',
-        dropoffHotel: '',
-        customDropoffHotel: '',
-        date: '',
-        time: '11:00',
-        vehicle: 'Toyota Innova Reborn',
-        infantSeat: '0',
-        toddlerSeat: '1',
-        boosterSeat: '0',
-        notes: ''
+        booking_type: 'Hotel Transfer',
+        vehicle_id: defaultVehicle?.id || '',
+        pickup_hotel_id: '',
+        dropoff_hotel_id: '',
+        booking_date: '',
+        pickup_time: '11:00',
+        adults: 2,
+        children: 1,
+        notes: '',
+        child_seats: [],
     });
 
-    const set = (key) => (e) => setForm(f => ({ ...f, [key]: e.target.value }));
+    useEffect(() => {
+        axios.get('/api/pricing/hotels')
+            .then((res) => {
+                if (Array.isArray(res.data) && res.data.length > 0) {
+                    setHotels(res.data);
+                }
+            })
+            .catch(() => {});
+    }, []);
 
-    const isCustomPickup = form.pickupHotel === '__custom__';
-    const isCustomDropoff = form.dropoffHotel === '__custom__';
+    useEffect(() => {
+        if (!data.vehicle_id && defaultVehicle?.id) {
+            setData('vehicle_id', defaultVehicle.id);
+        }
+    }, [vehicles]);
+
+    const handleSeatChange = (seatId, quantity) => {
+        const updated = { ...selectedSeats, [seatId]: quantity };
+        setSelectedSeats(updated);
+
+        const childSeatsPayload = Object.entries(updated)
+            .filter(([_, q]) => q > 0)
+            .map(([id, q]) => ({
+                id: parseInt(id, 10),
+                quantity: parseInt(q, 10),
+            }));
+
+        setData('child_seats', childSeatsPayload);
+    };
+
+    // Live price calculation on pickup, dropoff, and vehicle
+    useEffect(() => {
+        if (!data.vehicle_id || !data.pickup_hotel_id || !data.dropoff_hotel_id) {
+            setEstimatedFee(null);
+            return;
+        }
+
+        if (data.pickup_hotel_id === data.dropoff_hotel_id) {
+            setEstimatedFee(null);
+            return;
+        }
+
+        const timer = setTimeout(() => {
+            setLoadingEstimate(true);
+            axios.post('/api/pricing/estimate', {
+                booking_type: 'Hotel Transfer',
+                vehicle_id: data.vehicle_id,
+                pickup_hotel_id: data.pickup_hotel_id,
+                dropoff_hotel_id: data.dropoff_hotel_id,
+            })
+                .then((res) => {
+                    setEstimatedFee(res.data.total_fee);
+                })
+                .catch(() => {
+                    setEstimatedFee(null);
+                })
+                .finally(() => {
+                    setLoadingEstimate(false);
+                });
+        }, 300);
+
+        return () => clearTimeout(timer);
+    }, [data.vehicle_id, data.pickup_hotel_id, data.dropoff_hotel_id]);
+
+    const handleFormSubmit = (e) => {
+        if (e) e.preventDefault();
+        post('/booking', {
+            preserveScroll: true,
+            onSuccess: () => {
+                reset();
+                setSelectedSeats({});
+                setEstimatedFee(null);
+            },
+        });
+    };
 
     const handleWA = () => {
-        const seatsSummary = [];
-        if (parseInt(form.infantSeat) > 0) seatsSummary.push(`${form.infantSeat}x Rear-Facing Infant`);
-        if (parseInt(form.toddlerSeat) > 0) seatsSummary.push(`${form.toddlerSeat}x Forward-Facing Toddler`);
-        if (parseInt(form.boosterSeat) > 0) seatsSummary.push(`${form.boosterSeat}x Booster Seat`);
-        const seatsText = seatsSummary.length > 0 ? seatsSummary.join(', ') : 'Standard free car seat';
+        const pObj = hotels.find((h) => String(h.id) === String(data.pickup_hotel_id));
+        const dObj = hotels.find((h) => String(h.id) === String(data.dropoff_hotel_id));
+        const vehObj = vehicles.find((v) => String(v.id) === String(data.vehicle_id));
 
-        const finalPickup = isCustomPickup
-            ? (form.customPickupHotel || 'Custom Hotel / Villa')
-            : (form.pickupHotel || form.customPickupHotel || 'Not specified');
+        const seatsText = Object.entries(selectedSeats)
+            .filter(([_, q]) => q > 0)
+            .map(([id, q]) => {
+                const s = childSeatTypes.find((st) => String(st.id) === String(id));
+                return `${q}x ${s?.name || 'Child Seat'}`;
+            })
+            .join(', ') || '1x Free Included';
 
-        const finalDropoff = isCustomDropoff
-            ? (form.customDropoffHotel || 'Custom Hotel / Villa')
-            : (form.dropoffHotel || form.customDropoffHotel || 'Not specified');
-
-        const msg = `Hi Bali Family Safe!\n\n*Hotel-to-Hotel Transfer Booking:*\n- Full Name: ${form.name}\n- WhatsApp: ${form.phone}\n- Email: ${form.email || '-'}\n- Pick-Up Hotel (From): ${finalPickup}\n- Drop-Off Hotel (To): ${finalDropoff}\n- Transfer Date: ${form.date || 'To be confirmed'}, Time: ${form.time || '11:00 AM'}\n- Vehicle Model: ${form.vehicle || 'Not specified'}\n- Passengers: ${form.adults || '1'} Adults, ${form.children || '0'} Children\n- Car Seats: ${seatsText}\n- Notes: ${form.notes || '-'}`;
+        const msg = `Hi Bali Family Safe!\n\n*Hotel-to-Hotel Transfer Booking:*
+- Guest Name: ${data.guest_name}
+- WhatsApp: ${data.whatsapp_number}
+- Pick-Up Hotel: ${pObj?.nama_hotel || 'Not specified'}
+- Drop-Off Hotel: ${dObj?.nama_hotel || 'Not specified'}
+- Transfer Date: ${data.booking_date} at ${data.pickup_time}
+- Vehicle: ${vehObj?.name || 'Not specified'}
+- Child Seats: ${seatsText}
+- Estimated Fare: ${estimatedFee ? `Rp ${Number(estimatedFee).toLocaleString('id-ID')}` : 'To be confirmed'}
+- Notes: ${data.notes || '-'}`;
 
         window.open(`https://wa.me/6281234567890?text=${encodeURIComponent(msg)}`, '_blank');
     };
 
     return (
-        <form onSubmit={e => e.preventDefault()} style={{ display: 'flex', flexDirection: 'column' }}>
+        <form onSubmit={handleFormSubmit} style={{ display: 'flex', flexDirection: 'column' }}>
+            {flash?.success && (
+                <div className="mx-6 mt-4 p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center gap-2">
+                    <svg className="w-4 h-4 text-emerald-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    <span>{flash.success}</span>
+                </div>
+            )}
+
             {/* 1. Row 1: Pick-Up & Drop-Off Hotels (50% / 50%) */}
             <div className="bfs-form-row" style={{
                 display: 'grid',
@@ -65,246 +166,219 @@ export default function HotelTransferForm() {
                 padding: '24px 32px 0',
             }}>
                 <div style={{ gridColumn: 'span 2' }}>
-                    <FieldWithIcon label="1. Pick-Up Hotel or Villa (Origin)" isSelect={true} icon={<IconHotel />}>
+                    <FieldWithIcon label="1. Pick-Up Hotel or Resort (Origin) *" isSelect={true} icon={<IconHotel />}>
                         <select
-                            style={selectStyle}
-                            value={form.pickupHotel}
-                            onChange={set('pickupHotel')}
+                            required
+                            style={{
+                                ...selectStyle,
+                                borderColor: errors.pickup_hotel_id ? '#F43F5E' : (data.pickup_hotel_id ? '#00658D' : '#CBD5E1'),
+                            }}
+                            value={data.pickup_hotel_id}
+                            onChange={(e) => setData('pickup_hotel_id', e.target.value ? parseInt(e.target.value, 10) : '')}
                         >
                             <option value="">-- Select Pick-Up Hotel / Resort --</option>
-                            <option value="__custom__">✍️ Other Hotel / Private Villa / Airbnb (Input manually)...</option>
-                            {BALI_DESTINATIONS.filter(d => d.popularHotels.length > 0).map(dest => (
-                                <optgroup key={dest.id} label={dest.name}>
-                                    {dest.popularHotels.map(h => (
-                                        <option key={h} value={h}>{h}</option>
-                                    ))}
-                                </optgroup>
+                            {hotels.map((h) => (
+                                <option key={h.id} value={h.id}>{h.nama_hotel}</option>
                             ))}
                         </select>
                     </FieldWithIcon>
+                    {errors.pickup_hotel_id && (
+                        <span style={{ fontSize: '11px', color: '#F43F5E', marginTop: '4px' }}>{errors.pickup_hotel_id}</span>
+                    )}
                 </div>
 
                 <div style={{ gridColumn: 'span 2' }}>
-                    <FieldWithIcon label="2. Drop-Off Hotel or Villa (Destination)" isSelect={true} icon={<IconHotel />}>
+                    <FieldWithIcon label="2. Drop-Off Hotel or Resort (Destination) *" isSelect={true} icon={<IconHotel />}>
                         <select
-                            style={selectStyle}
-                            value={form.dropoffHotel}
-                            onChange={set('dropoffHotel')}
+                            required
+                            style={{
+                                ...selectStyle,
+                                borderColor: errors.dropoff_hotel_id ? '#F43F5E' : (data.dropoff_hotel_id ? '#00658D' : '#CBD5E1'),
+                            }}
+                            value={data.dropoff_hotel_id}
+                            onChange={(e) => setData('dropoff_hotel_id', e.target.value ? parseInt(e.target.value, 10) : '')}
                         >
                             <option value="">-- Select Drop-Off Hotel / Resort --</option>
-                            <option value="__custom__">✍️ Other Hotel / Private Villa / Airbnb (Input manually)...</option>
-                            {BALI_DESTINATIONS.filter(d => d.popularHotels.length > 0).map(dest => (
-                                <optgroup key={dest.id} label={dest.name}>
-                                    {dest.popularHotels.map(h => (
-                                        <option key={h} value={h}>{h}</option>
-                                    ))}
-                                </optgroup>
+                            {hotels.map((h) => (
+                                <option key={h.id} value={h.id}>{h.nama_hotel}</option>
+                            ))}
+                        </select>
+                    </FieldWithIcon>
+                    {errors.dropoff_hotel_id && (
+                        <span style={{ fontSize: '11px', color: '#F43F5E', marginTop: '4px' }}>{errors.dropoff_hotel_id}</span>
+                    )}
+                </div>
+            </div>
+
+            {/* 2. Row 2: Date, Time, Vehicle */}
+            <div className="bfs-form-row" style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(4, 1fr)',
+                gap: '16px',
+                padding: '16px 32px 0',
+            }}>
+                <div style={{ gridColumn: 'span 2' }}>
+                    <FieldWithIcon label="Transfer Date *" icon={<IconCalendar />}>
+                        <input
+                            type="date"
+                            required
+                            style={{
+                                ...inputStyle,
+                                borderColor: errors.booking_date ? '#F43F5E' : '#CBD5E1',
+                            }}
+                            value={data.booking_date}
+                            onChange={(e) => setData('booking_date', e.target.value)}
+                        />
+                    </FieldWithIcon>
+                    {errors.booking_date && (
+                        <span style={{ fontSize: '11px', color: '#F43F5E' }}>{errors.booking_date}</span>
+                    )}
+                </div>
+
+                <div>
+                    <FieldWithIcon label="Pick-Up Time *" icon={<IconClock />}>
+                        <input
+                            type="time"
+                            required
+                            style={{
+                                ...inputStyle,
+                                borderColor: errors.pickup_time ? '#F43F5E' : '#CBD5E1',
+                            }}
+                            value={data.pickup_time}
+                            onChange={(e) => setData('pickup_time', e.target.value)}
+                        />
+                    </FieldWithIcon>
+                    {errors.pickup_time && (
+                        <span style={{ fontSize: '11px', color: '#F43F5E' }}>{errors.pickup_time}</span>
+                    )}
+                </div>
+
+                <div>
+                    <VehicleSelect
+                        vehicles={vehicles}
+                        value={data.vehicle_id}
+                        onChange={(e) => setData('vehicle_id', parseInt(e.target.value, 10))}
+                    />
+                    {errors.vehicle_id && (
+                        <span style={{ fontSize: '11px', color: '#F43F5E' }}>{errors.vehicle_id}</span>
+                    )}
+                </div>
+            </div>
+
+            {/* 3. Row 3: Guest Name, WhatsApp, Email, Passengers */}
+            <div className="bfs-form-row" style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(4, 1fr)',
+                gap: '16px',
+                padding: '16px 32px 0',
+            }}>
+                <div>
+                    <FieldWithIcon label="Full Name *" icon={<IconUser />}>
+                        <input
+                            type="text"
+                            required
+                            placeholder="e.g. David Thompson"
+                            style={{
+                                ...inputStyle,
+                                borderColor: errors.guest_name ? '#F43F5E' : '#CBD5E1',
+                            }}
+                            value={data.guest_name}
+                            onChange={(e) => setData('guest_name', e.target.value)}
+                        />
+                    </FieldWithIcon>
+                    {errors.guest_name && (
+                        <span style={{ fontSize: '11px', color: '#F43F5E' }}>{errors.guest_name}</span>
+                    )}
+                </div>
+
+                <div>
+                    <FieldWithIcon label="WhatsApp Number *" icon={<IconPhone />}>
+                        <input
+                            type="tel"
+                            required
+                            placeholder="e.g. +61 412 345 678"
+                            style={{
+                                ...inputStyle,
+                                borderColor: errors.whatsapp_number ? '#F43F5E' : '#CBD5E1',
+                            }}
+                            value={data.whatsapp_number}
+                            onChange={(e) => setData('whatsapp_number', e.target.value)}
+                        />
+                    </FieldWithIcon>
+                    {errors.whatsapp_number && (
+                        <span style={{ fontSize: '11px', color: '#F43F5E' }}>{errors.whatsapp_number}</span>
+                    )}
+                </div>
+
+                <div>
+                    <FieldWithIcon label="Email Address" icon={<IconEmail />} optional={true}>
+                        <input
+                            type="email"
+                            placeholder="david@example.com"
+                            style={inputStyle}
+                            value={data.email}
+                            onChange={(e) => setData('email', e.target.value)}
+                        />
+                    </FieldWithIcon>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                    <FieldWithIcon label="Adults" isSelect={true}>
+                        <select
+                            style={selectStyle}
+                            value={data.adults}
+                            onChange={(e) => setData('adults', parseInt(e.target.value, 10))}
+                        >
+                            {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
+                                <option key={n} value={n}>{n}</option>
+                            ))}
+                        </select>
+                    </FieldWithIcon>
+
+                    <FieldWithIcon label="Children" isSelect={true}>
+                        <select
+                            style={selectStyle}
+                            value={data.children}
+                            onChange={(e) => setData('children', parseInt(e.target.value, 10))}
+                        >
+                            {[0, 1, 2, 3, 4, 5].map((n) => (
+                                <option key={n} value={n}>{n}</option>
                             ))}
                         </select>
                     </FieldWithIcon>
                 </div>
-
-                {isCustomPickup && (
-                    <div style={{ gridColumn: isCustomDropoff ? 'span 2' : 'span 4' }}>
-                        <FieldWithIcon label="Specify Pick-Up Hotel / Villa Name & Address" icon={<IconHotel />}>
-                            <input
-                                style={inputStyle}
-                                placeholder="Type pick-up hotel / villa name or exact address..."
-                                value={form.customPickupHotel}
-                                onChange={set('customPickupHotel')}
-                                autoFocus
-                            />
-                        </FieldWithIcon>
-                    </div>
-                )}
-
-                {isCustomDropoff && (
-                    <div style={{ gridColumn: isCustomPickup ? 'span 2' : 'span 4' }}>
-                        <FieldWithIcon label="Specify Drop-Off Hotel / Villa Name & Address" icon={<IconHotel />}>
-                            <input
-                                style={inputStyle}
-                                placeholder="Type drop-off hotel / villa name or exact address..."
-                                value={form.customDropoffHotel}
-                                onChange={set('customDropoffHotel')}
-                                autoFocus
-                            />
-                        </FieldWithIcon>
-                    </div>
-                )}
             </div>
 
-            {/* 2. Row 2: Date, Time & Vehicle */}
-            <div className="bfs-form-row" style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(4, 1fr)',
-                gap: '16px',
-                padding: '16px 32px 0',
-            }}>
-                <div style={{ gridColumn: 'span 1' }}>
-                    <FieldWithIcon label="Transfer Date" icon={<IconCalendar />}>
-                        <input
-                            type="date"
-                            style={inputStyle}
-                            value={form.date}
-                            onChange={set('date')}
-                        />
-                    </FieldWithIcon>
-                </div>
-
-                <div style={{ gridColumn: 'span 1' }}>
-                    <FieldWithIcon label="Pick-Up Time" icon={<IconClock />}>
-                        <input
-                            type="time"
-                            style={inputStyle}
-                            value={form.time}
-                            onChange={set('time')}
-                        />
-                    </FieldWithIcon>
-                </div>
-
-                <div style={{ gridColumn: 'span 2' }}>
-                    <VehicleSelect value={form.vehicle} onChange={set('vehicle')} />
-                </div>
+            {/* 4. Child Seats Selection */}
+            <div style={{ padding: '16px 32px 0' }}>
+                <ChildSeatsSelector
+                    childSeatTypes={childSeatTypes}
+                    selectedSeats={selectedSeats}
+                    onSeatChange={handleSeatChange}
+                />
             </div>
 
-            {/* 3. Row 3: Passengers & Free Child Car Seats (All 4 equal 1fr columns!) */}
-            <div className="bfs-form-row" style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(4, 1fr)',
-                gap: '16px',
-                padding: '16px 32px 0',
-            }}>
-                {/* Passengers */}
-                <div style={{ gridColumn: 'span 1', display: 'flex', flexDirection: 'column' }}>
-                    <label style={{
-                        fontFamily: 'Inter, sans-serif',
-                        fontWeight: 600,
-                        fontSize: '13px',
-                        lineHeight: '18px',
-                        color: '#334155',
-                        marginBottom: '6px',
-                    }}>
-                        Passengers
-                    </label>
-                    <div style={{ display: 'flex', gap: '6px' }}>
-                        <div style={{ position: 'relative', flex: 1 }}>
-                            <select
-                                style={{ ...selectStyle, paddingLeft: '10px', paddingRight: '18px', fontSize: '13px' }}
-                                value={form.adults}
-                                onChange={set('adults')}
-                            >
-                                {[1,2,3,4,5,6,7,8].map(n => <option key={n} value={n}>{n} Adl</option>)}
-                            </select>
-                        </div>
-                        <div style={{ position: 'relative', flex: 1 }}>
-                            <select
-                                style={{ ...selectStyle, paddingLeft: '10px', paddingRight: '18px', fontSize: '13px' }}
-                                value={form.children}
-                                onChange={set('children')}
-                            >
-                                {[0,1,2,3,4,5].map(n => <option key={n} value={n}>{n} Chd</option>)}
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Free Car Seat 1: Infant */}
-                <div style={{ gridColumn: 'span 1' }}>
-                    <FieldWithIcon label="Infant (0–12 Mo)" isSelect={true}>
-                        <select
-                            style={{ ...selectStyle, paddingLeft: '12px' }}
-                            value={form.infantSeat}
-                            onChange={set('infantSeat')}
-                        >
-                            <option value="0">0 (None)</option>
-                            <option value="1">1 Seat</option>
-                            <option value="2">2 Seats</option>
-                            <option value="3">3 Seats</option>
-                        </select>
-                    </FieldWithIcon>
-                </div>
-
-                {/* Free Car Seat 2: Toddler */}
-                <div style={{ gridColumn: 'span 1' }}>
-                    <FieldWithIcon label="Toddler (1–4 Yrs)" isSelect={true}>
-                        <select
-                            style={{ ...selectStyle, paddingLeft: '12px' }}
-                            value={form.toddlerSeat}
-                            onChange={set('toddlerSeat')}
-                        >
-                            <option value="0">0 (None)</option>
-                            <option value="1">1 Seat</option>
-                            <option value="2">2 Seats</option>
-                            <option value="3">3 Seats</option>
-                        </select>
-                    </FieldWithIcon>
-                </div>
-
-                {/* Free Car Seat 3: Booster */}
-                <div style={{ gridColumn: 'span 1' }}>
-                    <FieldWithIcon label="Booster (4–8+ Yrs)" isSelect={true}>
-                        <select
-                            style={{ ...selectStyle, paddingLeft: '12px' }}
-                            value={form.boosterSeat}
-                            onChange={set('boosterSeat')}
-                        >
-                            <option value="0">0 (None)</option>
-                            <option value="1">1 Seat</option>
-                            <option value="2">2 Seats</option>
-                            <option value="3">3 Seats</option>
-                        </select>
-                    </FieldWithIcon>
-                </div>
+            {/* 5. Special Notes */}
+            <div style={{ padding: '16px 32px 0' }}>
+                <FieldWithIcon label="Special Instructions & Requests" icon={<IconNote />} optional={true}>
+                    <textarea
+                        rows="2"
+                        placeholder="e.g. Extra luggage space, stroller/pram details, preferred scenic route..."
+                        style={textareaStyle}
+                        value={data.notes}
+                        onChange={(e) => setData('notes', e.target.value)}
+                    />
+                </FieldWithIcon>
             </div>
 
-            {/* 4. Row 4: Contact Information */}
-            <div className="bfs-form-row" style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(4, 1fr)',
-                gap: '16px',
-                padding: '16px 32px 0',
-            }}>
-                <div style={{ gridColumn: 'span 1' }}>
-                    <FieldWithIcon label="Full Name" icon={<IconUser />}>
-                        <input style={inputStyle} placeholder="John Doe" value={form.name} onChange={set('name')} />
-                    </FieldWithIcon>
-                </div>
-
-                <div style={{ gridColumn: 'span 1' }}>
-                    <FieldWithIcon label="WhatsApp Number" icon={<IconPhone />}>
-                        <input style={inputStyle} placeholder="+1 234 567 8900" value={form.phone} onChange={set('phone')} />
-                    </FieldWithIcon>
-                </div>
-
-                <div style={{ gridColumn: 'span 2' }}>
-                    <FieldWithIcon label="Email Address" optional={true} icon={<IconEmail />}>
-                        <input style={inputStyle} placeholder="john@example.com" value={form.email} onChange={set('email')} type="email" />
-                    </FieldWithIcon>
-                </div>
-            </div>
-
-            {/* 5. Row 5: Notes & Special Requests */}
-            <div className="bfs-form-row" style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(4, 1fr)',
-                gap: '16px',
-                padding: '16px 32px 0',
-            }}>
-                <div style={{ gridColumn: 'span 4' }}>
-                    <FieldWithIcon label="Special Notes & Luggage Info" optional={true} icon={<IconNote />}>
-                        <textarea
-                            style={textareaStyle}
-                            placeholder="Luggage count, stroller space, room numbers or villa check-out/check-in times..."
-                            value={form.notes}
-                            onChange={set('notes')}
-                            rows={2}
-                        />
-                    </FieldWithIcon>
-                </div>
-            </div>
-
-            {/* 6. Footer Actions */}
-            <BookingFooter onWhatsApp={handleWA} onBook={handleWA} />
+            {/* 6. Footer */}
+            <BookingFooter
+                onWhatsApp={handleWA}
+                onBook={handleFormSubmit}
+                estimatedFee={estimatedFee}
+                loadingEstimate={loadingEstimate}
+                isSubmitting={processing}
+            />
         </form>
     );
 }

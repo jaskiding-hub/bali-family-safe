@@ -128,8 +128,15 @@ function AccordionItem({ faq, isOpen, onToggle }) {
     );
 }
 
-export default function FaqSection() {
+export default function FaqSection({ faqs = [] }) {
     const [openIndex, setOpenIndex] = useState(-1);
+
+    const displayFaqs = faqs && faqs.length > 0
+        ? faqs.map((f) => ({
+            q: f.question,
+            a: f.answer,
+        }))
+        : FAQS;
 
     return (
         <section
@@ -171,7 +178,7 @@ export default function FaqSection() {
 
                 {/* FAQ Accordion */}
                 <div className="bfs-faq-list" style={{ maxWidth: '768px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    {FAQS.map((faq, i) => (
+                    {displayFaqs.map((faq, i) => (
                         <AccordionItem
                             key={i}
                             faq={faq}

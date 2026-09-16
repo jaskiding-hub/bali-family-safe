@@ -45,7 +45,15 @@ const PILLARS = [
     },
 ];
 
-export default function WhyChooseUsSection() {
+export default function WhyChooseUsSection({ siteFeatures = [] }) {
+    const displayPillars = siteFeatures && siteFeatures.length > 0
+        ? siteFeatures.map((f, i) => ({
+            title: f.title,
+            desc: f.description || '',
+            icon: PILLARS[i % PILLARS.length]?.icon || PILLARS[0].icon,
+        }))
+        : PILLARS;
+
     return (
         <section
             id="why-us"
@@ -101,7 +109,7 @@ export default function WhyChooseUsSection() {
                     marginRight: 'auto',
                     width: '100%',
                 }}>
-                    {PILLARS.map((pillar, i) => (
+                    {displayPillars.map((pillar, i) => (
                         <div
                             key={i}
                             style={{

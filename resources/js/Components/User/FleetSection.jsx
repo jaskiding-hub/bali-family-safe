@@ -210,8 +210,36 @@ function FleetModal({ vehicle, onClose }) {
     );
 }
 
-export default function FleetSection() {
+export default function FleetSection({ vehicles = [] }) {
     const [selectedVehicle, setSelectedVehicle] = useState(null);
+
+    const displayFleet = vehicles && vehicles.length > 0
+        ? vehicles.map((car, i) => {
+            const fallback = FLEET[i % FLEET.length];
+            return {
+                title: car.name,
+                capacity: `1–${car.passenger_capacity || 6} Passengers`,
+                seats: car.category?.includes('HiAce') ? '3+ Car Seats' : (car.passenger_capacity > 5 ? '2 Car Seats' : '1 Car Seat'),
+                price: car.daily_rate ? `From Rp ${Number(car.daily_rate).toLocaleString()} / day` : fallback.price,
+                badge: i === 1 ? 'MOST POPULAR' : null,
+                img: car.photo_url || fallback.img,
+                shortDesc: car.description || fallback.shortDesc,
+                highlighted: i === 1,
+                details: {
+                    heading: car.name,
+                    description: car.description || fallback.details.description,
+                    specs: [
+                        { label: 'Passenger Capacity', value: `1–${car.passenger_capacity || 6} passengers + driver` },
+                        { label: 'Car Seats', value: car.passenger_capacity > 5 ? 'Up to 2 certified child seats' : '1 certified child seat' },
+                        { label: 'Luggage Space', value: `${car.luggage_capacity || 3} medium/large suitcases + stroller` },
+                        { label: 'Air Conditioning', value: 'Dual-zone climate control with rear vents' },
+                    ],
+                    features: fallback.details.features,
+                    bestFor: fallback.details.bestFor,
+                },
+            };
+        })
+        : FLEET;
 
     return (
         <section
@@ -267,7 +295,7 @@ export default function FleetSection() {
 
                 {/* 3 Fleet Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-5xl mx-auto">
-                    {FLEET.map((car, i) => (
+                    {displayFleet.map((car, i) => (
                         <div
                             key={i}
                             className="w-full bg-white border border-slate-200/60 shadow-sm rounded-2xl overflow-hidden relative flex flex-col"

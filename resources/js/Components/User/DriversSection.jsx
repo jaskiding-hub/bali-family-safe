@@ -78,7 +78,21 @@ const SAFETY_FEATURES = [
     'Child-Safe Driving',
 ];
 
-export default function DriversSection() {
+export default function DriversSection({ teamMembers = [] }) {
+    const founder = teamMembers.find((m) => m.is_founder) || null;
+    const regularMembers = teamMembers.filter((m) => !m.is_founder);
+
+    const displayTeam = regularMembers.length > 0
+        ? regularMembers.map((m) => ({
+            type: m.driver_id ? 'driver' : 'staff',
+            name: m.name,
+            role: m.role_title,
+            specialty: `${m.years_experience ? `${m.years_experience} • ` : ''}${m.languages || 'English'}`,
+            badge: m.driver_id ? 'POLICE CLEARED' : 'SUPPORT TEAM',
+            img: m.photo_url || 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=400&q=80',
+        }))
+        : UNIFIED_TEAM;
+
     return (
         <div id="drivers" style={{ width: '100%', background: '#F8F9FA' }}>
 
@@ -90,8 +104,8 @@ export default function DriversSection() {
                         {/* Founder Portrait — matches the text height exactly */}
                         <div className="w-full md:w-[320px] lg:w-[350px] shrink-0 bg-slate-100 relative overflow-hidden">
                             <img
-                                src="/images/wayan-suparta.jpg"
-                                alt="Wayan Suparta - Founder of Bali Family Safe Tours"
+                                src={founder?.photo_url || "/images/wayan-suparta.jpg"}
+                                alt={`${founder?.name || 'Wayan Suparta'} - Founder of Bali Family Safe Tours`}
                                 className="w-full h-full object-cover object-top min-h-[300px] md:min-h-0"
                             />
                         </div>
@@ -111,20 +125,20 @@ export default function DriversSection() {
 
                             {/* Message body */}
                             <p className="text-slate-600 text-sm sm:text-base leading-relaxed font-normal mb-5">
-                                Behind Bali Family Safe Tours is a simple commitment: every parent traveling with little ones deserves complete peace of mind. We take the stress out of island travel—providing vetted family drivers, certified child seats, and genuine Balinese care so you can focus on making memories.
+                                {founder?.bio || "Behind Bali Family Safe Tours is a simple commitment: every parent traveling with little ones deserves complete peace of mind. We take the stress out of island travel—providing vetted family drivers, certified child seats, and genuine Balinese care so you can focus on making memories."}
                             </p>
 
                             {/* Founder Info (clean, elegant, no noisy labels) */}
                             <div className="pt-4 border-t border-slate-100 flex items-center gap-3">
                                 <div className="w-10 h-10 rounded-full bg-[#00658D]/10 text-[#00658D] flex items-center justify-center font-bold text-sm shrink-0">
-                                    WS
+                                    {(founder?.name || 'Wayan Suparta').split(' ').map(n => n[0]).join('').substring(0, 2)}
                                 </div>
                                 <div>
                                     <div className="text-base font-bold text-slate-900 leading-tight">
-                                        Wayan Suparta
+                                        {founder?.name || 'Wayan Suparta'}
                                     </div>
                                     <div className="text-xs font-medium text-slate-500 mt-0.5">
-                                        Founder & Head Driver
+                                        {founder?.role_title || 'Founder & Head Driver'}
                                     </div>
                                 </div>
                             </div>
@@ -194,7 +208,7 @@ export default function DriversSection() {
 
                     {/* Combined Staff & Drivers Grid */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 w-full max-w-6xl mx-auto">
-                        {UNIFIED_TEAM.map((member, i) => (
+                        {displayTeam.map((member, i) => (
                             <div
                                 key={i}
                                 className="group w-full bg-white border border-slate-200/80 hover:border-sky-300 shadow-sm hover:shadow-md rounded-2xl overflow-hidden relative flex flex-col transition-all duration-200"

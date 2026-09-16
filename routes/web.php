@@ -4,15 +4,12 @@ use Illuminate\Support\Facades\Route;
 
 use Inertia\Inertia;
 
-Route::get('/', function () {
-    return Inertia::render('User/Home');
-})->name('home');
+use App\Http\Controllers\Public\HomeController;
+use App\Http\Controllers\Public\TourController;
 
-Route::get('/tours/{id}', function ($id) {
-    return Inertia::render('User/TourDetail', [
-        'tourId' => $id,
-    ]);
-})->name('tours.show');
+Route::get('/', [HomeController::class, 'index'])->name('home');
+
+Route::get('/tours/{id}', [TourController::class, 'show'])->name('tours.show');
 
 Route::get('/our-team', function () {
     return Inertia::render('User/OurTeam');

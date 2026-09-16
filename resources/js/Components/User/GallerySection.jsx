@@ -1,7 +1,7 @@
 import React from 'react';
 
-export default function GallerySection() {
-    const photos = [
+export default function GallerySection({ gallery = [] }) {
+    const defaultPhotos = [
         {
             src: 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=1000&q=80',
             alt: 'Sanitized child safety car seat installation',
@@ -16,6 +16,14 @@ export default function GallerySection() {
             alt: 'Family airport greeting in Bali',
         },
     ];
+
+    const photos = gallery && gallery.length >= 3
+        ? [
+            { src: gallery[0].image_url, alt: gallery[0].caption || 'Family safe transport', big: true },
+            { src: gallery[1].image_url, alt: gallery[1].caption || 'Armada & child seats' },
+            { src: gallery[2].image_url, alt: gallery[2].caption || 'Happy family in Bali' },
+        ]
+        : defaultPhotos;
 
     return (
         <section

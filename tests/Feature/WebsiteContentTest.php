@@ -75,4 +75,29 @@ class WebsiteContentTest extends TestCase
             ->missing('vehicles')
         );
     }
+
+    public function test_cms_website_content_loads_active_drivers(): void
+    {
+        \App\Models\Driver::create([
+            'full_name' => 'Wayan Test',
+            'username' => 'wayantest',
+            'whatsapp_number' => '08123456789',
+            'email' => 'wayan@test.com',
+            'password_hash' => bcrypt('password'),
+            'license_number' => 'SIM-12345',
+            'license_expiry_date' => now()->addYear(),
+            'status' => \App\Enums\DriverStatus::Active,
+        ]);
+
+        $response = $this->actingAs($this->admin, 'admin')->get('/admin/website-content');
+
+        $response->assertStatus(200);
+        $response->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/WebsiteContent')
+            ->has('drivers', 1)
+            ->where('drivers.0.full_name', 'Wayan Test')
+            ->where('drivers.0.name', 'Wayan Test')
+            ->where('drivers.0.whatsapp_number', '08123456789')
+        );
+    }
 }

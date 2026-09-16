@@ -1,9 +1,10 @@
 import React from 'react';
 
-export default function FloatingWhatsApp() {
+export default function FloatingWhatsApp({ siteSettings = null }) {
     const handleClick = () => {
+        const waNumber = (siteSettings?.whatsapp_number || '6281234567890').replace(/[^0-9]/g, '') || '6281234567890';
         const msg = 'Hi Bali Family Safe! I\'d like to inquire about your transport services.';
-        window.open(`https://wa.me/6281234567890?text=${encodeURIComponent(msg)}`, '_blank');
+        window.open(`https://wa.me/${waNumber}?text=${encodeURIComponent(msg)}`, '_blank');
     };
 
     return (

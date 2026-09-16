@@ -250,7 +250,11 @@ function DriverGrid({ drivers }) {
     );
 }
 
-export default function OurTeam() {
+export default function OurTeam({ supportTeam = [], driverTeam = [] }) {
+    const finalSupport = supportTeam && supportTeam.length > 0 ? supportTeam : SUPPORT_TEAM;
+    const allFallbackDrivers = [...DRIVERS_ROW_1, ...DRIVERS_ROW_2, ...DRIVERS_ROW_3];
+    const finalDrivers = driverTeam && driverTeam.length > 0 ? driverTeam : allFallbackDrivers;
+
     return (
         <div style={{
             fontFamily: "'Inter', sans-serif",
@@ -301,25 +305,40 @@ export default function OurTeam() {
                     flexDirection: 'column',
                     alignItems: 'center',
                     textAlign: 'center',
-                    maxWidth: '768px',
-                    gap: '16px',
+                    maxWidth: '672px',
                 }}>
-                    <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-white m-0">
+                    <h1 style={{
+                        fontFamily: "'Inter', sans-serif",
+                        fontWeight: 700,
+                        fontSize: '48px',
+                        lineHeight: '56px',
+                        letterSpacing: '-1.2px',
+                        color: '#FFFFFF',
+                        margin: '0 0 16px 0',
+                    }}>
                         Meet the BFS Family
                     </h1>
-                    <p className="text-sm sm:text-base md:text-lg font-normal text-white/90 m-0 max-w-xl">
-                        A trusted local team dedicated to making your Bali family journey safe, comfortable and stress-free.
+                    <p style={{
+                        fontFamily: "'Inter', sans-serif",
+                        fontWeight: 400,
+                        fontSize: '18px',
+                        lineHeight: '28px',
+                        color: '#FFFFFF',
+                        margin: 0,
+                    }}>
+                        The trusted local team dedicated to making your Bali family journey safe, comfortable and stress-free.
                     </p>
                 </div>
             </section>
 
-            {/* Main Content */}
+            {/* Main Content Area */}
             <div style={{
-                background: '#F8F9FA',
-                padding: '0 0 128px',
+                maxWidth: '1200px',
+                margin: '0 auto',
+                padding: '48px 0',
             }}>
                 {/* Support Team Section */}
-                <section className="px-4 py-12 sm:px-8 sm:py-16 md:px-12 md:py-20">
+                <section className="px-4 py-12 sm:px-8 sm:py-16 md:px-12 md:py-20 relative">
                     <div style={{
                         maxWidth: '1200px',
                         margin: '0 auto',
@@ -367,7 +386,7 @@ export default function OurTeam() {
 
                         {/* Cards grid */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 relative z-10 max-w-5xl mx-auto w-full">
-                            {SUPPORT_TEAM.map((member, i) => (
+                            {finalSupport.map((member, i) => (
                                 <SupportCard key={i} member={member} />
                             ))}
                         </div>
@@ -423,9 +442,7 @@ export default function OurTeam() {
                             position: 'relative',
                             zIndex: 1,
                         }}>
-                            <DriverGrid drivers={DRIVERS_ROW_1} />
-                            <DriverGrid drivers={DRIVERS_ROW_2} />
-                            <DriverGrid drivers={DRIVERS_ROW_3} />
+                            <DriverGrid drivers={finalDrivers} />
                         </div>
                     </div>
                 </section>

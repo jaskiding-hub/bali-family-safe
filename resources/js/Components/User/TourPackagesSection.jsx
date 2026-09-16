@@ -1,8 +1,9 @@
 import React from 'react';
 import { Link } from '@inertiajs/react';
-import { TOUR_PACKAGES } from '../../data/user/tours';
 
-export default function TourPackagesSection() {
+export default function TourPackagesSection({ packages = [] }) {
+    const tourList = packages.length > 0 ? packages.slice(0, 3) : [];
+
     return (
         <section
             id="tours"
@@ -57,99 +58,119 @@ export default function TourPackagesSection() {
 
                 {/* 3 Tour Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-5xl mx-auto">
-                    {TOUR_PACKAGES.map((tour, i) => (
-                        <div
-                            key={tour.id || i}
-                            className="w-full bg-white border border-slate-200/60 shadow-sm rounded-2xl overflow-hidden relative flex flex-col"
-                        >
-                            {/* POPULAR badge */}
-                            {tour.badge && (
-                                <div className="absolute top-4 right-4 z-10 flex items-center gap-1 bg-amber-400 text-amber-950 px-3 py-1 rounded-full shadow-sm border border-amber-300">
-                                    <svg className="w-3.5 h-3.5 text-amber-950 shrink-0" viewBox="0 0 20 20" fill="currentColor">
-                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                    </svg>
-                                    <span className="text-[11px] font-extrabold tracking-wider uppercase font-sans">
-                                        {tour.badge}
-                                    </span>
-                                </div>
-                            )}
+                    {tourList.map((tour, i) => {
+                        const tourKey = tour.slug || tour.id || i;
+                        const tourLink = `/tours/${tour.slug || tour.id}`;
+                        const tourTitle = tour.title || tour.name;
+                        const tourImg = tour.image || tour.hero_image || 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=1200&q=80';
+                        const tourDesc = tour.description || tour.subtitle;
+                        const tourPrice = tour.price || tour.regular_price_formatted || (tour.regular_price ? 'Rp ' + Number(tour.regular_price).toLocaleString('id-ID') : '');
 
-                            {/* Image */}
-                            <Link href={`/tours/${tour.id}`} style={{ height: '192px', background: '#EDEEEF', overflow: 'hidden', display: 'block' }}>
-                                <img src={tour.image} alt={tour.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                            </Link>
+                        return (
+                            <div
+                                key={tourKey}
+                                className="w-full bg-white border border-slate-200/60 shadow-sm rounded-2xl overflow-hidden relative flex flex-col"
+                            >
+                                {/* POPULAR badge */}
+                                {tour.badge && (
+                                    <div className="absolute top-4 right-4 z-10 flex items-center gap-1 bg-amber-400 text-amber-950 px-3 py-1 rounded-full shadow-sm border border-amber-300">
+                                        <svg className="w-3.5 h-3.5 text-amber-950 shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                        </svg>
+                                        <span className="text-[11px] font-extrabold tracking-wider uppercase font-sans">
+                                            {tour.badge}
+                                        </span>
+                                    </div>
+                                )}
 
-                            {/* Content */}
-                            <div style={{ padding: '24px', flex: 1, display: 'flex', flexDirection: 'column' }}>
-                                <Link
-                                    href={`/tours/${tour.id}`}
-                                    style={{ textDecoration: 'none', color: 'inherit' }}
-                                >
-                                    <h3 style={{
-                                        fontFamily: 'Inter, sans-serif',
-                                        fontWeight: 600,
-                                        fontSize: '24px',
-                                        lineHeight: '32px',
-                                        color: '#191C1D',
-                                        margin: 0,
-                                        marginBottom: '8px',
-                                    }}>
-                                        {tour.title}
-                                    </h3>
+                                {/* Image */}
+                                <Link href={tourLink} style={{ height: '192px', background: '#EDEEEF', overflow: 'hidden', display: 'block' }}>
+                                    <img src={tourImg} alt={tourTitle} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                 </Link>
 
-                                <p style={{
-                                    fontFamily: 'Inter, sans-serif',
-                                    fontWeight: 400,
-                                    fontSize: '16px',
-                                    lineHeight: '24px',
-                                    color: '#3E4850',
-                                    margin: 0,
-                                    flex: 1,
-                                }}>
-                                    {tour.description}
-                                </p>
-
-                                {/* Horizontal border + View Details button */}
-                                <div style={{
-                                    display: 'flex',
-                                    flexDirection: 'row',
-                                    justifyContent: 'space-between',
-                                    alignItems: 'center',
-                                    paddingTop: '16px',
-                                    marginTop: '24px',
-                                    borderTop: '1px solid #E1E3E4',
-                                }}>
+                                {/* Content */}
+                                <div style={{ padding: '24px', flex: 1, display: 'flex', flexDirection: 'column' }}>
                                     <Link
-                                        href={`/tours/${tour.id}`}
-                                        style={{
-                                            display: 'inline-flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            padding: '8px 16px',
-                                            height: '32px',
-                                            background: '#3E5E96',
-                                            borderRadius: '8px',
-                                            fontFamily: 'Inter, sans-serif',
-                                            fontWeight: 500,
-                                            fontSize: '12px',
-                                            lineHeight: '16px',
-                                            color: '#FFFFFF',
-                                            textDecoration: 'none',
-                                            transition: 'background 0.15s',
-                                        }}
-                                        onMouseEnter={e => e.currentTarget.style.background = '#2e4f82'}
-                                        onMouseLeave={e => e.currentTarget.style.background = '#3E5E96'}
+                                        href={tourLink}
+                                        style={{ textDecoration: 'none', color: 'inherit' }}
                                     >
-                                        View Details
+                                        <h3 style={{
+                                            fontFamily: 'Inter, sans-serif',
+                                            fontWeight: 600,
+                                            fontSize: '24px',
+                                            lineHeight: '32px',
+                                            color: '#191C1D',
+                                            margin: 0,
+                                            marginBottom: '8px',
+                                        }}>
+                                            {tourTitle}
+                                        </h3>
                                     </Link>
+
+                                    {tourPrice && (
+                                        <div style={{
+                                            fontFamily: 'Inter, sans-serif',
+                                            fontWeight: 700,
+                                            fontSize: '15px',
+                                            color: '#00658D',
+                                            marginBottom: '8px',
+                                        }}>
+                                            {tourPrice}
+                                        </div>
+                                    )}
+
+                                    <p style={{
+                                        fontFamily: 'Inter, sans-serif',
+                                        fontWeight: 400,
+                                        fontSize: '16px',
+                                        lineHeight: '24px',
+                                        color: '#3E4850',
+                                        margin: 0,
+                                        flex: 1,
+                                    }}>
+                                        {tourDesc}
+                                    </p>
+
+                                    {/* Horizontal border + View Details button */}
+                                    <div style={{
+                                        display: 'flex',
+                                        flexDirection: 'row',
+                                        justifyContent: 'space-between',
+                                        alignItems: 'center',
+                                        paddingTop: '16px',
+                                        marginTop: '24px',
+                                        borderTop: '1px solid #E1E3E4',
+                                    }}>
+                                        <Link
+                                            href={tourLink}
+                                            style={{
+                                                display: 'inline-flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                padding: '8px 16px',
+                                                height: '32px',
+                                                background: '#3E5E96',
+                                                borderRadius: '8px',
+                                                fontFamily: 'Inter, sans-serif',
+                                                fontWeight: 500,
+                                                fontSize: '12px',
+                                                lineHeight: '16px',
+                                                color: '#FFFFFF',
+                                                textDecoration: 'none',
+                                                transition: 'background 0.15s',
+                                            }}
+                                            onMouseEnter={e => e.currentTarget.style.background = '#2e4f82'}
+                                            onMouseLeave={e => e.currentTarget.style.background = '#3E5E96'}
+                                        >
+                                            View Details
+                                        </Link>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             </div>
         </section>
     );
 }
-

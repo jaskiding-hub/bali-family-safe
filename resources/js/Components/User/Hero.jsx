@@ -1,11 +1,18 @@
 import React from 'react';
 import BookingWidget from './BookingWidget/BookingWidget';
 
-export default function Hero() {
+export default function Hero({ siteSettings = null, packages = [], childSeatTypes = [], vehicles = [] }) {
+    const headline = siteSettings?.hero_headline || 'Family Transportation in Bali\nwith Child Car Seats';
+    const subheadline = siteSettings?.hero_subheadline || 'Safe, comfortable and private transportation for families travelling to Bali with babies, toddlers and children.';
+    const bgImage = siteSettings?.hero_background_image;
+
     return (
         <section id="hero" className="bfs-hero">
             {/* Hero Background Image — 600px tall */}
-            <div className="bfs-hero-bg">
+            <div
+                className="bfs-hero-bg"
+                style={bgImage ? { backgroundImage: `url(${bgImage})` } : {}}
+            >
                 {/* Subtle gradient for text readability */}
                 <div style={{
                     position: 'absolute', inset: 0,
@@ -49,8 +56,9 @@ export default function Hero() {
                     maxWidth: '1166px',
                     textShadow: '0 2px 8px rgba(0,0,0,0.4)',
                     margin: 0,
+                    whiteSpace: 'pre-line',
                 }}>
-                    Family Transportation in Bali<br />with Child Car Seats
+                    {headline}
                 </h1>
 
                 {/* Subheading */}
@@ -66,13 +74,17 @@ export default function Hero() {
                     textShadow: '0 1px 4px rgba(0,0,0,0.3)',
                     margin: 0,
                 }}>
-                    Safe, comfortable and private transportation for families travelling to Bali with babies, toddlers and children.
+                    {subheadline}
                 </p>
             </div>
 
             {/* Floating Booking Form — positioned via CSS (absolute on desktop, relative on mobile) */}
             <div className="bfs-hero-booking">
-                <BookingWidget />
+                <BookingWidget
+                    packages={packages}
+                    childSeatTypes={childSeatTypes}
+                    vehicles={vehicles}
+                />
             </div>
         </section>
     );

@@ -3,7 +3,6 @@ import { Head, Link } from '@inertiajs/react';
 import Footer from '../../Components/User/Footer';
 import FloatingWhatsApp from '../../Components/User/FloatingWhatsApp';
 import BookingModal from '../../Components/User/BookingModal';
-import { getTourById, TOUR_PACKAGES } from '../../data/user/tours';
 import { CaretLeft, ArrowRight } from '@phosphor-icons/react';
 
 // Custom inline SVG icons for maximum compatibility & zero build errors
@@ -92,10 +91,19 @@ const IconShoppingBag = ({ size = 16, color = "currentColor" }) => (
     </svg>
 );
 
-export default function TourDetail({ tourId }) {
-    const tour = getTourById(tourId);
-    // Fallback to first tour if no match found or id is missing
-    const safeTour = tour || TOUR_PACKAGES[0];
+export default function TourDetail({ tourId, tour: initialTour = null }) {
+    const tour = initialTour || {
+        heroTitle: 'Bali Family Safe Tours',
+        heroSubtitle: 'The Cultural and Spiritual Heart of Bali',
+        heroImage: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4',
+        heroTag: 'DESTINATION GUIDE',
+        overviewTitle: 'Explore Bali with Family Safe Transport',
+        overviewParagraph1: 'Enjoy comfortable private transportation with certified child car seats.',
+        overviewParagraph2: 'All our tours include private car with AC, English-speaking driver, free child car seats, fuel, parking, and mineral water.',
+        overviewTags: [],
+        highlights: [],
+        price: 'Rp 850,000',
+    };
     const [isBookingOpen, setIsBookingOpen] = useState(false);
 
     // Map tag icon string to component

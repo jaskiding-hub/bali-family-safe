@@ -31,7 +31,16 @@ function Stars() {
     );
 }
 
-export default function TestimonialsSection() {
+export default function TestimonialsSection({ testimonials = [] }) {
+    const displayReviews = testimonials && testimonials.length > 0
+        ? testimonials.map(t => ({
+            quote: t.quote,
+            author: t.customer_name,
+            location: t.customer_origin || 'Tourist in Bali',
+            rating: t.rating || 5,
+        }))
+        : REVIEWS;
+
     return (
         <section
             id="reviews"
@@ -85,7 +94,7 @@ export default function TestimonialsSection() {
                     marginRight: 'auto',
                     width: '100%',
                 }}>
-                    {REVIEWS.map((review, i) => (
+                    {displayReviews.map((review, i) => (
                         <div
                             key={i}
                             style={{
