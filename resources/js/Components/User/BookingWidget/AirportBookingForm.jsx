@@ -33,6 +33,7 @@ export default function AirportBookingForm({ vehicles = [], childSeatTypes = [] 
     const [selectedSeats, setSelectedSeats] = useState({});
     const [estimatedFee, setEstimatedFee] = useState(null);
     const [loadingEstimate, setLoadingEstimate] = useState(false);
+    const [validationWarning, setValidationWarning] = useState('');
 
     // Initial vehicle selection
     const defaultVehicle = vehicles.find((v) => !v.category?.includes('Minibus')) || vehicles[0];
@@ -81,14 +82,56 @@ export default function AirportBookingForm({ vehicles = [], childSeatTypes = [] 
         }
     }, [vehicles]);
 
-    // Direction changes
+    // Available destination areas based on current direction
+    const availableDestinations = React.useMemo(() => {
+        if (zones.length > 0) {
+            const matchingZones = zones.filter((z) => !z.type || z.type === direction);
+            const source = matchingZones.length > 0 ? matchingZones : zones;
+            const unique = Array.from(new Set(source.map((z) => z.destinasi))).filter(Boolean);
+            return unique.filter((d) => d.toLowerCase() !== 'dps airport');
+        }
+        return BALI_DESTINATIONS.map((d) => d.name);
+    }, [zones, direction]);
+
+    // Direction changes: reset hotel and recalculate
     const handleDirectionChange = (newDir) => {
         setDirection(newDir);
+        setSelectedHotelId('');
+        setEstimatedFee(null);
+        setValidationWarning('');
         setData((prev) => ({
             ...prev,
             transfer_direction: newDir,
-            pickup_hotel_id: newDir === 'Drop-Off' ? selectedHotelId : '',
-            dropoff_hotel_id: newDir === 'Pick-Up' ? selectedHotelId : '',
+            pickup_hotel_id: '',
+            dropoff_hotel_id: '',
+        }));
+    };
+
+    // If destination is no longer valid in new direction, reset it cleanly
+    useEffect(() => {
+        if (selectedArea && availableDestinations.length > 0 && !availableDestinations.includes(selectedArea)) {
+            setSelectedArea('');
+            setSelectedHotelId('');
+            setEstimatedFee(null);
+            setData((prev) => ({
+                ...prev,
+                pickup_hotel_id: '',
+                dropoff_hotel_id: '',
+            }));
+        }
+    }, [direction, availableDestinations, selectedArea]);
+
+    // Area selection changes: reset hotel & price estimate
+    const handleAreaChange = (e) => {
+        const newArea = e.target.value;
+        setSelectedArea(newArea);
+        setSelectedHotelId('');
+        setEstimatedFee(null);
+        setValidationWarning('');
+        setData((prev) => ({
+            ...prev,
+            pickup_hotel_id: '',
+            dropoff_hotel_id: '',
         }));
     };
 
@@ -96,6 +139,7 @@ export default function AirportBookingForm({ vehicles = [], childSeatTypes = [] 
     const handleHotelChange = (e) => {
         const hId = e.target.value;
         setSelectedHotelId(hId);
+        setValidationWarning('');
         if (direction === 'Pick-Up') {
             setData('dropoff_hotel_id', hId ? parseInt(hId, 10) : '');
             setData('pickup_hotel_id', '');
@@ -150,9 +194,26 @@ export default function AirportBookingForm({ vehicles = [], childSeatTypes = [] 
         return () => clearTimeout(timer);
     }, [data.vehicle_id, selectedHotelId, direction]);
 
-    // Handle standard submission via Inertia
+    // Handle standard submission via Inertia with validation guards
     const handleFormSubmit = (e) => {
         if (e) e.preventDefault();
+        if (!selectedArea) {
+            setValidationWarning(
+                direction === 'Pick-Up'
+                    ? 'Please select your Destination Area in Bali first.'
+                    : 'Please select your Pick-Up Area in Bali first.'
+            );
+            return;
+        }
+        if (!selectedHotelId) {
+            setValidationWarning(
+                direction === 'Pick-Up'
+                    ? `Please choose your Drop-Off Hotel or Resort in ${selectedArea}.`
+                    : `Please choose your Pick-Up Hotel or Resort in ${selectedArea}.`
+            );
+            return;
+        }
+        setValidationWarning('');
         post('/booking', {
             preserveScroll: true,
             onSuccess: () => {
@@ -161,12 +222,31 @@ export default function AirportBookingForm({ vehicles = [], childSeatTypes = [] 
                 setSelectedHotelId('');
                 setSelectedArea('');
                 setEstimatedFee(null);
+                setValidationWarning('');
             },
         });
     };
 
-    // Handle WhatsApp fallback
+    // Handle WhatsApp fallback with validation guards
     const handleWA = () => {
+        if (!selectedArea) {
+            setValidationWarning(
+                direction === 'Pick-Up'
+                    ? 'Please select your Destination Area in Bali first.'
+                    : 'Please select your Pick-Up Area in Bali first.'
+            );
+            return;
+        }
+        if (!selectedHotelId) {
+            setValidationWarning(
+                direction === 'Pick-Up'
+                    ? `Please choose your Drop-Off Hotel or Resort in ${selectedArea}.`
+                    : `Please choose your Pick-Up Hotel or Resort in ${selectedArea}.`
+            );
+            return;
+        }
+        setValidationWarning('');
+
         const hotelObj = hotels.find((h) => String(h.id) === String(selectedHotelId));
         const hotelName = hotelObj?.nama_hotel || 'Selected Hotel';
         const vehObj = vehicles.find((v) => String(v.id) === String(data.vehicle_id));
@@ -182,10 +262,11 @@ export default function AirportBookingForm({ vehicles = [], childSeatTypes = [] 
 
         const msg = `Hi Bali Family Safe!\n\n*Airport Transfer Booking:*
 - Type: ${direction === 'Pick-Up' ? 'DPS Airport → Hotel (Pick-Up)' : 'Hotel → DPS Airport (Drop-Off)'}
+- Area: ${selectedArea}
+- Hotel: ${hotelName}
 - Guest Name: ${data.guest_name}
 - WhatsApp: ${data.whatsapp_number}
 - Flight Number: ${data.flight_number || '-'}
-- Hotel: ${hotelName}
 - Date & Time: ${data.booking_date} at ${data.pickup_time}
 - Vehicle: ${vehName}
 - Child Seats: ${seatsText}
@@ -195,12 +276,23 @@ export default function AirportBookingForm({ vehicles = [], childSeatTypes = [] 
         window.open(`https://wa.me/6281234567890?text=${encodeURIComponent(msg)}`, '_blank');
     };
 
-    // Filter hotels by zone or display all
-    const filteredHotels = hotels.length > 0
-        ? (selectedArea
-            ? hotels.filter((h) => (h.zones || []).some((z) => z.destinasi === selectedArea || String(z.id) === String(selectedArea)))
-            : hotels)
-        : [];
+    // Filter hotels strictly by chosen destination area and direction
+    const filteredHotels = React.useMemo(() => {
+        if (!selectedArea) return [];
+        if (hotels.length === 0) return [];
+        let matches = hotels.filter((h) =>
+            (h.zones || []).some((z) =>
+                (z.destinasi === selectedArea || String(z.id) === String(selectedArea)) &&
+                (!z.type || z.type === direction)
+            )
+        );
+        if (matches.length === 0) {
+            matches = hotels.filter((h) =>
+                (h.zones || []).some((z) => z.destinasi === selectedArea || String(z.id) === String(selectedArea))
+            );
+        }
+        return matches.sort((a, b) => (a.nama_hotel || '').localeCompare(b.nama_hotel || ''));
+    }, [hotels, selectedArea, direction]);
 
     return (
         <form onSubmit={handleFormSubmit} style={{ display: 'flex', flexDirection: 'column' }}>
@@ -283,69 +375,166 @@ export default function AirportBookingForm({ vehicles = [], childSeatTypes = [] 
                 gap: '16px',
                 padding: '16px 32px 0',
             }}>
+                {validationWarning && (
+                    <div style={{
+                        gridColumn: 'span 4',
+                        padding: '10px 14px',
+                        background: '#FEF2F2',
+                        border: '1px solid #FCA5A5',
+                        borderRadius: '8px',
+                        color: '#991B1B',
+                        fontSize: '13px',
+                        fontWeight: 500,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                    }}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#DC2626" strokeWidth="2" style={{ flexShrink: 0 }}>
+                            <circle cx="12" cy="12" r="10" />
+                            <line x1="12" y1="8" x2="12" y2="12" />
+                            <line x1="12" y1="16" x2="12.01" y2="16" />
+                        </svg>
+                        <span>{validationWarning}</span>
+                    </div>
+                )}
+
                 <div style={{ gridColumn: 'span 2' }}>
                     <FieldWithIcon
-                        label={direction === 'Pick-Up' ? '1. Destination Area in Bali' : '1. Pick-Up Area in Bali'}
+                        label={direction === 'Pick-Up' ? '1. Destination Area in Bali *' : '1. Pick-Up Area in Bali *'}
                         isSelect={true}
                         icon={<IconLocation />}
                     >
                         <select
-                            style={selectStyle}
-                            value={selectedArea}
-                            onChange={(e) => {
-                                setSelectedArea(e.target.value);
-                                setSelectedHotelId('');
+                            required
+                            style={{
+                                ...selectStyle,
+                                borderColor: selectedArea ? '#00658D' : '#CBD5E1',
+                                background: '#FFFFFF',
                             }}
+                            value={selectedArea}
+                            onChange={handleAreaChange}
                         >
                             <option value="">
-                                {direction === 'Pick-Up' ? 'Filter by Destination Area (optional)...' : 'Filter by Pick-Up Area (optional)...'}
+                                {direction === 'Pick-Up' ? '-- Choose Destination Area in Bali --' : '-- Choose Pick-Up Area in Bali --'}
                             </option>
-                            {zones.length > 0 ? (
-                                Array.from(new Set(zones.map((z) => z.destinasi))).map((dest) => (
-                                    <option key={dest} value={dest}>{dest}</option>
-                                ))
-                            ) : (
-                                BALI_DESTINATIONS.map((dest) => (
-                                    <option key={dest.id} value={dest.name}>{dest.name}</option>
-                                ))
-                            )}
+                            {availableDestinations.map((dest) => (
+                                <option key={dest} value={dest}>{dest}</option>
+                            ))}
                         </select>
                     </FieldWithIcon>
                 </div>
 
                 <div style={{ gridColumn: 'span 2' }}>
                     <FieldWithIcon
-                        label={direction === 'Drop-Off' ? '2. Pick-Up Hotel / Resort *' : '2. Drop-Off Hotel / Resort *'}
+                        label={
+                            selectedArea
+                                ? (direction === 'Drop-Off' ? `2. Pick-Up Hotel in ${selectedArea} *` : `2. Drop-Off Hotel in ${selectedArea} *`)
+                                : (direction === 'Drop-Off' ? '2. Pick-Up Hotel / Resort *' : '2. Drop-Off Hotel / Resort *')
+                        }
                         isSelect={true}
                         icon={<IconHotel />}
                     >
                         <select
                             required
+                            disabled={!selectedArea}
                             style={{
                                 ...selectStyle,
-                                borderColor: errors.dropoff_hotel_id || errors.pickup_hotel_id ? '#F43F5E' : (selectedHotelId ? '#00658D' : '#CBD5E1'),
+                                background: !selectedArea ? '#F8FAFC' : '#FFFFFF',
+                                color: !selectedArea ? '#94A3B8' : '#0F172A',
+                                cursor: !selectedArea ? 'not-allowed' : 'pointer',
+                                borderColor: !selectedArea
+                                    ? '#E2E8F0'
+                                    : (errors.dropoff_hotel_id || errors.pickup_hotel_id
+                                        ? '#F43F5E'
+                                        : (selectedHotelId ? '#00658D' : '#CBD5E1')),
                             }}
                             value={selectedHotelId}
                             onChange={handleHotelChange}
                         >
-                            <option value="">-- Choose Hotel / Resort --</option>
-                            {filteredHotels.length > 0 ? (
-                                filteredHotels.map((h) => (
-                                    <option key={h.id} value={h.id}>
-                                        {h.nama_hotel}
-                                    </option>
-                                ))
-                            ) : (
-                                hotels.map((h) => (
-                                    <option key={h.id} value={h.id}>
-                                        {h.nama_hotel}
-                                    </option>
-                                ))
-                            )}
+                            <option value="">
+                                {!selectedArea
+                                    ? (direction === 'Pick-Up' ? '⚠️ Choose destination area first...' : '⚠️ Choose pick-up area first...')
+                                    : (filteredHotels.length > 0
+                                        ? `-- Select Hotel / Resort (${filteredHotels.length} available) --`
+                                        : `-- No hotels registered in ${selectedArea} --`)}
+                            </option>
+                            {filteredHotels.map((h) => (
+                                <option key={h.id} value={h.id}>
+                                    {h.nama_hotel}
+                                </option>
+                            ))}
                         </select>
                     </FieldWithIcon>
+
+                    {/* Helpful state cues */}
+                    {!selectedArea && (
+                        <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            fontSize: '11px',
+                            color: '#64748B',
+                            marginTop: '5px',
+                            padding: '5px 8px',
+                            background: '#F8FAFC',
+                            borderRadius: '6px',
+                            border: '1px dashed #CBD5E1',
+                        }}>
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#00658D" strokeWidth="2.2" style={{ flexShrink: 0 }}>
+                                <circle cx="12" cy="12" r="10" />
+                                <line x1="12" y1="8" x2="12" y2="12" />
+                                <line x1="12" y1="16" x2="12.01" y2="8" />
+                            </svg>
+                            <span>Select your destination area on the left to unlock hotels.</span>
+                        </div>
+                    )}
+
+                    {selectedArea && filteredHotels.length > 0 && (
+                        <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            fontSize: '11px',
+                            color: '#0369A1',
+                            marginTop: '5px',
+                            padding: '4px 8px',
+                            background: '#F0F9FF',
+                            borderRadius: '6px',
+                            border: '1px solid #BAE6FD',
+                        }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0284C7" strokeWidth="2.5" style={{ flexShrink: 0 }}>
+                                    <polyline points="20 6 9 17 4 12" />
+                                </svg>
+                                <span>
+                                    <strong>{filteredHotels.length}</strong> hotel{filteredHotels.length === 1 ? '' : 's'} available in <strong>{selectedArea}</strong>
+                                </span>
+                            </div>
+                            {!selectedHotelId && (
+                                <span style={{ color: '#0284C7', fontWeight: 600 }}>Choose hotel ↑</span>
+                            )}
+                        </div>
+                    )}
+
+                    {selectedArea && filteredHotels.length === 0 && (
+                        <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            fontSize: '11px',
+                            color: '#B45309',
+                            marginTop: '5px',
+                            padding: '5px 8px',
+                            background: '#FFFBEB',
+                            borderRadius: '6px',
+                            border: '1px solid #FDE68A',
+                        }}>
+                            <span>Staying at a private villa? You can mention your address in the Special Instructions box below.</span>
+                        </div>
+                    )}
+
                     {(errors.dropoff_hotel_id || errors.pickup_hotel_id) && (
-                        <span style={{ fontSize: '11px', color: '#F43F5E', marginTop: '4px' }}>
+                        <span style={{ fontSize: '11px', color: '#F43F5E', marginTop: '4px', display: 'block' }}>
                             {errors.dropoff_hotel_id || errors.pickup_hotel_id}
                         </span>
                     )}

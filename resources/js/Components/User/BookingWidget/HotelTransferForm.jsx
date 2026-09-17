@@ -25,6 +25,7 @@ export default function HotelTransferForm({ vehicles = [], childSeatTypes = [] }
     const [selectedSeats, setSelectedSeats] = useState({});
     const [estimatedFee, setEstimatedFee] = useState(null);
     const [loadingEstimate, setLoadingEstimate] = useState(false);
+    const [validationWarning, setValidationWarning] = useState('');
 
     const defaultVehicle = vehicles.find((v) => !v.category?.includes('Minibus')) || vehicles[0];
 
@@ -59,6 +60,22 @@ export default function HotelTransferForm({ vehicles = [], childSeatTypes = [] }
             setData('vehicle_id', defaultVehicle.id);
         }
     }, [vehicles]);
+
+    const handlePickupHotelChange = (e) => {
+        const pId = e.target.value ? parseInt(e.target.value, 10) : '';
+        setValidationWarning('');
+        setData((prev) => ({
+            ...prev,
+            pickup_hotel_id: pId,
+            dropoff_hotel_id: prev.dropoff_hotel_id === pId ? '' : prev.dropoff_hotel_id,
+        }));
+    };
+
+    const handleDropoffHotelChange = (e) => {
+        const dId = e.target.value ? parseInt(e.target.value, 10) : '';
+        setValidationWarning('');
+        setData('dropoff_hotel_id', dId);
+    };
 
     const handleSeatChange = (seatId, quantity) => {
         const updated = { ...selectedSeats, [seatId]: quantity };
@@ -110,17 +127,45 @@ export default function HotelTransferForm({ vehicles = [], childSeatTypes = [] }
 
     const handleFormSubmit = (e) => {
         if (e) e.preventDefault();
+        if (!data.pickup_hotel_id) {
+            setValidationWarning('Please select your Pick-Up Hotel (Origin) first.');
+            return;
+        }
+        if (!data.dropoff_hotel_id) {
+            setValidationWarning('Please select your Drop-Off Hotel (Destination).');
+            return;
+        }
+        if (data.pickup_hotel_id === data.dropoff_hotel_id) {
+            setValidationWarning('Pick-Up Hotel and Drop-Off Hotel cannot be the same.');
+            return;
+        }
+        setValidationWarning('');
         post('/booking', {
             preserveScroll: true,
             onSuccess: () => {
                 reset();
                 setSelectedSeats({});
                 setEstimatedFee(null);
+                setValidationWarning('');
             },
         });
     };
 
     const handleWA = () => {
+        if (!data.pickup_hotel_id) {
+            setValidationWarning('Please select your Pick-Up Hotel (Origin) first.');
+            return;
+        }
+        if (!data.dropoff_hotel_id) {
+            setValidationWarning('Please select your Drop-Off Hotel (Destination).');
+            return;
+        }
+        if (data.pickup_hotel_id === data.dropoff_hotel_id) {
+            setValidationWarning('Pick-Up Hotel and Drop-Off Hotel cannot be the same.');
+            return;
+        }
+        setValidationWarning('');
+
         const pObj = hotels.find((h) => String(h.id) === String(data.pickup_hotel_id));
         const dObj = hotels.find((h) => String(h.id) === String(data.dropoff_hotel_id));
         const vehObj = vehicles.find((v) => String(v.id) === String(data.vehicle_id));
@@ -165,6 +210,29 @@ export default function HotelTransferForm({ vehicles = [], childSeatTypes = [] }
                 gap: '16px',
                 padding: '24px 32px 0',
             }}>
+                {validationWarning && (
+                    <div style={{
+                        gridColumn: 'span 4',
+                        padding: '10px 14px',
+                        background: '#FEF2F2',
+                        border: '1px solid #FCA5A5',
+                        borderRadius: '8px',
+                        color: '#991B1B',
+                        fontSize: '13px',
+                        fontWeight: 500,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                    }}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#DC2626" strokeWidth="2" style={{ flexShrink: 0 }}>
+                            <circle cx="12" cy="12" r="10" />
+                            <line x1="12" y1="8" x2="12" y2="12" />
+                            <line x1="12" y1="16" x2="12.01" y2="8" />
+                        </svg>
+                        <span>{validationWarning}</span>
+                    </div>
+                )}
+
                 <div style={{ gridColumn: 'span 2' }}>
                     <FieldWithIcon label="1. Pick-Up Hotel or Resort (Origin) *" isSelect={true} icon={<IconHotel />}>
                         <select
@@ -174,7 +242,7 @@ export default function HotelTransferForm({ vehicles = [], childSeatTypes = [] }
                                 borderColor: errors.pickup_hotel_id ? '#F43F5E' : (data.pickup_hotel_id ? '#00658D' : '#CBD5E1'),
                             }}
                             value={data.pickup_hotel_id}
-                            onChange={(e) => setData('pickup_hotel_id', e.target.value ? parseInt(e.target.value, 10) : '')}
+                            onChange={handlePickupHotelChange}
                         >
                             <option value="">-- Select Pick-Up Hotel / Resort --</option>
                             {hotels.map((h) => (
@@ -191,19 +259,54 @@ export default function HotelTransferForm({ vehicles = [], childSeatTypes = [] }
                     <FieldWithIcon label="2. Drop-Off Hotel or Resort (Destination) *" isSelect={true} icon={<IconHotel />}>
                         <select
                             required
+                            disabled={!data.pickup_hotel_id}
                             style={{
                                 ...selectStyle,
-                                borderColor: errors.dropoff_hotel_id ? '#F43F5E' : (data.dropoff_hotel_id ? '#00658D' : '#CBD5E1'),
+                                background: !data.pickup_hotel_id ? '#F8FAFC' : '#FFFFFF',
+                                color: !data.pickup_hotel_id ? '#94A3B8' : '#0F172A',
+                                cursor: !data.pickup_hotel_id ? 'not-allowed' : 'pointer',
+                                borderColor: !data.pickup_hotel_id
+                                    ? '#E2E8F0'
+                                    : (errors.dropoff_hotel_id ? '#F43F5E' : (data.dropoff_hotel_id ? '#00658D' : '#CBD5E1')),
                             }}
                             value={data.dropoff_hotel_id}
-                            onChange={(e) => setData('dropoff_hotel_id', e.target.value ? parseInt(e.target.value, 10) : '')}
+                            onChange={handleDropoffHotelChange}
                         >
-                            <option value="">-- Select Drop-Off Hotel / Resort --</option>
-                            {hotels.map((h) => (
-                                <option key={h.id} value={h.id}>{h.nama_hotel}</option>
-                            ))}
+                            <option value="">
+                                {!data.pickup_hotel_id
+                                    ? '⚠️ Select Pick-Up Hotel (Origin) first...'
+                                    : '-- Select Drop-Off Hotel / Resort --'}
+                            </option>
+                            {hotels
+                                .filter((h) => String(h.id) !== String(data.pickup_hotel_id))
+                                .map((h) => (
+                                    <option key={h.id} value={h.id}>{h.nama_hotel}</option>
+                                ))}
                         </select>
                     </FieldWithIcon>
+
+                    {!data.pickup_hotel_id && (
+                        <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            fontSize: '11px',
+                            color: '#64748B',
+                            marginTop: '5px',
+                            padding: '5px 8px',
+                            background: '#F8FAFC',
+                            borderRadius: '6px',
+                            border: '1px dashed #CBD5E1',
+                        }}>
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#00658D" strokeWidth="2.2" style={{ flexShrink: 0 }}>
+                                <circle cx="12" cy="12" r="10" />
+                                <line x1="12" y1="8" x2="12" y2="12" />
+                                <line x1="12" y1="16" x2="12.01" y2="8" />
+                            </svg>
+                            <span>Select origin hotel on the left to unlock destination hotel.</span>
+                        </div>
+                    )}
+
                     {errors.dropoff_hotel_id && (
                         <span style={{ fontSize: '11px', color: '#F43F5E', marginTop: '4px' }}>{errors.dropoff_hotel_id}</span>
                     )}
