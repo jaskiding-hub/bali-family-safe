@@ -10,6 +10,7 @@ export default function MasterData({
     active_tab = 'vehicles',
     vehicles = [],
     vehicle_categories = [],
+    vehicle_units = [],
     packages = [],
     package_types = [],
     package_duration_types = [],
@@ -133,6 +134,93 @@ export default function MasterData({
             },
         });
     };
+
+    // -------------------------------------------------------------------------
+    // TAB: VEHICLE UNITS (Plat Nomor Kendaraan)
+    // -------------------------------------------------------------------------
+    const [vehicleUnitSearch, setVehicleUnitSearch] = useState('');
+    const [vehicleUnitStatusFilter, setVehicleUnitStatusFilter] = useState('all');
+    const [showAddVehicleUnitModal, setShowAddVehicleUnitModal] = useState(false);
+    const [showEditVehicleUnitModal, setShowEditVehicleUnitModal] = useState(false);
+    const [showDeleteVehicleUnitModal, setShowDeleteVehicleUnitModal] = useState(false);
+    const [selectedVehicleUnit, setSelectedVehicleUnit] = useState(null);
+
+    const addVehicleUnitForm = useForm({
+        vehicle_id: vehicles[0]?.id || '',
+        plate_number: '',
+        status: 'Available',
+    });
+
+    const editVehicleUnitForm = useForm({
+        vehicle_id: '',
+        plate_number: '',
+        status: 'Available',
+    });
+
+    const handleAddVehicleUnitSubmit = (e) => {
+        e.preventDefault();
+        addVehicleUnitForm.post('/admin/vehicle-units', {
+            preserveScroll: true,
+            onSuccess: () => {
+                setShowAddVehicleUnitModal(false);
+                addVehicleUnitForm.reset({
+                    vehicle_id: vehicles[0]?.id || '',
+                    plate_number: '',
+                    status: 'Available',
+                });
+            },
+        });
+    };
+
+    const openEditVehicleUnitModal = (unit) => {
+        setSelectedVehicleUnit(unit);
+        editVehicleUnitForm.clearErrors();
+        editVehicleUnitForm.setData({
+            vehicle_id: unit.vehicle_id || unit.vehicle?.id || '',
+            plate_number: unit.plate_number || '',
+            status: unit.status || 'Available',
+        });
+        setShowEditVehicleUnitModal(true);
+    };
+
+    const handleEditVehicleUnitSubmit = (e) => {
+        e.preventDefault();
+        if (!selectedVehicleUnit) return;
+        editVehicleUnitForm.put(`/admin/vehicle-units/${selectedVehicleUnit.id}`, {
+            preserveScroll: true,
+            onSuccess: () => {
+                setShowEditVehicleUnitModal(false);
+                editVehicleUnitForm.reset();
+                setSelectedVehicleUnit(null);
+            },
+        });
+    };
+
+    const openDeleteVehicleUnitModal = (unit) => {
+        setSelectedVehicleUnit(unit);
+        setShowDeleteVehicleUnitModal(true);
+    };
+
+    const handleDeleteVehicleUnit = () => {
+        if (!selectedVehicleUnit) return;
+        router.delete(`/admin/vehicle-units/${selectedVehicleUnit.id}`, {
+            preserveScroll: true,
+            onSuccess: () => {
+                setShowDeleteVehicleUnitModal(false);
+                setSelectedVehicleUnit(null);
+            },
+        });
+    };
+
+    const filteredVehicleUnits = (vehicle_units || []).filter((unit) => {
+        const query = vehicleUnitSearch.trim().toLowerCase();
+        const matchesSearch = !query ||
+            unit.plate_number?.toLowerCase().includes(query) ||
+            unit.vehicle?.name?.toLowerCase().includes(query) ||
+            unit.vehicle?.category?.toLowerCase().includes(query);
+        const matchesStatus = vehicleUnitStatusFilter === 'all' || unit.status === vehicleUnitStatusFilter;
+        return matchesSearch && matchesStatus;
+    });
 
     // -------------------------------------------------------------------------
     // TAB 2: PACKAGES (Day Tour Management)
@@ -687,6 +775,20 @@ export default function MasterData({
             ),
         },
         {
+            id: 'vehicle_units',
+            label: 'Unit Kendaraan',
+            sublabel: 'Plat Nomor',
+            count: stats.total_vehicle_units ?? vehicle_units.length,
+            icon: (
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <rect x="2" y="5" width="20" height="14" rx="2" />
+                    <line x1="2" y1="10" x2="22" y2="10" />
+                    <circle cx="7" cy="15" r="1" />
+                    <circle cx="17" cy="15" r="1" />
+                </svg>
+            ),
+        },
+        {
             id: 'packages',
             label: 'Paket Day Tour',
             sublabel: 'Wisata Bali',
@@ -1022,6 +1124,169 @@ export default function MasterData({
                                 </p>
                             </div>
                         )}
+                    </div>
+                )}
+
+                {/* ================================================================= */}
+                {/* TAB: VEHICLE UNITS (Plat Nomor Kendaraan)                         */}
+                {/* ================================================================= */}
+                {currentTab === 'vehicle_units' && (
+                    <div className="space-y-6">
+                        <div className="bg-white rounded-2xl border border-slate-200/80 p-5 space-y-4">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
+                                <div>
+                                    <h2 className="text-base font-bold text-slate-900">Unit Fisik Kendaraan & Plat Nomor</h2>
+                                    <p className="text-xs text-slate-500 mt-0.5">
+                                        Kelola daftar unit mobil fisik dan nomor polisi operasional yang ditugaskan kepada driver dan pemesanan.
+                                    </p>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        addVehicleUnitForm.reset();
+                                        addVehicleUnitForm.clearErrors();
+                                        if (vehicles.length > 0) {
+                                            addVehicleUnitForm.setData({
+                                                vehicle_id: vehicles[0].id,
+                                                plate_number: '',
+                                                status: 'Available',
+                                            });
+                                        }
+                                        setShowAddVehicleUnitModal(true);
+                                    }}
+                                    className="inline-flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-white text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-xl transition shadow-xs cursor-pointer shrink-0"
+                                >
+                                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                        <line x1="12" y1="5" x2="12" y2="19" />
+                                        <line x1="5" y1="12" x2="19" y2="12" />
+                                    </svg>
+                                    <span>Tambah Unit</span>
+                                </button>
+                            </div>
+
+                            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-1">
+                                    <div className="relative flex-1 max-w-md">
+                                        <input
+                                            type="text"
+                                            value={vehicleUnitSearch}
+                                            onChange={(e) => setVehicleUnitSearch(e.target.value)}
+                                            placeholder="Cari plat nomor atau tipe mobil..."
+                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-2 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#00AEEF]/20 focus:border-[#00AEEF] min-h-[40px]"
+                                        />
+                                        <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                                            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                <circle cx="11" cy="11" r="8" />
+                                                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                                            </svg>
+                                        </div>
+                                    </div>
+
+                                    <div className="w-full sm:w-56">
+                                        <select
+                                            value={vehicleUnitStatusFilter}
+                                            onChange={(e) => setVehicleUnitStatusFilter(e.target.value)}
+                                            className={selectBaseClass}
+                                        >
+                                            <option value="all">Semua Status</option>
+                                            <option value="Available">Available (Tersedia)</option>
+                                            <option value="In Use">In Use (Sedang Dipakai)</option>
+                                            <option value="Maintenance">Maintenance (Servis)</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div className="text-xs text-slate-500 font-medium">
+                                    Total: <span className="font-bold text-slate-900">{filteredVehicleUnits.length}</span> unit
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Vehicle Units Table */}
+                        <div className="bg-white rounded-2xl border border-slate-200/80 overflow-hidden">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr className="border-b border-slate-200/80 bg-slate-50/75 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                                            <th className="px-6 py-3.5">Plat Nomor</th>
+                                            <th className="px-6 py-3.5">Kategori & Model Mobil</th>
+                                            <th className="px-6 py-3.5">Status</th>
+                                            <th className="px-6 py-3.5 text-right">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-100 text-xs text-slate-700">
+                                        {filteredVehicleUnits && filteredVehicleUnits.length > 0 ? (
+                                            filteredVehicleUnits.map((unit) => (
+                                                <tr key={unit.id} className="hover:bg-slate-50/60 transition-colors">
+                                                    <td className="px-6 py-4">
+                                                        <div className="inline-flex items-center gap-2 bg-slate-900 text-white font-mono font-bold text-xs tracking-wider px-3 py-1.5 rounded-lg border border-slate-800 shadow-2xs">
+                                                            <span>{unit.plate_number}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <div className="font-bold text-slate-900 text-sm">
+                                                            {unit.vehicle?.name || '-'}
+                                                        </div>
+                                                        <div className="text-slate-500 text-[11px] mt-0.5">
+                                                            {unit.vehicle?.category || 'Kategori tidak ditentukan'}
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        {unit.status === 'Available' && (
+                                                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/80">
+                                                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                                                Available
+                                                            </span>
+                                                        )}
+                                                        {unit.status === 'In Use' && (
+                                                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-sky-50 text-sky-700 border border-sky-200/80">
+                                                                <span className="w-1.5 h-1.5 rounded-full bg-sky-500"></span>
+                                                                In Use
+                                                            </span>
+                                                        )}
+                                                        {unit.status === 'Maintenance' && (
+                                                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200/80">
+                                                                <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                                                                Maintenance
+                                                            </span>
+                                                        )}
+                                                        {!['Available', 'In Use', 'Maintenance'].includes(unit.status) && (
+                                                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-700 border border-slate-200/80">
+                                                                {unit.status}
+                                                            </span>
+                                                        )}
+                                                    </td>
+                                                    <td className="px-6 py-4 text-right">
+                                                        <div className="flex items-center justify-end gap-1.5">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => openEditVehicleUnitModal(unit)}
+                                                                className="px-2.5 py-1 text-xs font-semibold text-slate-700 hover:text-slate-900 border border-slate-200 hover:bg-slate-50 rounded-lg transition cursor-pointer"
+                                                            >
+                                                                Edit
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => openDeleteVehicleUnitModal(unit)}
+                                                                className="px-2.5 py-1 text-xs font-semibold text-red-700 hover:text-red-900 border border-slate-200 hover:bg-red-50 rounded-lg transition cursor-pointer"
+                                                            >
+                                                                Hapus
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        ) : (
+                                            <tr>
+                                                <td colSpan={4} className="px-6 py-12 text-center text-slate-400 text-xs">
+                                                    Belum ada unit fisik kendaraan terdaftar.
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                 )}
 
@@ -3917,6 +4182,234 @@ export default function MasterData({
                 <p className="text-xs text-slate-600">
                     Apakah Anda yakin ingin menghapus rute <strong>{selectedHotelPrice?.pickup_hotel_name}</strong> ke <strong>{selectedHotelPrice?.dropoff_hotel_name}</strong>?
                 </p>
+            </Modal>
+
+            {/* ========================================================================= */}
+            {/* VEHICLE UNIT MODALS                                                       */}
+            {/* ========================================================================= */}
+
+            {/* ADD VEHICLE UNIT MODAL */}
+            <Modal
+                show={showAddVehicleUnitModal}
+                onClose={() => setShowAddVehicleUnitModal(false)}
+                title="Tambah Unit Fisik Kendaraan"
+                maxWidth="md"
+                footer={
+                    <>
+                        <button
+                            type="button"
+                            onClick={() => setShowAddVehicleUnitModal(false)}
+                            className="px-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 transition cursor-pointer min-h-[40px]"
+                        >
+                            Batal
+                        </button>
+                        <button
+                            type="submit"
+                            form="add-vehicle-unit-form"
+                            disabled={addVehicleUnitForm.processing}
+                            className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-semibold transition disabled:opacity-50 cursor-pointer min-h-[40px]"
+                        >
+                            {addVehicleUnitForm.processing && (
+                                <svg className="w-4 h-4 animate-spin text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <circle cx="12" cy="12" r="10" strokeWidth="4" className="opacity-25" />
+                                    <path fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" className="opacity-75" />
+                                </svg>
+                            )}
+                            <span>Simpan Unit</span>
+                        </button>
+                    </>
+                }
+            >
+                <form id="add-vehicle-unit-form" onSubmit={handleAddVehicleUnitSubmit} className="space-y-4 text-xs">
+                    <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                            Pilih Mobil (Armada Showcase) <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                            required
+                            value={addVehicleUnitForm.data.vehicle_id}
+                            onChange={(e) => addVehicleUnitForm.setData('vehicle_id', e.target.value)}
+                            className={selectBaseClass}
+                        >
+                            <option value="" disabled>Pilih Kendaraan...</option>
+                            {vehicles.map((v) => (
+                                <option key={v.id} value={v.id}>
+                                    {v.name} ({v.category})
+                                </option>
+                            ))}
+                        </select>
+                        {addVehicleUnitForm.errors.vehicle_id && (
+                            <p className="text-red-500 text-xs mt-1">{addVehicleUnitForm.errors.vehicle_id}</p>
+                        )}
+                    </div>
+
+                    <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                            Plat Nomor Kendaraan <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            required
+                            placeholder="Contoh: DK 1234 ABC"
+                            value={addVehicleUnitForm.data.plate_number}
+                            onChange={(e) => addVehicleUnitForm.setData('plate_number', e.target.value.toUpperCase())}
+                            className={inputBaseClass}
+                        />
+                        {addVehicleUnitForm.errors.plate_number && (
+                            <p className="text-red-500 text-xs mt-1">{addVehicleUnitForm.errors.plate_number}</p>
+                        )}
+                    </div>
+
+                    <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                            Status Operasional <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                            required
+                            value={addVehicleUnitForm.data.status}
+                            onChange={(e) => addVehicleUnitForm.setData('status', e.target.value)}
+                            className={selectBaseClass}
+                        >
+                            <option value="Available">Available (Tersedia)</option>
+                            <option value="In Use">In Use (Sedang Dipakai)</option>
+                            <option value="Maintenance">Maintenance (Servis / Perbaikan)</option>
+                        </select>
+                        {addVehicleUnitForm.errors.status && (
+                            <p className="text-red-500 text-xs mt-1">{addVehicleUnitForm.errors.status}</p>
+                        )}
+                    </div>
+                </form>
+            </Modal>
+
+            {/* EDIT VEHICLE UNIT MODAL */}
+            <Modal
+                show={showEditVehicleUnitModal}
+                onClose={() => setShowEditVehicleUnitModal(false)}
+                title="Edit Unit Fisik Kendaraan"
+                maxWidth="md"
+                footer={
+                    <>
+                        <button
+                            type="button"
+                            onClick={() => setShowEditVehicleUnitModal(false)}
+                            className="px-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 transition cursor-pointer min-h-[40px]"
+                        >
+                            Batal
+                        </button>
+                        <button
+                            type="submit"
+                            form="edit-vehicle-unit-form"
+                            disabled={editVehicleUnitForm.processing}
+                            className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-semibold transition disabled:opacity-50 cursor-pointer min-h-[40px]"
+                        >
+                            {editVehicleUnitForm.processing && (
+                                <svg className="w-4 h-4 animate-spin text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <circle cx="12" cy="12" r="10" strokeWidth="4" className="opacity-25" />
+                                    <path fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" className="opacity-75" />
+                                </svg>
+                            )}
+                            <span>Simpan Perubahan</span>
+                        </button>
+                    </>
+                }
+            >
+                <form id="edit-vehicle-unit-form" onSubmit={handleEditVehicleUnitSubmit} className="space-y-4 text-xs">
+                    <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                            Pilih Mobil (Armada Showcase) <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                            required
+                            value={editVehicleUnitForm.data.vehicle_id}
+                            onChange={(e) => editVehicleUnitForm.setData('vehicle_id', e.target.value)}
+                            className={selectBaseClass}
+                        >
+                            <option value="" disabled>Pilih Kendaraan...</option>
+                            {vehicles.map((v) => (
+                                <option key={v.id} value={v.id}>
+                                    {v.name} ({v.category})
+                                </option>
+                            ))}
+                        </select>
+                        {editVehicleUnitForm.errors.vehicle_id && (
+                            <p className="text-red-500 text-xs mt-1">{editVehicleUnitForm.errors.vehicle_id}</p>
+                        )}
+                    </div>
+
+                    <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                            Plat Nomor Kendaraan <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            required
+                            value={editVehicleUnitForm.data.plate_number}
+                            onChange={(e) => editVehicleUnitForm.setData('plate_number', e.target.value.toUpperCase())}
+                            className={inputBaseClass}
+                        />
+                        {editVehicleUnitForm.errors.plate_number && (
+                            <p className="text-red-500 text-xs mt-1">{editVehicleUnitForm.errors.plate_number}</p>
+                        )}
+                    </div>
+
+                    <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                            Status Operasional <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                            required
+                            value={editVehicleUnitForm.data.status}
+                            onChange={(e) => editVehicleUnitForm.setData('status', e.target.value)}
+                            className={selectBaseClass}
+                        >
+                            <option value="Available">Available (Tersedia)</option>
+                            <option value="In Use">In Use (Sedang Dipakai)</option>
+                            <option value="Maintenance">Maintenance (Servis / Perbaikan)</option>
+                        </select>
+                        {editVehicleUnitForm.errors.status && (
+                            <p className="text-red-500 text-xs mt-1">{editVehicleUnitForm.errors.status}</p>
+                        )}
+                    </div>
+                </form>
+            </Modal>
+
+            {/* DELETE VEHICLE UNIT MODAL */}
+            <Modal
+                show={showDeleteVehicleUnitModal}
+                onClose={() => setShowDeleteVehicleUnitModal(false)}
+                title="Hapus Unit Fisik Kendaraan"
+                maxWidth="md"
+                footer={
+                    <>
+                        <button
+                            type="button"
+                            onClick={() => setShowDeleteVehicleUnitModal(false)}
+                            className="px-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 transition cursor-pointer"
+                        >
+                            Batal
+                        </button>
+                        <button
+                            type="button"
+                            onClick={handleDeleteVehicleUnit}
+                            className="px-4 py-2 bg-red-600 text-white rounded-xl text-xs font-semibold hover:bg-red-700 transition cursor-pointer"
+                        >
+                            Hapus Unit
+                        </button>
+                    </>
+                }
+            >
+                <div className="space-y-2 text-xs">
+                    <p className="text-slate-700">
+                        Apakah Anda yakin ingin menghapus unit kendaraan dengan plat nomor{' '}
+                        <strong className="text-slate-900 font-mono bg-slate-100 px-1.5 py-0.5 rounded">
+                            {selectedVehicleUnit?.plate_number}
+                        </strong>
+                        {selectedVehicleUnit?.vehicle?.name ? ` (${selectedVehicleUnit.vehicle.name})` : ''}?
+                    </p>
+                    <p className="text-slate-500 text-[11px] bg-slate-50 border border-slate-200/80 p-2.5 rounded-lg">
+                        <strong>Perhatian:</strong> Unit tidak dapat dihapus jika masih ditugaskan kepada supir atau terhubung dengan riwayat pemesanan yang sedang berjalan.
+                    </p>
+                </div>
             </Modal>
         </AdminLayout>
     );

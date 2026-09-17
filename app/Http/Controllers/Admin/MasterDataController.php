@@ -200,6 +200,23 @@ class MasterDataController extends Controller
                 ];
             });
 
+        $vehicleUnits = VehicleUnit::with('vehicle')
+            ->orderBy('plate_number', 'asc')
+            ->get()
+            ->map(function (VehicleUnit $unit) {
+                return [
+                    'id' => $unit->id,
+                    'vehicle_id' => $unit->vehicle_id,
+                    'plate_number' => $unit->plate_number,
+                    'status' => $unit->status instanceof \BackedEnum ? $unit->status->value : (string) $unit->status,
+                    'vehicle' => $unit->vehicle ? [
+                        'id' => $unit->vehicle->id,
+                        'name' => $unit->vehicle->name,
+                        'category' => $unit->vehicle->category instanceof \BackedEnum ? $unit->vehicle->category->value : (string) $unit->vehicle->category,
+                    ] : null,
+                ];
+            });
+
         // 4. Hotels Query
         $hotelSearch = $request->input('search_hotel');
         $hotelsQuery = Hotel::with('airports')->withCount('airports')->orderBy('nama_hotel', 'asc');
@@ -315,6 +332,7 @@ class MasterDataController extends Controller
             'package_duration_types' => $packageDurationTypes,
             'drivers' => $driversData,
             'available_vehicle_units' => $availableVehicleUnits,
+            'vehicle_units' => $vehicleUnits,
             'hotels' => $hotels,
             'airports' => $airports,
             'hotel_transfer_price_lists' => $hotelTransferPriceLists,
@@ -322,6 +340,7 @@ class MasterDataController extends Controller
             'airports_list' => $airportsList,
             'stats' => [
                 'total_vehicles' => $vehicles->count(),
+                'total_vehicle_units' => $vehicleUnits->count(),
                 'total_packages' => $packages->count(),
                 'total_drivers' => $driversPaginated->total(),
                 'total_hotels' => $hotels->count(),

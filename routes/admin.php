@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\SiteSettingController;
 use App\Http\Controllers\Admin\TeamMemberController;
 use App\Http\Controllers\Admin\TestimonialController;
 use App\Http\Controllers\Admin\VehicleController;
+use App\Http\Controllers\Admin\VehicleUnitController;
 use App\Http\Controllers\Admin\WebsiteContentController;
 use Illuminate\Support\Facades\Route;
 
@@ -37,6 +38,7 @@ Route::middleware('auth:admin')->prefix('admin')->name('admin.')->group(function
     Route::resource('airports', AirportController::class)->except(['index','create','show','edit']);
     Route::resource('hotel-transfer-price-lists', HotelTransferPriceListController::class)->except(['index','create','show','edit']);
     Route::resource('vehicles', VehicleController::class)->except(['index','create','show','edit']);
+    Route::resource('vehicle-units', \App\Http\Controllers\Admin\VehicleUnitController::class)->except(['index', 'create', 'show', 'edit']);
     Route::resource('packages', PackageController::class)->except(['index','create','show','edit']);
 
     Route::get('/website-content', [WebsiteContentController::class, 'index'])->name('website-content');
