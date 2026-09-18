@@ -622,7 +622,7 @@ export default function FinancialReport({
                                     <th className="w-[30%] py-4 px-6 align-middle">Guest & Service</th>
                                     <th className="w-[20%] py-4 px-6 align-middle">Total Fee</th>
                                     <th className="w-[16%] py-4 px-6 align-middle text-left">Status</th>
-                                    <th className="w-[16%] py-4 px-6 align-middle text-center">Action</th>
+                                    <th className="w-[16%] py-4 px-6 align-middle text-right">Action</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-[#DEE3E8] text-sm text-[#171C20]">
@@ -682,15 +682,16 @@ export default function FinancialReport({
                                             </td>
 
                                             {/* Action Button */}
-                                            <td className="py-4.5 px-6 align-middle text-center whitespace-nowrap">
+                                            <td className="px-6 py-4 text-right whitespace-nowrap">
                                                 <button
                                                     type="button"
                                                     onClick={() => openDetailModal(booking)}
-                                                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold text-[#00658D] bg-[#EFF4FA] border border-sky-100/80 hover:border-sky-200 hover:shadow-md hover:shadow-slate-200/80 transition-all duration-200 cursor-pointer shadow-2xs active:scale-95 group/btn"
+                                                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-sky-600 hover:text-sky-700 hover:bg-sky-50 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
                                                 >
-                                                    <span>detail</span>
-                                                    <svg className="w-3.5 h-3.5 text-[#00658D] group-hover/btn:translate-x-0.5 transition-transform duration-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                                        <polyline points="9 18 15 12 9 6" />
+                                                    <span>View Details</span>
+                                                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                        <path d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                                        <path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7Z" />
                                                     </svg>
                                                 </button>
                                             </td>
