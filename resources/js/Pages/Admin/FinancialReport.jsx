@@ -12,6 +12,7 @@ export default function FinancialReport({
         total_revenue_formatted = 'Rp 0',
         completed_trips = 0,
         total_expenses_formatted = 'Rp 0',
+        net_profit_total = 0,
         net_profit_total_formatted = 'Rp 0',
         profit_margin = 0,
         trend_percentage = 12,
@@ -115,9 +116,7 @@ export default function FinancialReport({
             ? selectedBooking.total_deductions_formatted
             : '- Rp 200.000';
 
-        const netProfitText = selectedBooking.net_profit > 0
-            ? selectedBooking.net_profit_formatted
-            : selectedBooking.total_fee_formatted;
+        const netProfitText = selectedBooking.net_profit_formatted;
 
         printWindow.document.write(`
             <!DOCTYPE html>
@@ -219,8 +218,8 @@ export default function FinancialReport({
                         font-size: 13.5px;
                     }
                     .profit-card {
-                        background: linear-gradient(135deg, rgba(0,174,239,0.08) 0%, rgba(0,174,239,0.02) 100%);
-                        border: 1.5px solid rgba(0, 174, 239, 0.25);
+                        background: ${selectedBooking.net_profit < 0 ? '#FEF2F2' : 'linear-gradient(135deg, rgba(0,174,239,0.08) 0%, rgba(0,174,239,0.02) 100%)'};
+                        border: 1.5px solid ${selectedBooking.net_profit < 0 ? '#FECACA' : 'rgba(0, 174, 239, 0.25)'};
                         border-radius: 16px;
                         padding: 20px 24px;
                         display: flex;
@@ -238,7 +237,7 @@ export default function FinancialReport({
                     .profit-value {
                         font-size: 26px;
                         font-weight: 900;
-                        color: #00AEEF;
+                        color: ${selectedBooking.net_profit < 0 ? '#DC2626' : '#00AEEF'};
                         letter-spacing: -0.5px;
                     }
                     .footer-note {
@@ -522,9 +521,9 @@ export default function FinancialReport({
                                 {trend_is_positive ? '+' : '-'}{trend_percentage}% {trend_label}
                             </span>
 
-                            {net_profit_total_formatted !== 'Rp 0' && (
+                            {net_profit_total !== 0 && (
                                 <span className="text-slate-500 font-medium hidden sm:inline">
-                                    Net Profit: <strong className="text-slate-800">{net_profit_total_formatted}</strong>
+                                    Net Profit: <strong className={net_profit_total < 0 ? 'text-red-600 font-bold' : 'text-slate-800'}>{net_profit_total_formatted}</strong>
                                 </span>
                             )}
                         </div>
@@ -559,11 +558,15 @@ export default function FinancialReport({
                                 Successfully finished
                             </span>
 
-                            {profit_margin > 0 && (
-                                <span className="px-2 py-0.5 rounded-md bg-sky-50 text-[#00658D] font-bold text-[11px] border border-sky-200/60">
-                                    {profit_margin}% Net Margin
-                                </span>
-                            )}
+                            <span className={`px-2 py-0.5 rounded-md font-bold text-[11px] border ${
+                                profit_margin < 0
+                                    ? 'bg-red-50 text-red-600 border-red-200/60'
+                                    : 'bg-sky-50 text-[#00658D] border-sky-200/60'
+                            }`}>
+                                {profit_margin < 0
+                                    ? `${Math.abs(profit_margin)}% Rugi`
+                                    : `${profit_margin}% Net Margin`}
+                            </span>
                         </div>
                     </div>
 
@@ -852,7 +855,11 @@ export default function FinancialReport({
                             </div>
 
                             {/* Company Net Profit Highlight Card */}
-                            <div className="bg-gradient-to-br from-[#00AEEF]/10 via-[#00AEEF]/5 to-transparent border border-[#00AEEF]/30 rounded-2xl p-5 flex items-center justify-between shadow-xs">
+                            <div className={`rounded-2xl p-5 flex items-center justify-between shadow-xs border ${
+                                selectedBooking.net_profit < 0
+                                    ? 'bg-gradient-to-br from-red-50 via-red-50/50 to-transparent border-red-300'
+                                    : 'bg-gradient-to-br from-[#00AEEF]/10 via-[#00AEEF]/5 to-transparent border-[#00AEEF]/30'
+                            }`}>
                                 <div>
                                     <span className="text-xs font-extrabold text-[#0A2540] tracking-wider uppercase block">
                                         COMPANY NET PROFIT
@@ -863,16 +870,20 @@ export default function FinancialReport({
                                 </div>
 
                                 <div className="text-right">
-                                    <span className="text-2xl sm:text-3xl font-black text-[#00AEEF] tracking-tight tabular-nums block">
-                                        {selectedBooking.net_profit > 0
-                                            ? selectedBooking.net_profit_formatted
-                                            : selectedBooking.total_fee_formatted}
+                                    <span className={`text-2xl sm:text-3xl font-black tracking-tight tabular-nums block ${
+                                        selectedBooking.net_profit < 0 ? 'text-red-600' : 'text-[#00AEEF]'
+                                    }`}>
+                                        {selectedBooking.net_profit_formatted}
                                     </span>
-                                    {selectedBooking.margin > 0 && (
-                                        <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/50 inline-block mt-0.5">
-                                            {selectedBooking.margin}% Net Margin
-                                        </span>
-                                    )}
+                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border inline-block mt-0.5 ${
+                                        selectedBooking.margin < 0
+                                            ? 'text-red-600 bg-red-50 border-red-200/50'
+                                            : 'text-emerald-600 bg-emerald-50 border-emerald-200/50'
+                                    }`}>
+                                        {selectedBooking.margin < 0
+                                            ? `${Math.abs(selectedBooking.margin)}% Rugi`
+                                            : `${selectedBooking.margin}% Net Margin`}
+                                    </span>
                                 </div>
                             </div>
                         </div>

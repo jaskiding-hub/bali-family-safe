@@ -8,6 +8,7 @@ use App\Models\Booking;
 use App\Models\TripExpense;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -18,7 +19,6 @@ class FinancialReportController extends Controller
     {
         $period = $request->input('period', 'this_month');
         $customMonth = $request->input('month'); // YYYY-MM if provided
-        $statusFilter = $request->input('status', 'all');
         $now = Carbon::now();
 
         $startDate = null;
@@ -85,7 +85,8 @@ class FinancialReportController extends Controller
         }
 
         // Base query for bookings table
-        $bookingsQuery = Booking::with(['driver', 'vehicle', 'package', 'tripExpenses', 'pickupHotel', 'dropoffHotel', 'airport']);
+        $bookingsQuery = Booking::with(['driver', 'vehicle', 'package', 'tripExpenses', 'pickupHotel', 'dropoffHotel', 'airport'])
+            ->where('status', BookingStatus::Completed->value);
         if ($startDate && $endDate) {
             $bookingsQuery->whereBetween('booking_date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')]);
         }
@@ -117,7 +118,7 @@ class FinancialReportController extends Controller
         // Total Expenses in this period for completed bookings
         $completedBookingIds = (clone $revenueQuery)->pluck('id');
         $totalExpenses = (float) TripExpense::whereIn('booking_id', $completedBookingIds)->sum('amount');
-        $netProfitTotal = max(0, $totalRevenue - $totalExpenses);
+        $netProfitTotal = $totalRevenue - $totalExpenses;
         $profitMargin = $totalRevenue > 0 ? round(($netProfitTotal / $totalRevenue) * 100, 1) : 0;
 
         // Calculate Trend percentage
@@ -160,7 +161,7 @@ class FinancialReportController extends Controller
             });
 
             $totalDeductions = (float) $booking->tripExpenses->sum('amount');
-            $netProfit = max(0, $totalFee - $totalDeductions);
+            $netProfit = $totalFee - $totalDeductions;
             $margin = $totalFee > 0 ? round(($netProfit / $totalFee) * 100, 1) : 0;
 
             $bookingTypeStr = $booking->booking_type instanceof \BackedEnum
@@ -191,7 +192,9 @@ class FinancialReportController extends Controller
                 'total_deductions' => $totalDeductions,
                 'total_deductions_formatted' => '- Rp ' . number_format($totalDeductions, 0, ',', '.'),
                 'net_profit' => $netProfit,
-                'net_profit_formatted' => 'Rp ' . number_format($netProfit, 0, ',', '.'),
+                'net_profit_formatted' => $netProfit < 0
+                    ? '- Rp ' . number_format(abs($netProfit), 0, ',', '.')
+                    : 'Rp ' . number_format($netProfit, 0, ',', '.'),
                 'margin' => $margin,
                 'expenses' => $expenses,
                 'driver' => $booking->driver ? [
@@ -208,12 +211,29 @@ class FinancialReportController extends Controller
             ];
         });
 
-        // Available months for quick filter
-        $availableMonths = Booking::selectRaw("DATE_FORMAT(booking_date, '%Y-%m') as ym, DATE_FORMAT(booking_date, '%M %Y') as label")
-            ->whereNotNull('booking_date')
-            ->groupBy('ym', 'label')
-            ->orderBy('ym', 'desc')
-            ->get();
+        // Available months for quick filter (completed trips only)
+        if (DB::connection()->getDriverName() === 'sqlite') {
+            $availableMonths = Booking::where('status', BookingStatus::Completed->value)
+                ->whereNotNull('booking_date')
+                ->selectRaw("strftime('%Y-%m', booking_date) as ym")
+                ->groupBy('ym')
+                ->orderBy('ym', 'desc')
+                ->get()
+                ->map(function ($item) {
+                    $date = Carbon::createFromFormat('Y-m', $item->ym);
+                    return [
+                        'ym' => $item->ym,
+                        'label' => $date ? $date->format('F Y') : $item->ym,
+                    ];
+                });
+        } else {
+            $availableMonths = Booking::where('status', BookingStatus::Completed->value)
+                ->whereNotNull('booking_date')
+                ->selectRaw("DATE_FORMAT(booking_date, '%Y-%m') as ym, DATE_FORMAT(booking_date, '%M %Y') as label")
+                ->groupBy('ym', 'label')
+                ->orderBy('ym', 'desc')
+                ->get();
+        }
 
         return Inertia::render('Admin/FinancialReport', [
             'stats' => [
@@ -223,7 +243,9 @@ class FinancialReportController extends Controller
                 'total_expenses' => $totalExpenses,
                 'total_expenses_formatted' => 'Rp ' . number_format($totalExpenses, 0, ',', '.'),
                 'net_profit_total' => $netProfitTotal,
-                'net_profit_total_formatted' => 'Rp ' . number_format($netProfitTotal, 0, ',', '.'),
+                'net_profit_total_formatted' => $netProfitTotal < 0
+                    ? '- Rp ' . number_format(abs($netProfitTotal), 0, ',', '.')
+                    : 'Rp ' . number_format($netProfitTotal, 0, ',', '.'),
                 'profit_margin' => $profitMargin,
                 'trend_percentage' => abs($trendPercentage),
                 'trend_is_positive' => $trendIsPositive,
@@ -244,7 +266,6 @@ class FinancialReportController extends Controller
             'filters' => [
                 'period' => $period,
                 'month' => $customMonth ?? '',
-                'status' => $statusFilter,
                 'search' => $search ?? '',
             ],
             'available_months' => $availableMonths,
