@@ -10,7 +10,6 @@ import {
     textareaStyle,
     VehicleSelect,
 } from './FormShared';
-import { BALI_DESTINATIONS } from '../../../data/user/destinationsHotels';
 
 const IconUser = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>;
 const IconPhone = () => <svg width="15" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>;
@@ -90,7 +89,7 @@ export default function AirportBookingForm({ vehicles = [], childSeatTypes = [] 
             const unique = Array.from(new Set(source.map((z) => z.destinasi))).filter(Boolean);
             return unique.filter((d) => d.toLowerCase() !== 'dps airport');
         }
-        return BALI_DESTINATIONS.map((d) => d.name);
+        return [];
     }, [zones, direction]);
 
     // Direction changes: reset hotel and recalculate

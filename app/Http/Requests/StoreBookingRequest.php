@@ -24,7 +24,7 @@ class StoreBookingRequest extends FormRequest
         return [
             'guest_name' => ['required', 'string', 'max:255'],
             'whatsapp_number' => ['required', 'string', 'max:30'],
-            'booking_type' => ['required', 'string'],
+            'booking_type' => ['required', 'in:Airport Transfer,Hotel Transfer,Day Tour'],
             'vehicle_id' => ['required', 'integer', 'exists:vehicles,id'],
             'booking_date' => ['required', 'date'],
             'pickup_time' => ['required'],
@@ -32,7 +32,7 @@ class StoreBookingRequest extends FormRequest
             'children' => ['nullable', 'integer', 'min:0'],
             'email' => ['nullable', 'email', 'max:255'],
             'flight_number' => ['nullable', 'string', 'max:50'],
-            'transfer_direction' => ['nullable', 'string'],
+            'transfer_direction' => ['nullable', 'required_if:booking_type,Airport Transfer', 'in:Pick-Up,Drop-Off'],
             'notes' => ['nullable', 'string', 'max:1000'],
             'pickup_hotel_id' => ['nullable', 'integer', 'exists:hotels,id'],
             'dropoff_hotel_id' => ['nullable', 'integer', 'exists:hotels,id'],
