@@ -46,6 +46,10 @@ export default function DayTourForm({ packages = [], vehicles = [], childSeatTyp
         child_seats: [],
     });
 
+    const selectedVehicle = vehicles.find((v) => String(v.id) === String(data.vehicle_id));
+    const totalPax = (parseInt(data.adults, 10) || 0) + (parseInt(data.children, 10) || 0);
+    const isOverCapacity = Boolean(selectedVehicle?.passenger_capacity && totalPax > selectedVehicle.passenger_capacity);
+
     useEffect(() => {
         if (!data.vehicle_id && defaultVehicle?.id) {
             setData('vehicle_id', defaultVehicle.id);
@@ -319,6 +323,11 @@ export default function DayTourForm({ packages = [], vehicles = [], childSeatTyp
                         </select>
                     </FieldWithIcon>
                 </div>
+                {(isOverCapacity || errors.adults) && (
+                    <span style={{ fontSize: '11px', color: '#F43F5E', marginTop: '4px', display: 'block' }}>
+                        {errors.adults || (selectedVehicle ? `Melebihi kapasitas kendaraan ini (maks ${selectedVehicle.passenger_capacity} orang)` : 'Melebihi kapasitas kendaraan')}
+                    </span>
+                )}
             </div>
 
             {/* 4. Child Seats Selection */}

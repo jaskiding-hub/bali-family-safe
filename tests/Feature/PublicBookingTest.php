@@ -142,4 +142,56 @@ class PublicBookingTest extends TestCase
             'pickup_time',
         ]);
     }
+
+    public function test_booking_fails_when_passengers_exceed_vehicle_capacity(): void
+    {
+        // $this->vehicle has passenger_capacity = 5. Total pax = 4 adults + 2 children = 6.
+        $payload = [
+            'guest_name' => 'Over Capacity User',
+            'whatsapp_number' => '+6281234567899',
+            'booking_type' => 'Airport Transfer',
+            'transfer_direction' => 'Pick-Up',
+            'vehicle_id' => $this->vehicle->id,
+            'dropoff_hotel_id' => $this->hotel->id,
+            'booking_date' => '2026-10-01',
+            'pickup_time' => '14:30',
+            'adults' => 4,
+            'children' => 2,
+        ];
+
+        $response = $this->post(route('public.booking.store'), $payload);
+
+        $response->assertSessionHasErrors(['adults']);
+        $this->assertDatabaseMissing('bookings', [
+            'guest_name' => 'Over Capacity User',
+        ]);
+    }
+
+    public function test_booking_succeeds_when_passengers_within_vehicle_capacity(): void
+    {
+        // $this->vehicle has passenger_capacity = 5. Total pax = 3 adults + 2 children = 5 (exactly fits).
+        $payload = [
+            'guest_name' => 'Within Capacity User',
+            'whatsapp_number' => '+6281234567898',
+            'booking_type' => 'Airport Transfer',
+            'transfer_direction' => 'Pick-Up',
+            'vehicle_id' => $this->vehicle->id,
+            'dropoff_hotel_id' => $this->hotel->id,
+            'booking_date' => '2026-10-01',
+            'pickup_time' => '14:30',
+            'adults' => 3,
+            'children' => 2,
+        ];
+
+        $response = $this->from('/')
+            ->post(route('public.booking.store'), $payload);
+
+        $response->assertSessionHasNoErrors();
+        $this->assertDatabaseHas('bookings', [
+            'guest_name' => 'Within Capacity User',
+            'vehicle_id' => $this->vehicle->id,
+            'adults' => 3,
+            'children' => 2,
+        ]);
+    }
 }

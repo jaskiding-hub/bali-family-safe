@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Vehicle;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreBookingRequest extends FormRequest
@@ -43,5 +44,28 @@ class StoreBookingRequest extends FormRequest
             'child_seats.*.id' => ['required_with:child_seats', 'integer', 'exists:child_seat_types,id'],
             'child_seats.*.quantity' => ['required_with:child_seats', 'integer', 'min:1'],
         ];
+    }
+
+    /**
+     * Configure the validator instance.
+     */
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator) {
+            $vehicleId = $this->input('vehicle_id');
+            if (!$vehicleId) {
+                return;
+            }
+
+            $vehicle = Vehicle::find($vehicleId);
+            if (!$vehicle) {
+                return;
+            }
+
+            $totalPax = (int) $this->input('adults', 0) + (int) $this->input('children', 0);
+            if ($totalPax > $vehicle->passenger_capacity) {
+                $validator->errors()->add('adults', "Jumlah penumpang ({$totalPax}) melebihi kapasitas kendaraan yang dipilih ({$vehicle->passenger_capacity} orang). Pilih kendaraan lain atau kurangi jumlah penumpang.");
+            }
+        });
     }
 }

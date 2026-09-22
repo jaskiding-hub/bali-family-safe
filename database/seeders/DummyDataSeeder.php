@@ -165,19 +165,10 @@ class DummyDataSeeder extends Seeder
             );
         }
 
-        // 4. Child Seat Types
-        $seatType1 = ChildSeatType::firstOrCreate(
-            ['name' => 'Infant Capsule (0-1 yr)'],
-            ['age_range' => '0-1 yr', 'weight_range' => '0-9 kg', 'description' => 'Rear facing capsule']
-        );
-        $seatType2 = ChildSeatType::firstOrCreate(
-            ['name' => 'Toddler Seat (1-4 yrs)'],
-            ['age_range' => '1-4 yrs', 'weight_range' => '9-18 kg', 'description' => 'Forward facing 5-point harness']
-        );
-        $seatType3 = ChildSeatType::firstOrCreate(
-            ['name' => 'Booster Seat (4-7 yrs)'],
-            ['age_range' => '4-7 yrs', 'weight_range' => '15-36 kg', 'description' => 'High back booster']
-        );
+        // 4. Child Seat Types (menggunakan 3 tipe kanonik dari ChildSeatTypeSeeder)
+        $seatType1 = ChildSeatType::where('name', 'Rear-Facing Infant')->first();
+        $seatType2 = ChildSeatType::where('name', 'Forward-Facing Toddler')->first();
+        $seatType3 = ChildSeatType::where('name', 'Booster Seat')->first();
 
         // 5. Destinasi / Airports (Pick-Up & Drop-Off pairs with client pricing rule)
         $airportsData = [

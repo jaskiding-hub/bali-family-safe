@@ -9,16 +9,28 @@ class ChildSeatTypeSeeder extends Seeder
 {
     public function run(): void
     {
-        ChildSeatType::create([
-            'name' => 'Infant Seat',
-            'age_range' => '0-1 tahun',
-            'weight_range' => '0-13 kg',
-        ]);
+        ChildSeatType::updateOrCreate(
+            ['name' => 'Rear-Facing Infant'],
+            [
+                'age_range' => '0-2 tahun',
+                'weight_range' => '0-13 kg',
+            ]
+        );
 
-        ChildSeatType::create([
-            'name' => 'Booster Seat',
-            'age_range' => '4-10 tahun',
-            'weight_range' => '15-36 kg',
-        ]);
+        ChildSeatType::updateOrCreate(
+            ['name' => 'Forward-Facing Toddler'],
+            [
+                'age_range' => '1-4 tahun',
+                'weight_range' => '9-18 kg',
+            ]
+        );
+
+        ChildSeatType::updateOrCreate(
+            ['name' => 'Booster Seat'],
+            [
+                'age_range' => '4-12 tahun',
+                'weight_range' => '15-36 kg',
+            ]
+        );
     }
 }
