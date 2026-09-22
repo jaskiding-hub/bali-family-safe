@@ -17,6 +17,7 @@ use App\Models\HotelTransferPriceList;
 use App\Models\Package;
 use App\Models\Vehicle;
 use App\Models\VehicleUnit;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -524,6 +525,40 @@ class BookingController extends Controller
         if ($unitStatus !== VehicleUnitStatus::Available && (int) $booking->vehicle_unit_id !== (int) $vehicleUnit->id) {
             return back()->withErrors([
                 'vehicle_unit_id' => 'Unit kendaraan ini sedang tidak tersedia.',
+            ]);
+        }
+
+        // Validasi jeda minimal 3 jam untuk driver yang sama pada hari yang sama
+        $bookingDateStr = $booking->booking_date instanceof \DateTimeInterface 
+            ? $booking->booking_date->format('Y-m-d') 
+            : substr((string) $booking->booking_date, 0, 10);
+
+        $targetPickupTime = $booking->pickup_time instanceof \DateTimeInterface 
+            ? $booking->pickup_time->format('H:i:s') 
+            : (string) $booking->pickup_time;
+
+        $targetDateTime = Carbon::parse("{$bookingDateStr} {$targetPickupTime}");
+
+        $conflictingBooking = Booking::where('driver_id', $driver->id)
+            ->where('id', '!=', $booking->id)
+            ->whereDate('booking_date', $bookingDateStr)
+            ->whereNotIn('status', [BookingStatus::Completed->value, BookingStatus::Cancelled->value])
+            ->get()
+            ->first(function (Booking $other) use ($bookingDateStr, $targetDateTime) {
+                $otherTimeStr = $other->pickup_time instanceof \DateTimeInterface 
+                    ? $other->pickup_time->format('H:i:s') 
+                    : (string) $other->pickup_time;
+                $otherDateTime = Carbon::parse("{$bookingDateStr} {$otherTimeStr}");
+                return abs($targetDateTime->diffInMinutes($otherDateTime, false)) < 180;
+            });
+
+        if ($conflictingBooking) {
+            $conflictTimeStr = $conflictingBooking->pickup_time instanceof \DateTimeInterface 
+                ? $conflictingBooking->pickup_time->format('H:i') 
+                : substr((string) $conflictingBooking->pickup_time, 0, 5);
+
+            return back()->withErrors([
+                'driver_id' => "Driver ini sudah punya trip lain di tanggal yang sama dengan jeda kurang dari 3 jam (trip pukul {$conflictTimeStr}). Pilih driver lain atau sesuaikan jadwal.",
             ]);
         }
 

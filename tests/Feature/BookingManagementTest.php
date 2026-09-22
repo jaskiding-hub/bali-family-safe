@@ -245,6 +245,130 @@ class BookingManagementTest extends TestCase
         $responseCancelled->assertSessionHasErrors('driver_id');
     }
 
+    public function test_cannot_assign_driver_when_gap_with_another_trip_is_less_than_3_hours(): void
+    {
+        // Trip 1 existing for this driver at 10:00
+        Booking::create([
+            'booking_code' => 'BFS-GAP-1',
+            'booking_type' => BookingType::AirportTransfer->value,
+            'status' => BookingStatus::Assigned->value,
+            'guest_name' => 'First Guest',
+            'whatsapp_number' => '081299990010',
+            'booking_date' => Carbon::today(),
+            'pickup_time' => '10:00:00',
+            'total_fee' => 500000,
+            'vehicle_id' => $this->vehicle->id,
+            'driver_id' => $this->driver->id,
+            'vehicle_unit_id' => $this->unit->id,
+        ]);
+
+        // Second unit for second booking
+        $unit2 = VehicleUnit::create([
+            'category' => VehicleCategory::RegularFamilySUV->value,
+            'passenger_capacity' => 6,
+            'plate_number' => 'DK 7777 GAP',
+            'status' => 'Available',
+        ]);
+
+        // Trip 2 to assign at 11:30 (gap 1.5 hours < 3 hours)
+        $booking2 = Booking::create([
+            'booking_code' => 'BFS-GAP-2',
+            'booking_type' => BookingType::AirportTransfer->value,
+            'status' => BookingStatus::Pending->value,
+            'guest_name' => 'Second Guest',
+            'whatsapp_number' => '081299990011',
+            'booking_date' => Carbon::today(),
+            'pickup_time' => '11:30:00',
+            'total_fee' => 500000,
+            'vehicle_id' => $this->vehicle->id,
+        ]);
+
+        $response = $this->actingAs($this->admin, 'admin')->post(route('admin.bookings.assign-driver', $booking2), [
+            'driver_id' => $this->driver->id,
+            'vehicle_unit_id' => $unit2->id,
+        ]);
+
+        $response->assertSessionHasErrors([
+            'driver_id' => 'Driver ini sudah punya trip lain di tanggal yang sama dengan jeda kurang dari 3 jam (trip pukul 10:00). Pilih driver lain atau sesuaikan jadwal.',
+        ]);
+    }
+
+    public function test_can_assign_driver_when_gap_with_another_trip_is_3_hours_or_more_or_different_day(): void
+    {
+        // Trip 1 existing for this driver at 08:00
+        Booking::create([
+            'booking_code' => 'BFS-GAP-OK1',
+            'booking_type' => BookingType::AirportTransfer->value,
+            'status' => BookingStatus::Assigned->value,
+            'guest_name' => 'Morning Guest',
+            'whatsapp_number' => '081299990012',
+            'booking_date' => Carbon::today(),
+            'pickup_time' => '08:00:00',
+            'total_fee' => 500000,
+            'vehicle_id' => $this->vehicle->id,
+            'driver_id' => $this->driver->id,
+            'vehicle_unit_id' => $this->unit->id,
+        ]);
+
+        $unit2 = VehicleUnit::create([
+            'category' => VehicleCategory::RegularFamilySUV->value,
+            'passenger_capacity' => 6,
+            'plate_number' => 'DK 6666 GAP',
+            'status' => 'Available',
+        ]);
+
+        // Trip 2 at 11:00 on the same date (gap exactly 3 hours)
+        $bookingSameDay = Booking::create([
+            'booking_code' => 'BFS-GAP-OK2',
+            'booking_type' => BookingType::AirportTransfer->value,
+            'status' => BookingStatus::Pending->value,
+            'guest_name' => 'Noon Guest',
+            'whatsapp_number' => '081299990013',
+            'booking_date' => Carbon::today(),
+            'pickup_time' => '11:00:00',
+            'total_fee' => 500000,
+            'vehicle_id' => $this->vehicle->id,
+        ]);
+
+        $responseSameDay = $this->actingAs($this->admin, 'admin')->post(route('admin.bookings.assign-driver', $bookingSameDay), [
+            'driver_id' => $this->driver->id,
+            'vehicle_unit_id' => $unit2->id,
+        ]);
+
+        $responseSameDay->assertRedirect(route('admin.bookings.index'));
+        $responseSameDay->assertSessionHas('success', 'Driver berhasil ditugaskan.');
+        $this->assertEquals($this->driver->id, $bookingSameDay->fresh()->driver_id);
+
+        // Trip 3 on tomorrow at 09:00 (different day)
+        $unit3 = VehicleUnit::create([
+            'category' => VehicleCategory::RegularFamilySUV->value,
+            'passenger_capacity' => 6,
+            'plate_number' => 'DK 5555 GAP',
+            'status' => 'Available',
+        ]);
+
+        $bookingNextDay = Booking::create([
+            'booking_code' => 'BFS-GAP-OK3',
+            'booking_type' => BookingType::AirportTransfer->value,
+            'status' => BookingStatus::Pending->value,
+            'guest_name' => 'Tomorrow Guest',
+            'whatsapp_number' => '081299990014',
+            'booking_date' => Carbon::tomorrow(),
+            'pickup_time' => '09:00:00',
+            'total_fee' => 500000,
+            'vehicle_id' => $this->vehicle->id,
+        ]);
+
+        $responseNextDay = $this->actingAs($this->admin, 'admin')->post(route('admin.bookings.assign-driver', $bookingNextDay), [
+            'driver_id' => $this->driver->id,
+            'vehicle_unit_id' => $unit3->id,
+        ]);
+
+        $responseNextDay->assertRedirect(route('admin.bookings.index'));
+        $responseNextDay->assertSessionHas('success', 'Driver berhasil ditugaskan.');
+        $this->assertEquals($this->driver->id, $bookingNextDay->fresh()->driver_id);
+    }
+
     public function test_completed_booking_cannot_be_deleted_and_trip_expenses_remain_intact(): void
     {
         $booking = Booking::create([

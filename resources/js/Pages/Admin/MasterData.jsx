@@ -364,6 +364,8 @@ export default function MasterData({
     const [selectedDriver, setSelectedDriver] = useState(null);
     const [addDriverPhotoPreview, setAddDriverPhotoPreview] = useState(null);
     const [editDriverPhotoPreview, setEditDriverPhotoPreview] = useState(null);
+    const [showAddDriverPassword, setShowAddDriverPassword] = useState(false);
+    const [showEditDriverPassword, setShowEditDriverPassword] = useState(false);
     const addDriverFileInputRef = useRef(null);
     const editDriverFileInputRef = useRef(null);
 
@@ -424,6 +426,7 @@ export default function MasterData({
 
     const openEditDriverModal = (driver) => {
         setSelectedDriver(driver);
+        setShowEditDriverPassword(false);
         editDriverForm.setData({
             _method: 'put',
             full_name: driver.full_name || '',
@@ -3244,14 +3247,33 @@ export default function MasterData({
                             <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                                 Password Login Driver <span className="text-red-500">*</span>
                             </label>
-                            <input
-                                type="password"
-                                required
-                                placeholder="Minimal 6 karakter"
-                                value={addDriverForm.data.password}
-                                onChange={(e) => addDriverForm.setData('password', e.target.value)}
-                                className={inputBaseClass}
-                            />
+                            <div className="relative">
+                                <input
+                                    type={showAddDriverPassword ? 'text' : 'password'}
+                                    required
+                                    placeholder="Minimal 6 karakter"
+                                    value={addDriverForm.data.password}
+                                    onChange={(e) => addDriverForm.setData('password', e.target.value)}
+                                    className={`${inputBaseClass} pr-10`}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowAddDriverPassword(!showAddDriverPassword)}
+                                    aria-label="Toggle password visibility"
+                                    className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-lg text-slate-400 hover:text-slate-600 transition cursor-pointer"
+                                >
+                                    {showAddDriverPassword ? (
+                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                        </svg>
+                                    ) : (
+                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                                        </svg>
+                                    )}
+                                </button>
+                            </div>
                         </div>
 
                         <div>
@@ -3410,13 +3432,32 @@ export default function MasterData({
                             <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                                 Password Baru (Opsional)
                             </label>
-                            <input
-                                type="password"
-                                placeholder="Kosongkan bila tidak diubah"
-                                value={editDriverForm.data.password}
-                                onChange={(e) => editDriverForm.setData('password', e.target.value)}
-                                className={inputBaseClass}
-                            />
+                            <div className="relative">
+                                <input
+                                    type={showEditDriverPassword ? 'text' : 'password'}
+                                    placeholder="Kosongkan bila tidak diubah"
+                                    value={editDriverForm.data.password}
+                                    onChange={(e) => editDriverForm.setData('password', e.target.value)}
+                                    className={`${inputBaseClass} pr-10`}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowEditDriverPassword(!showEditDriverPassword)}
+                                    aria-label="Toggle password visibility"
+                                    className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-lg text-slate-400 hover:text-slate-600 transition cursor-pointer"
+                                >
+                                    {showEditDriverPassword ? (
+                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                        </svg>
+                                    ) : (
+                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                                        </svg>
+                                    )}
+                                </button>
+                            </div>
                         </div>
 
                         <div>

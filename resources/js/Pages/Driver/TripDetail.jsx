@@ -18,6 +18,34 @@ function formatDate(dateStr) {
     });
 }
 
+function isTripDepartureReached(trip) {
+    const status = (trip?.status || '').toLowerCase();
+    if (status === 'on going' || status === 'in_progress') return true;
+
+    const tripDate = trip?.booking_date || trip?.trip_date;
+    const tripTime = trip?.pickup_time || trip?.trip_time;
+    if (!tripDate) return true;
+
+    try {
+        const timePart = tripTime ? tripTime.substring(0, 5) : '00:00';
+        const [year, month, day] = tripDate.split('-').map(Number);
+        const [hour, minute] = timePart.split(':').map(Number);
+
+        // Current time in Bali (Asia/Makassar, UTC+8)
+        const now = new Date();
+        const baliTimeString = now.toLocaleString('en-US', { timeZone: 'Asia/Makassar' });
+        const nowInBali = new Date(baliTimeString);
+
+        const scheduledTime = new Date(year, month - 1, day, hour, minute, 0);
+
+        return nowInBali >= scheduledTime;
+    } catch (e) {
+        const timePart = tripTime ? tripTime.substring(0, 5) : '00:00';
+        const scheduled = new Date(`${tripDate}T${timePart}:00`);
+        return new Date() >= scheduled;
+    }
+}
+
 export default function TripDetail({ trip, authDriver }) {
     const { flash, csrf_token } = usePage().props;
     const { openProfile } = useDriverProfile();
@@ -221,7 +249,11 @@ export default function TripDetail({ trip, authDriver }) {
     }, [sliderCompleted]);
 
     const totalExpenses = (trip.expenses || []).reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
-    const isActiveOrUpNext = trip.status === 'active' || trip.status === 'up_next' || trip.status === 'in_progress';
+    const statusLower = (trip.status || '').toLowerCase();
+    const isCompleted = statusLower === 'completed';
+    const isCancelled = statusLower === 'cancelled';
+    const isDepartureTime = isTripDepartureReached(trip);
+    const isActionable = !isCompleted && !isCancelled && isDepartureTime;
 
     return (
         <DriverLayout hideBottomNav={true}>
@@ -261,7 +293,7 @@ export default function TripDetail({ trip, authDriver }) {
             </header>
 
             {/* Main Container Content */}
-            <div className={`max-w-6xl mx-auto px-4 sm:px-8 lg:px-12 w-full py-4 flex flex-col gap-4 font-['Inter'] ${isActiveOrUpNext ? 'pb-48 sm:pb-52' : 'pb-28 sm:pb-32'}`}>
+            <div className={`max-w-6xl mx-auto px-4 sm:px-8 lg:px-12 w-full py-4 flex flex-col gap-4 font-['Inter'] ${isActionable ? 'pb-48 sm:pb-52' : 'pb-28 sm:pb-32'}`}>
                 
                 {flash?.success && (
                     <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 text-xs font-semibold flex items-center gap-2 anim-ease-up shadow-2xs">
@@ -470,7 +502,7 @@ export default function TripDetail({ trip, authDriver }) {
 
                 {/* Fixed Bottom Action Panel */}
                 <div className="fixed z-40 transition-all duration-200 bottom-0 left-0 right-0 w-full sm:bottom-5 sm:left-1/2 sm:-translate-x-1/2 sm:max-w-xl md:max-w-2xl sm:rounded-2xl sm:border sm:border-slate-200/80 sm:shadow-[0_10px_30px_rgba(0,0,0,0.08)] bg-white/95 backdrop-blur-md border-t border-slate-200/80 p-4 anim-ease-up delay-4">
-                    {isActiveOrUpNext ? (
+                    {isActionable ? (
                         <div className="w-full flex flex-col gap-3">
                             {/* '+ Add Expenses' Button */}
                             <Link 
@@ -526,7 +558,7 @@ export default function TripDetail({ trip, authDriver }) {
                                 </div>
                             </div>
                         </div>
-                    ) : trip.status === 'completed' ? (
+                    ) : isCompleted ? (
                         <div className="w-full py-3 px-4 rounded-xl bg-emerald-50 border border-emerald-200/80 text-emerald-800 text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-2xs">
                             <div className="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
                                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
