@@ -3,20 +3,16 @@
 namespace Database\Seeders;
 
 use App\Models\Driver;
-use App\Models\VehicleUnit;
 use Illuminate\Database\Seeder;
 
 class DriverSeeder extends Seeder
 {
     public function run(): void
     {
-        $unit = VehicleUnit::first();
-
         // Primary dummy driver account provided by Admin
         Driver::updateOrCreate(
             ['email' => 'driver@transport.com'],
             [
-                'vehicle_unit_id' => $unit?->id,
                 'full_name' => 'Wayan Arta',
                 'username' => 'driver_bali',
                 'whatsapp_number' => '08123456789',
@@ -31,7 +27,6 @@ class DriverSeeder extends Seeder
         Driver::updateOrCreate(
             ['email' => 'driver@bfs.test'],
             [
-                'vehicle_unit_id' => $unit?->id,
                 'full_name' => 'Wayan Driver',
                 'username' => 'driver_bfs',
                 'whatsapp_number' => '08123456789',

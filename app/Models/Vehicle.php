@@ -28,11 +28,6 @@ class Vehicle extends Model
         'category' => VehicleCategory::class,
     ];
 
-    public function units(): HasMany
-    {
-        return $this->hasMany(VehicleUnit::class);
-    }
-
     public function features(): HasMany
     {
         return $this->hasMany(VehicleFeature::class);

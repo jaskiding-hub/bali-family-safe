@@ -6,6 +6,7 @@ use App\Enums\BookingStatus;
 use App\Enums\BookingType;
 use App\Enums\DriverStatus;
 use App\Enums\TransferDirection;
+use App\Enums\VehicleCategory;
 use App\Models\AdminUser;
 use App\Models\Airport;
 use App\Models\Booking;
@@ -51,13 +52,13 @@ class BookingManagementTest extends TestCase
         ]);
 
         $this->unit = VehicleUnit::create([
-            'vehicle_id' => $this->vehicle->id,
+            'category' => VehicleCategory::RegularFamilySUV->value,
+            'passenger_capacity' => 6,
             'plate_number' => 'DK 1234 AB',
             'status' => 'Available',
         ]);
 
         $this->driver = Driver::create([
-            'vehicle_unit_id' => $this->unit->id,
             'full_name' => 'Wayan Driver',
             'whatsapp_number' => '08123456789',
             'email' => 'wayan@bfs.test',
@@ -102,6 +103,9 @@ class BookingManagementTest extends TestCase
             ->has('stats.day_tour')
             ->has('bookings.data', 1)
             ->has('available_drivers')
+            ->has('available_vehicle_units', 1)
+            ->where('available_vehicle_units.0.category', 'Regular Family SUV')
+            ->where('bookings.data.0.vehicle_category', 'Regular Family SUV')
             ->missing('drivers')
             ->where('stats.all_bookings', 1)
             ->where('stats.airport_pickup', 1)
@@ -129,6 +133,7 @@ class BookingManagementTest extends TestCase
 
         $response = $this->actingAs($this->admin, 'admin')->post(route('admin.bookings.assign-driver', $booking), [
             'driver_id' => $this->driver->id,
+            'vehicle_unit_id' => $this->unit->id,
         ]);
 
         $response->assertRedirect(route('admin.bookings.index'));
@@ -139,6 +144,64 @@ class BookingManagementTest extends TestCase
             'vehicle_unit_id' => $this->unit->id,
             'status' => BookingStatus::Assigned->value,
         ]);
+    }
+
+    public function test_cannot_assign_vehicle_unit_with_mismatched_category(): void
+    {
+        $luxuryUnit = VehicleUnit::create([
+            'category' => VehicleCategory::LuxuryTouringVan->value,
+            'passenger_capacity' => 6,
+            'plate_number' => 'DK 9999 LUX',
+            'status' => 'Available',
+        ]);
+
+        $booking = Booking::create([
+            'booking_code' => 'BFS-MISMATCH',
+            'booking_type' => BookingType::AirportTransfer->value,
+            'status' => BookingStatus::Pending->value,
+            'guest_name' => 'Mismatch Guest',
+            'whatsapp_number' => '081299990005',
+            'booking_date' => Carbon::today(),
+            'pickup_time' => '10:00:00',
+            'total_fee' => 500000,
+            'vehicle_id' => $this->vehicle->id,
+        ]);
+
+        $response = $this->actingAs($this->admin, 'admin')->post(route('admin.bookings.assign-driver', $booking), [
+            'driver_id' => $this->driver->id,
+            'vehicle_unit_id' => $luxuryUnit->id,
+        ]);
+
+        $response->assertSessionHasErrors('vehicle_unit_id');
+    }
+
+    public function test_cannot_assign_vehicle_unit_that_is_not_available(): void
+    {
+        $maintenanceUnit = VehicleUnit::create([
+            'category' => VehicleCategory::RegularFamilySUV->value,
+            'passenger_capacity' => 6,
+            'plate_number' => 'DK 8888 MNT',
+            'status' => 'Maintenance',
+        ]);
+
+        $booking = Booking::create([
+            'booking_code' => 'BFS-MAINT',
+            'booking_type' => BookingType::AirportTransfer->value,
+            'status' => BookingStatus::Pending->value,
+            'guest_name' => 'Maint Guest',
+            'whatsapp_number' => '081299990006',
+            'booking_date' => Carbon::today(),
+            'pickup_time' => '10:00:00',
+            'total_fee' => 500000,
+            'vehicle_id' => $this->vehicle->id,
+        ]);
+
+        $response = $this->actingAs($this->admin, 'admin')->post(route('admin.bookings.assign-driver', $booking), [
+            'driver_id' => $this->driver->id,
+            'vehicle_unit_id' => $maintenanceUnit->id,
+        ]);
+
+        $response->assertSessionHasErrors('vehicle_unit_id');
     }
 
     public function test_cannot_assign_driver_to_completed_or_cancelled_booking(): void

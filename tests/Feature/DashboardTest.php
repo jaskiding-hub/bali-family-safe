@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Enums\BookingStatus;
 use App\Enums\BookingType;
 use App\Enums\DriverStatus;
+use App\Enums\VehicleCategory;
 use App\Models\AdminUser;
 use App\Models\Booking;
 use App\Models\Driver;
@@ -46,7 +47,8 @@ class DashboardTest extends TestCase
         ]);
 
         $this->unit = VehicleUnit::create([
-            'vehicle_id' => $this->vehicle->id,
+            'category' => VehicleCategory::RegularFamilySUV->value,
+            'passenger_capacity' => 6,
             'plate_number' => 'DK 1234 AB',
             'status' => 'Available',
         ]);

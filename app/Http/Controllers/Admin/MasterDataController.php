@@ -27,7 +27,7 @@ class MasterDataController extends Controller
         $vehicleSearch = $request->input('search_vehicle');
         $vehicleCategoryFilter = $request->input('category_vehicle');
 
-        $vehiclesQuery = Vehicle::withCount('units')->orderBy('name', 'asc');
+        $vehiclesQuery = Vehicle::orderBy('name', 'asc');
 
         if ($vehicleSearch) {
             $vehiclesQuery->where(function ($q) use ($vehicleSearch) {
@@ -143,7 +143,7 @@ class MasterDataController extends Controller
 
         // 3. Drivers Query
         $driverSearch = $request->input('search_driver');
-        $driversQuery = Driver::with('currentVehicleUnit.vehicle');
+        $driversQuery = Driver::query();
 
         if ($driverSearch) {
             $driversQuery->where(function ($q) use ($driverSearch) {
@@ -172,10 +172,8 @@ class MasterDataController extends Controller
                     'license_number' => $driver->license_number,
                     'license_expiry_date' => $driver->license_expiry_date ? $driver->license_expiry_date->format('Y-m-d') : '',
                     'status' => $driver->status instanceof \BackedEnum ? $driver->status->value : (string) $driver->status,
-                    'vehicle_unit_id' => $driver->vehicle_unit_id,
-                    'vehicle_unit_label' => $driver->currentVehicleUnit
-                        ? ($driver->currentVehicleUnit->plate_number . ($driver->currentVehicleUnit->vehicle ? ' - ' . $driver->currentVehicleUnit->vehicle->name : ''))
-                        : null,
+                    'vehicle_unit_id' => null,
+                    'vehicle_unit_label' => null,
                     'profile_photo_url' => $driver->profile_photo_url,
                 ];
             })->all(),
@@ -190,30 +188,29 @@ class MasterDataController extends Controller
             'links' => $driversPaginated->linkCollection()->toArray(),
         ];
 
-        $availableVehicleUnits = VehicleUnit::with('vehicle')
-            ->where('status', 'Available')
+        $availableVehicleUnits = VehicleUnit::where('status', 'Available')
             ->get()
-            ->map(function ($unit) {
+            ->map(function (VehicleUnit $unit) {
+                $categoryName = $unit->category instanceof \BackedEnum ? $unit->category->value : (string) $unit->category;
                 return [
                     'id' => $unit->id,
-                    'label' => $unit->plate_number . ($unit->vehicle ? ' - ' . $unit->vehicle->name : ''),
+                    'category' => $categoryName,
+                    'passenger_capacity' => $unit->passenger_capacity,
+                    'plate_number' => $unit->plate_number,
+                    'label' => "{$unit->plate_number} - {$categoryName} ({$unit->passenger_capacity} seats)",
                 ];
             });
 
-        $vehicleUnits = VehicleUnit::with('vehicle')
-            ->orderBy('plate_number', 'asc')
+        $vehicleUnits = VehicleUnit::orderBy('plate_number', 'asc')
             ->get()
             ->map(function (VehicleUnit $unit) {
+                $categoryName = $unit->category instanceof \BackedEnum ? $unit->category->value : (string) $unit->category;
                 return [
                     'id' => $unit->id,
-                    'vehicle_id' => $unit->vehicle_id,
+                    'category' => $categoryName,
+                    'passenger_capacity' => $unit->passenger_capacity,
                     'plate_number' => $unit->plate_number,
                     'status' => $unit->status instanceof \BackedEnum ? $unit->status->value : (string) $unit->status,
-                    'vehicle' => $unit->vehicle ? [
-                        'id' => $unit->vehicle->id,
-                        'name' => $unit->vehicle->name,
-                        'category' => $unit->vehicle->category instanceof \BackedEnum ? $unit->vehicle->category->value : (string) $unit->vehicle->category,
-                    ] : null,
                 ];
             });
 

@@ -43,7 +43,8 @@ class DriverManagementTest extends TestCase
         ]);
 
         $this->vehicleUnit = VehicleUnit::create([
-            'vehicle_id' => $vehicle->id,
+            'category' => VehicleCategory::RegularFamilySUV->value,
+            'passenger_capacity' => 6,
             'plate_number' => 'DK 1234 XX',
             'status' => VehicleUnitStatus::Available->value,
         ]);
@@ -59,7 +60,6 @@ class DriverManagementTest extends TestCase
             'license_number' => 'SIM-001',
             'license_expiry_date' => '2028-12-31',
             'status' => DriverStatus::Active->value,
-            'vehicle_unit_id' => $this->vehicleUnit->id,
         ]);
 
         $response = $this->actingAs($this->admin, 'admin')->get(route('admin.master-data.index'));
@@ -87,7 +87,6 @@ class DriverManagementTest extends TestCase
             'license_number' => 'SIM-999888',
             'license_expiry_date' => '2029-01-15',
             'status' => DriverStatus::Active->value,
-            'vehicle_unit_id' => $this->vehicleUnit->id,
             'profile_photo' => $photo,
         ];
 
@@ -102,7 +101,6 @@ class DriverManagementTest extends TestCase
             'email' => 'wayan.baru@bfs.test',
             'whatsapp_number' => '+6281234567890',
             'license_number' => 'SIM-999888',
-            'vehicle_unit_id' => $this->vehicleUnit->id,
             'status' => DriverStatus::Active->value,
         ]);
 
@@ -159,7 +157,6 @@ class DriverManagementTest extends TestCase
             'license_number' => 'SIM-2222',
             'license_expiry_date' => '2030-01-01',
             'status' => DriverStatus::OnLeave->value,
-            'vehicle_unit_id' => $this->vehicleUnit->id,
         ];
 
         $response = $this->actingAs($this->admin, 'admin')
@@ -172,7 +169,6 @@ class DriverManagementTest extends TestCase
         $this->assertEquals('Made Terupdate', $driver->full_name);
         $this->assertEquals('+628999999999', $driver->whatsapp_number);
         $this->assertEquals(DriverStatus::OnLeave, $driver->status);
-        $this->assertEquals($this->vehicleUnit->id, $driver->vehicle_unit_id);
         // Password should remain unchanged
         $this->assertTrue(Hash::check('original_password', $driver->password_hash));
         $this->assertEquals('/storage/drivers/existing.jpg', $driver->profile_photo_url);

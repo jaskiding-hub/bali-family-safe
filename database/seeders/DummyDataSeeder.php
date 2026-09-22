@@ -87,20 +87,38 @@ class DummyDataSeeder extends Seeder
             ]
         );
 
-        // 2. Ensure Units
-        $unit1 = VehicleUnit::firstOrCreate(['plate_number' => 'DK 1822 AB'], ['vehicle_id' => $innova->id, 'status' => VehicleUnitStatus::Available->value]);
-        $unit2 = VehicleUnit::firstOrCreate(['plate_number' => 'DK 2455 BC'], ['vehicle_id' => $premio->id, 'status' => VehicleUnitStatus::Available->value]);
-        $unit3 = VehicleUnit::firstOrCreate(['plate_number' => 'DK 3990 CD'], ['vehicle_id' => $alphard->id, 'status' => VehicleUnitStatus::Available->value]);
-        $unit4 = VehicleUnit::firstOrCreate(['plate_number' => 'DK 7781 DE'], ['vehicle_id' => $fortuner->id, 'status' => VehicleUnitStatus::Available->value]);
-        $unit5 = VehicleUnit::firstOrCreate(['plate_number' => 'DK 8892 EF'], ['vehicle_id' => $bigVan->id, 'status' => VehicleUnitStatus::Available->value]);
+        // 2. Ensure Realistic Vehicle Units across all 3 categories
+        $unit1 = VehicleUnit::firstOrCreate(
+            ['plate_number' => 'DK 1822 AB'],
+            ['category' => VehicleCategory::RegularFamilySUV->value, 'passenger_capacity' => 6, 'status' => VehicleUnitStatus::Available->value]
+        );
+        $unit2 = VehicleUnit::firstOrCreate(
+            ['plate_number' => 'DK 2455 BC'],
+            ['category' => VehicleCategory::LuxuryTouringVan->value, 'passenger_capacity' => 8, 'status' => VehicleUnitStatus::Available->value]
+        );
+        $unit3 = VehicleUnit::firstOrCreate(
+            ['plate_number' => 'DK 3990 CD'],
+            ['category' => VehicleCategory::LuxuryTouringVan->value, 'passenger_capacity' => 7, 'status' => VehicleUnitStatus::Available->value]
+        );
+        $unit4 = VehicleUnit::firstOrCreate(
+            ['plate_number' => 'DK 7781 DE'],
+            ['category' => VehicleCategory::RegularFamilySUV->value, 'passenger_capacity' => 6, 'status' => VehicleUnitStatus::Available->value]
+        );
+        $unit5 = VehicleUnit::firstOrCreate(
+            ['plate_number' => 'DK 8892 EF'],
+            ['category' => VehicleCategory::FamilyMinibus->value, 'passenger_capacity' => 14, 'status' => VehicleUnitStatus::Available->value]
+        );
+        $unit6 = VehicleUnit::firstOrCreate(
+            ['plate_number' => 'DK 5512 GH'],
+            ['category' => VehicleCategory::FamilyMinibus->value, 'passenger_capacity' => 12, 'status' => VehicleUnitStatus::Available->value]
+        );
 
-        // 3. Ensure Drivers
+        // 3. Ensure Drivers (Drivers no longer have default vehicle_unit_id)
         $driversData = [
             [
                 'full_name' => 'Wayan Sudira',
                 'email' => 'wayan@bfs.test',
                 'whatsapp_number' => '081234567891',
-                'vehicle_unit_id' => $unit1->id,
                 'license_number' => 'SIM-98711',
                 'license_expiry_date' => '2028-12-31',
                 'status' => DriverStatus::Active->value,
@@ -109,7 +127,6 @@ class DummyDataSeeder extends Seeder
                 'full_name' => 'Made Suartana',
                 'email' => 'made@bfs.test',
                 'whatsapp_number' => '081234567892',
-                'vehicle_unit_id' => $unit2->id,
                 'license_number' => 'SIM-98712',
                 'license_expiry_date' => '2029-05-15',
                 'status' => DriverStatus::Active->value,
@@ -118,7 +135,6 @@ class DummyDataSeeder extends Seeder
                 'full_name' => 'Nyoman Arnawa',
                 'email' => 'nyoman@bfs.test',
                 'whatsapp_number' => '081234567893',
-                'vehicle_unit_id' => $unit3->id,
                 'license_number' => 'SIM-98713',
                 'license_expiry_date' => '2027-08-20',
                 'status' => DriverStatus::Active->value,
@@ -127,7 +143,6 @@ class DummyDataSeeder extends Seeder
                 'full_name' => 'Ketut Arianta',
                 'email' => 'ketut@bfs.test',
                 'whatsapp_number' => '081234567894',
-                'vehicle_unit_id' => $unit4->id,
                 'license_number' => 'SIM-98714',
                 'license_expiry_date' => '2028-02-10',
                 'status' => DriverStatus::Active->value,
@@ -136,7 +151,6 @@ class DummyDataSeeder extends Seeder
                 'full_name' => 'Putu Gede',
                 'email' => 'putu@bfs.test',
                 'whatsapp_number' => '081234567895',
-                'vehicle_unit_id' => $unit5->id,
                 'license_number' => 'SIM-98715',
                 'license_expiry_date' => '2029-11-25',
                 'status' => DriverStatus::Active->value,
@@ -476,6 +490,16 @@ class DummyDataSeeder extends Seeder
                 $bData['status'] = BookingStatus::Completed->value;
                 if (empty($bData['driver_id'])) {
                     $bData['driver_id'] = $drivers[0]->id;
+                }
+            }
+
+            if (!empty($bData['driver_id']) && empty($bData['vehicle_unit_id'])) {
+                $v = Vehicle::find($bData['vehicle_id'] ?? null);
+                if ($v) {
+                    $matchedUnit = VehicleUnit::where('category', $v->category)->first();
+                    if ($matchedUnit) {
+                        $bData['vehicle_unit_id'] = $matchedUnit->id;
+                    }
                 }
             }
 

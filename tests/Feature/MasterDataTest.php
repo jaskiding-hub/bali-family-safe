@@ -57,7 +57,8 @@ class MasterDataTest extends TestCase
         ]);
 
         $unit = VehicleUnit::create([
-            'vehicle_id' => $vehicle->id,
+            'category' => VehicleCategory::RegularFamilySUV->value,
+            'passenger_capacity' => 6,
             'plate_number' => 'DK 9999 XX',
             'status' => 'Available',
         ]);

@@ -44,13 +44,13 @@ class EndToEndBookingFlowTest extends TestCase
         ]);
 
         $unit = VehicleUnit::create([
-            'vehicle_id' => $vehicle->id,
+            'category' => VehicleCategory::RegularFamilySUV->value,
+            'passenger_capacity' => 6,
             'plate_number' => 'DK 9999 BFS',
             'status' => 'Available',
         ]);
 
         $driver = Driver::create([
-            'vehicle_unit_id' => $unit->id,
             'full_name' => 'I Ketut Driver',
             'username' => 'ketut_driver',
             'whatsapp_number' => '081234567890',
@@ -112,13 +112,14 @@ class EndToEndBookingFlowTest extends TestCase
         $assignResponse = $this->actingAs($admin, 'admin')
             ->post(route('admin.bookings.assign-driver', $bookingId), [
                 'driver_id' => $driver->id,
+                'vehicle_unit_id' => $unit->id,
             ]);
 
         $assignResponse->assertRedirect(route('admin.bookings.index'));
 
         $freshBooking = $booking->fresh();
         $this->assertEquals($driver->id, $freshBooking->driver_id, 'Driver ID was not updated after assignment.');
-        $this->assertEquals($unit->id, $freshBooking->vehicle_unit_id, 'Vehicle unit ID was not synced from driver.');
+        $this->assertEquals($unit->id, $freshBooking->vehicle_unit_id, 'Vehicle unit ID was not updated after assignment.');
         $this->assertEquals(BookingStatus::Assigned->value, $freshBooking->status instanceof \BackedEnum ? $freshBooking->status->value : $freshBooking->status, 'Status was not changed to Assigned.');
 
         // ---------------------------------------------------------------------
@@ -205,5 +206,120 @@ class EndToEndBookingFlowTest extends TestCase
             ->where('bookings.data.0.total_deductions', 250000)
             ->where('bookings.data.0.net_profit', 750000)
         );
+    }
+
+    public function test_vehicle_unit_lifecycle_on_assignment_completion_and_reassignment(): void
+    {
+        $admin = AdminUser::create([
+            'name' => 'Admin Lifecycle',
+            'email' => 'admin_lifecycle@bali-safe.test',
+            'password_hash' => bcrypt('secret123'),
+        ]);
+
+        $vehicle = Vehicle::create([
+            'category' => VehicleCategory::RegularFamilySUV->value,
+            'name' => 'Toyota Rush',
+            'model' => '2024',
+            'daily_rate' => 600000,
+            'passenger_capacity' => 6,
+            'luggage_capacity' => 4,
+        ]);
+
+        $unitA = VehicleUnit::create([
+            'category' => VehicleCategory::RegularFamilySUV->value,
+            'passenger_capacity' => 6,
+            'plate_number' => 'DK 1111 LC',
+            'status' => 'Available',
+        ]);
+
+        $unitB = VehicleUnit::create([
+            'category' => VehicleCategory::RegularFamilySUV->value,
+            'passenger_capacity' => 6,
+            'plate_number' => 'DK 2222 LC',
+            'status' => 'Available',
+        ]);
+
+        $driver = Driver::create([
+            'full_name' => 'Driver Lifecycle',
+            'username' => 'driver_lifecycle',
+            'whatsapp_number' => '081234567888',
+            'email' => 'driver_lifecycle@bali-safe.test',
+            'password_hash' => bcrypt('driver123'),
+            'license_number' => 'SIM-777',
+            'license_expiry_date' => '2029-12-31',
+            'status' => DriverStatus::Active->value,
+        ]);
+
+        $booking1 = Booking::create([
+            'booking_code' => 'BFS-LC-01',
+            'booking_type' => BookingType::AirportTransfer->value,
+            'status' => BookingStatus::Pending->value,
+            'guest_name' => 'Lifecycle Guest 1',
+            'whatsapp_number' => '+628123450001',
+            'booking_date' => Carbon::today(),
+            'pickup_time' => '10:00:00',
+            'total_fee' => 500000,
+            'vehicle_id' => $vehicle->id,
+            'adults' => 2,
+        ]);
+
+        // 1. Assign driver + unitA ke booking1 -> unitA jadi In Use
+        $this->actingAs($admin, 'admin')
+            ->post(route('admin.bookings.assign-driver', $booking1->id), [
+                'driver_id' => $driver->id,
+                'vehicle_unit_id' => $unitA->id,
+            ])
+            ->assertRedirect(route('admin.bookings.index'));
+
+        $this->assertEquals('In Use', $unitA->fresh()->status instanceof \BackedEnum ? $unitA->fresh()->status->value : $unitA->fresh()->status);
+        $this->assertEquals($unitA->id, $booking1->fresh()->vehicle_unit_id);
+
+        // 2. completeTrip() booking1 -> unitA balik jadi Available otomatis
+        $this->actingAs($driver, 'driver')
+            ->post(route('driver.trip.complete', ['id' => $booking1->id]))
+            ->assertRedirect(route('driver.home'));
+
+        $this->assertEquals(BookingStatus::Completed->value, $booking1->fresh()->status instanceof \BackedEnum ? $booking1->fresh()->status->value : $booking1->fresh()->status);
+        $this->assertEquals('Available', $unitA->fresh()->status instanceof \BackedEnum ? $unitA->fresh()->status->value : $unitA->fresh()->status);
+
+        // 3. Assign unitA ke booking2 -> unitA jadi In Use
+        $booking2 = Booking::create([
+            'booking_code' => 'BFS-LC-02',
+            'booking_type' => BookingType::AirportTransfer->value,
+            'status' => BookingStatus::Pending->value,
+            'guest_name' => 'Lifecycle Guest 2',
+            'whatsapp_number' => '+628123450002',
+            'booking_date' => Carbon::today(),
+            'pickup_time' => '14:00:00',
+            'total_fee' => 500000,
+            'vehicle_id' => $vehicle->id,
+            'adults' => 2,
+        ]);
+
+        $this->actingAs($admin, 'admin')
+            ->post(route('admin.bookings.assign-driver', $booking2->id), [
+                'driver_id' => $driver->id,
+                'vehicle_unit_id' => $unitA->id,
+            ])
+            ->assertRedirect(route('admin.bookings.index'));
+
+        $this->assertEquals('In Use', $unitA->fresh()->status instanceof \BackedEnum ? $unitA->fresh()->status->value : $unitA->fresh()->status);
+        $this->assertEquals('Available', $unitB->fresh()->status instanceof \BackedEnum ? $unitB->fresh()->status->value : $unitB->fresh()->status);
+
+        // Lalu assign ULANG dengan unitB ke booking yang sama -> unitA balik Available, unitB jadi In Use
+        $this->actingAs($admin, 'admin')
+            ->post(route('admin.bookings.assign-driver', $booking2->id), [
+                'driver_id' => $driver->id,
+                'vehicle_unit_id' => $unitB->id,
+            ])
+            ->assertRedirect(route('admin.bookings.index'));
+
+        $this->assertEquals('Available', $unitA->fresh()->status instanceof \BackedEnum ? $unitA->fresh()->status->value : $unitA->fresh()->status);
+        $this->assertEquals('In Use', $unitB->fresh()->status instanceof \BackedEnum ? $unitB->fresh()->status->value : $unitB->fresh()->status);
+        $this->assertEquals($unitB->id, $booking2->fresh()->vehicle_unit_id);
+
+        // 4. Verifikasi bonus: Cancel booking2 -> unitB balik jadi Available otomatis
+        $booking2->fresh()->update(['status' => BookingStatus::Cancelled->value]);
+        $this->assertEquals('Available', $unitB->fresh()->status instanceof \BackedEnum ? $unitB->fresh()->status->value : $unitB->fresh()->status);
     }
 }

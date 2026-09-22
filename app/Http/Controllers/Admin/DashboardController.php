@@ -30,7 +30,7 @@ class DashboardController extends Controller
 
         // Driver Management Query
         $driverSearch = $request->input('search_driver');
-        $driversQuery = Driver::with('currentVehicleUnit.vehicle');
+        $driversQuery = Driver::query();
 
         if ($driverSearch) {
             $driversQuery->where(function ($q) use ($driverSearch) {
@@ -59,10 +59,6 @@ class DashboardController extends Controller
                     'license_number' => $driver->license_number,
                     'license_expiry_date' => $driver->license_expiry_date ? ($driver->license_expiry_date instanceof \Carbon\CarbonInterface ? $driver->license_expiry_date->format('Y-m-d') : substr((string) $driver->license_expiry_date, 0, 10)) : '',
                     'status' => $driver->status instanceof \BackedEnum ? $driver->status->value : (string) $driver->status,
-                    'vehicle_unit_id' => $driver->vehicle_unit_id,
-                    'vehicle_unit_label' => $driver->currentVehicleUnit
-                        ? ($driver->currentVehicleUnit->plate_number . ($driver->currentVehicleUnit->vehicle ? ' — ' . $driver->currentVehicleUnit->vehicle->name : ''))
-                        : null,
                     'profile_photo_url' => $driver->profile_photo_url,
                 ];
             })->all(),
@@ -77,13 +73,16 @@ class DashboardController extends Controller
             'links' => $driversPaginated->linkCollection()->toArray(),
         ];
 
-        $availableVehicleUnits = VehicleUnit::with('vehicle')
-            ->where('status', 'Available')
+        $availableVehicleUnits = VehicleUnit::where('status', 'Available')
             ->get()
-            ->map(function ($unit) {
+            ->map(function (VehicleUnit $unit) {
+                $categoryName = $unit->category instanceof \BackedEnum ? $unit->category->value : (string) $unit->category;
                 return [
                     'id' => $unit->id,
-                    'label' => $unit->plate_number . ($unit->vehicle ? ' — ' . $unit->vehicle->name : ''),
+                    'category' => $categoryName,
+                    'passenger_capacity' => $unit->passenger_capacity,
+                    'plate_number' => $unit->plate_number,
+                    'label' => "{$unit->plate_number} — {$categoryName} ({$unit->passenger_capacity} seats)",
                 ];
             });
 

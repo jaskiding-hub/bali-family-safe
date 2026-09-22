@@ -12,6 +12,7 @@ use App\Models\Hotel;
 use App\Models\Package;
 use App\Models\TripExpense;
 use App\Models\Vehicle;
+use App\Models\VehicleUnit;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 
@@ -25,6 +26,7 @@ class DriverBookingSeeder extends Seeder
         }
 
         $vehicle = Vehicle::first();
+        $unit = $vehicle ? VehicleUnit::where('category', $vehicle->category)->first() : VehicleUnit::first();
         $hotel1 = Hotel::first();
         $hotel2 = Hotel::skip(1)->first() ?? $hotel1;
         $airport = Airport::first();
@@ -58,7 +60,7 @@ class DriverBookingSeeder extends Seeder
                 'notes' => 'Tamu membawa 3 koper besar. Hubungi via WA saat pesawat landing. Requested 1x Toddler Seat.',
                 'total_fee' => 450000,
                 'vehicle_id' => $vehicle?->id ?? 1,
-                'vehicle_unit_id' => $driver->vehicle_unit_id,
+                'vehicle_unit_id' => $unit?->id,
                 'driver_id' => $driver->id,
                 'airport_id' => $airport?->id,
                 'dropoff_hotel_id' => $hotel1?->id,
@@ -91,7 +93,7 @@ class DriverBookingSeeder extends Seeder
                 'notes' => 'Rute: GWK -> Pantai Melasti -> Sunset di Pura Uluwatu -> Dinner Jimbaran.',
                 'total_fee' => 850000,
                 'vehicle_id' => $vehicle?->id ?? 1,
-                'vehicle_unit_id' => $driver->vehicle_unit_id,
+                'vehicle_unit_id' => $unit?->id,
                 'driver_id' => $driver->id,
                 'package_id' => $package?->id,
                 'pickup_hotel_id' => $hotel2?->id,

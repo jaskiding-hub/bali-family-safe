@@ -9,6 +9,7 @@ export default function BookingManagement({
     stats = {},
     bookings = { data: [], links: [] },
     available_drivers = [],
+    available_vehicle_units = [],
     vehicles = [],
     packages = [],
     hotels = [],
@@ -31,6 +32,7 @@ export default function BookingManagement({
     // Forms for actions
     const assignDriverForm = useForm({
         driver_id: '',
+        vehicle_unit_id: '',
     });
 
     const addBookingForm = useForm({
@@ -205,7 +207,11 @@ export default function BookingManagement({
             return;
         }
         setSelectedBooking(booking);
-        assignDriverForm.setData('driver_id', booking.driver_id || (available_drivers[0]?.id || ''));
+        assignDriverForm.clearErrors();
+        assignDriverForm.setData({
+            driver_id: booking.driver_id || '',
+            vehicle_unit_id: booking.vehicle_unit_id || '',
+        });
         setShowAssignDriverModal(true);
     };
 
@@ -216,6 +222,7 @@ export default function BookingManagement({
             onSuccess: () => {
                 setShowAssignDriverModal(false);
                 setSelectedBooking(null);
+                assignDriverForm.reset();
             },
         });
     };
@@ -1721,14 +1728,22 @@ export default function BookingManagement({
             {/* 1. Modal: Assign Driver */}
             <Modal
                 show={showAssignDriverModal}
-                onClose={() => setShowAssignDriverModal(false)}
+                onClose={() => {
+                    setShowAssignDriverModal(false);
+                    setSelectedBooking(null);
+                    assignDriverForm.reset();
+                }}
                 title={`Assign Driver ${selectedBooking ? `(${selectedBooking.booking_code})` : ''}`}
                 maxWidth="md"
                 footer={
                     <>
                         <button
                             type="button"
-                            onClick={() => setShowAssignDriverModal(false)}
+                            onClick={() => {
+                                setShowAssignDriverModal(false);
+                                setSelectedBooking(null);
+                                assignDriverForm.reset();
+                            }}
                             className="px-5 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition cursor-pointer min-h-[44px]"
                         >
                             Cancel
@@ -1736,7 +1751,7 @@ export default function BookingManagement({
                         <button
                             type="submit"
                             form="assign-driver-form"
-                            disabled={assignDriverForm.processing || !assignDriverForm.data.driver_id}
+                            disabled={assignDriverForm.processing || !assignDriverForm.data.driver_id || !assignDriverForm.data.vehicle_unit_id}
                             className="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-[#00AEEF] hover:bg-[#009cd7] text-white rounded-xl text-sm font-semibold transition shadow-xs disabled:opacity-50 cursor-pointer min-h-[44px]"
                         >
                             {assignDriverForm.processing && (
@@ -1750,66 +1765,120 @@ export default function BookingManagement({
                     </>
                 }
             >
-                <form id="assign-driver-form" onSubmit={handleAssignDriverSubmit} className="space-y-4">
-                    {selectedBooking && (
-                        <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl flex flex-col gap-1 text-xs text-slate-600">
-                            <div className="flex justify-between items-center">
-                                <span className="font-semibold text-slate-900">{selectedBooking.guest_name}</span>
-                                <span className="text-slate-500">{selectedBooking.date}</span>
-                            </div>
-                            <div className="text-slate-500 font-medium">
-                                {selectedBooking.booking_type} &bull; {selectedBooking.detail}
-                            </div>
-                        </div>
-                    )}
+                {(() => {
+                    const targetCategory = selectedBooking?.vehicle_category || vehicles.find((v) => String(v.id) === String(selectedBooking?.vehicle_id))?.category;
+                    const eligibleUnits = (available_vehicle_units || []).filter(
+                        (u) => (!targetCategory || u.category === targetCategory) && u.status === 'Available'
+                    );
 
-                    <div>
-                        <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                            Select Available Driver <span className="text-red-500">*</span>
-                        </label>
-                        <select
-                            value={assignDriverForm.data.driver_id}
-                            onChange={(e) => assignDriverForm.setData('driver_id', e.target.value)}
-                            required
-                            className={selectClass}
-                        >
-                            <option value="">-- Pilih Driver --</option>
-                            {available_drivers.map((d) => (
-                                <option key={d.id} value={d.id}>
-                                    {d.label}
-                                </option>
-                            ))}
-                        </select>
-                        {assignDriverForm.errors.driver_id && (
-                            <p className="text-xs text-red-600 mt-1 font-medium">{assignDriverForm.errors.driver_id}</p>
-                        )}
-                    </div>
-
-                    {/* Dynamic Driver Status */}
-                    {(() => {
-                        const selectedAssignedDriver = available_drivers.find(
-                            (d) => String(d.id) === String(assignDriverForm.data.driver_id)
-                        );
-
-                        if (selectedAssignedDriver) {
-                            return (
-                                <div className="flex items-center gap-2 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200/60 rounded-xl px-3.5 py-2.5">
-                                    <svg className="w-4 h-4 text-emerald-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                                        <polyline points="20 6 9 17 4 12" />
-                                    </svg>
-                                    <span>Driver Status: {selectedAssignedDriver.status || 'Available'}</span>
+                    return (
+                        <form id="assign-driver-form" onSubmit={handleAssignDriverSubmit} className="space-y-4">
+                            {selectedBooking && (
+                                <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl flex flex-col gap-1 text-xs text-slate-600">
+                                    <div className="flex justify-between items-center">
+                                        <span className="font-semibold text-slate-900">{selectedBooking.guest_name}</span>
+                                        <span className="text-slate-500">{selectedBooking.date}</span>
+                                    </div>
+                                    <div className="text-slate-500 font-medium">
+                                        {selectedBooking.booking_type} &bull; {selectedBooking.detail}
+                                    </div>
+                                    {targetCategory && (
+                                        <div className="text-slate-700 font-medium flex items-center gap-1.5 pt-1.5 border-t border-slate-200/80 mt-1">
+                                            <span className="text-slate-400">Kategori Armada:</span>
+                                            <span className="font-bold text-slate-900">{targetCategory}</span>
+                                            {selectedBooking.vehicle_name && (
+                                                <span className="text-slate-500">({selectedBooking.vehicle_name})</span>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
-                            );
-                        }
+                            )}
 
-                        return (
-                            <div className="flex items-center gap-2 text-xs text-slate-400 px-1 py-0.5">
-                                <span className="w-2 h-2 rounded-full bg-slate-300"></span>
-                                <span>Pilih driver untuk melihat ketersediaan status.</span>
+                            <div>
+                                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                                    Select Available Driver <span className="text-red-500">*</span>
+                                </label>
+                                <select
+                                    value={assignDriverForm.data.driver_id}
+                                    onChange={(e) => assignDriverForm.setData('driver_id', e.target.value)}
+                                    required
+                                    className={selectClass}
+                                >
+                                    <option value="">-- Pilih Driver --</option>
+                                    {available_drivers.map((d) => (
+                                        <option key={d.id} value={d.id}>
+                                            {d.label}
+                                        </option>
+                                    ))}
+                                </select>
+                                {assignDriverForm.errors.driver_id && (
+                                    <p className="text-xs text-red-600 mt-1 font-medium">{assignDriverForm.errors.driver_id}</p>
+                                )}
                             </div>
-                        );
-                    })()}
-                </form>
+
+                            {/* Dynamic Driver Status */}
+                            {(() => {
+                                const selectedAssignedDriver = available_drivers.find(
+                                    (d) => String(d.id) === String(assignDriverForm.data.driver_id)
+                                );
+
+                                if (selectedAssignedDriver) {
+                                    return (
+                                        <div className="flex items-center gap-2 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200/60 rounded-xl px-3.5 py-2.5">
+                                            <svg className="w-4 h-4 text-emerald-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                                <polyline points="20 6 9 17 4 12" />
+                                            </svg>
+                                            <span>Driver Status: {selectedAssignedDriver.status || 'Available'}</span>
+                                        </div>
+                                    );
+                                }
+
+                                return (
+                                    <div className="flex items-center gap-2 text-xs text-slate-400 px-1 py-0.5">
+                                        <span className="w-2 h-2 rounded-full bg-slate-300"></span>
+                                        <span>Pilih driver untuk melihat ketersediaan status.</span>
+                                    </div>
+                                );
+                            })()}
+
+                            {/* Select Vehicle Unit */}
+                            <div>
+                                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                                    Pilih Unit Kendaraan {targetCategory ? `(${targetCategory})` : ''} <span className="text-red-500">*</span>
+                                </label>
+                                {eligibleUnits.length > 0 ? (
+                                    <select
+                                        value={assignDriverForm.data.vehicle_unit_id}
+                                        onChange={(e) => assignDriverForm.setData('vehicle_unit_id', e.target.value)}
+                                        required
+                                        className={selectClass}
+                                    >
+                                        <option value="">-- Pilih Unit Kendaraan --</option>
+                                        {eligibleUnits.map((u) => (
+                                            <option key={u.id} value={u.id}>
+                                                {u.label || `${u.plate_number} (${u.category}, ${u.passenger_capacity} Pax)`}
+                                            </option>
+                                        ))}
+                                    </select>
+                                ) : (
+                                    <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 flex items-center gap-2">
+                                        <svg className="w-4 h-4 text-amber-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                            <circle cx="12" cy="12" r="10" />
+                                            <line x1="12" y1="8" x2="12" y2="12" />
+                                            <line x1="12" y1="16" x2="12.01" y2="16" />
+                                        </svg>
+                                        <span>
+                                            Tidak ada unit <strong>{targetCategory || 'kategori ini'}</strong> yang tersedia (Available) saat ini.
+                                        </span>
+                                    </div>
+                                )}
+                                {assignDriverForm.errors.vehicle_unit_id && (
+                                    <p className="text-xs text-red-600 mt-1 font-medium">{assignDriverForm.errors.vehicle_unit_id}</p>
+                                )}
+                            </div>
+                        </form>
+                    );
+                })()}
             </Modal>
 
             {/* 2. Modal: Add New Booking */}

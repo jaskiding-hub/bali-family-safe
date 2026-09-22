@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\BookingStatus;
 use App\Enums\BookingType;
 use App\Enums\TransferDirection;
+use App\Enums\VehicleUnitStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -13,6 +14,22 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 class Booking extends Model
 {
     const UPDATED_AT = null;
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::updating(function (Booking $booking) {
+            if ($booking->isDirty('status')) {
+                $newStatus = $booking->status instanceof \BackedEnum ? $booking->status->value : $booking->status;
+                $originalUnitId = $booking->getOriginal('vehicle_unit_id') ?: $booking->vehicle_unit_id;
+                if (in_array($newStatus, [BookingStatus::Completed->value, BookingStatus::Cancelled->value]) && $originalUnitId) {
+                    VehicleUnit::where('id', $originalUnitId)
+                        ->update(['status' => VehicleUnitStatus::Available->value]);
+                }
+            }
+        });
+    }
 
     protected $fillable = [
         'booking_code',

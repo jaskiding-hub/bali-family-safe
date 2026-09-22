@@ -15,7 +15,6 @@ class Driver extends Authenticatable
     const UPDATED_AT = null;
 
     protected $fillable = [
-        'vehicle_unit_id',
         'full_name',
         'username',
         'whatsapp_number',
@@ -44,15 +43,6 @@ class Driver extends Authenticatable
         return $this->password_hash;
     }
 
-    public function vehicleUnit()
-    {
-        return $this->belongsTo(VehicleUnit::class);
-    }
-
-    public function currentVehicleUnit()
-    {
-        return $this->belongsTo(VehicleUnit::class, 'vehicle_unit_id');
-    }
 
     public function bookings()
     {
