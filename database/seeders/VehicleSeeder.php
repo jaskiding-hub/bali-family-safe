@@ -6,7 +6,6 @@ use App\Enums\VehicleCategory;
 use App\Models\Vehicle;
 use App\Models\VehicleUnit;
 use App\Models\VehicleFeature;
-use App\Enums\VehicleUnitStatus;
 use App\Enums\VehicleFeatureType;
 use Illuminate\Database\Seeder;
 
@@ -52,46 +51,20 @@ class VehicleSeeder extends Seeder
             ]);
         }
 
-        // 1. Regular Family SUV Units (Available, 6 Pax)
-        VehicleUnit::create([
-            'category' => VehicleCategory::RegularFamilySUV->value,
-            'passenger_capacity' => 6,
-            'plate_number' => 'DK 4487 XX',
-            'status' => VehicleUnitStatus::Available->value,
-        ]);
-        VehicleUnit::create([
-            'category' => VehicleCategory::RegularFamilySUV->value,
-            'passenger_capacity' => 6,
-            'plate_number' => 'DK 9097 XX',
-            'status' => VehicleUnitStatus::Available->value,
-        ]);
+        // Seed 3 kategori kendaraan (bukan unit fisik)
+        VehicleUnit::updateOrCreate(
+            ['category' => VehicleCategory::RegularFamilySUV->value],
+            ['passenger_capacity' => 6]
+        );
 
-        // 2. Luxury Touring Van Units (Available, 7 & 8 Pax)
-        VehicleUnit::create([
-            'category' => VehicleCategory::LuxuryTouringVan->value,
-            'passenger_capacity' => 7,
-            'plate_number' => 'DK 3128 LX',
-            'status' => VehicleUnitStatus::Available->value,
-        ]);
-        VehicleUnit::create([
-            'category' => VehicleCategory::LuxuryTouringVan->value,
-            'passenger_capacity' => 8,
-            'plate_number' => 'DK 6214 LX',
-            'status' => VehicleUnitStatus::Available->value,
-        ]);
+        VehicleUnit::updateOrCreate(
+            ['category' => VehicleCategory::LuxuryTouringVan->value],
+            ['passenger_capacity' => 8]
+        );
 
-        // 3. Family Minibus Units (Available, 12 & 14 Pax)
-        VehicleUnit::create([
-            'category' => VehicleCategory::FamilyMinibus->value,
-            'passenger_capacity' => 14,
-            'plate_number' => 'DK 7890 MB',
-            'status' => VehicleUnitStatus::Available->value,
-        ]);
-        VehicleUnit::create([
-            'category' => VehicleCategory::FamilyMinibus->value,
-            'passenger_capacity' => 12,
-            'plate_number' => 'DK 8234 MB',
-            'status' => VehicleUnitStatus::Available->value,
-        ]);
+        VehicleUnit::updateOrCreate(
+            ['category' => VehicleCategory::FamilyMinibus->value],
+            ['passenger_capacity' => 12]
+        );
     }
 }

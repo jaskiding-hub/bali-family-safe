@@ -7,7 +7,6 @@ use App\Enums\BookingType;
 use App\Enums\DriverStatus;
 use App\Enums\TransferDirection;
 use App\Enums\VehicleCategory;
-use App\Enums\VehicleUnitStatus;
 use App\Models\Airport;
 use App\Models\Booking;
 use App\Models\BookingChildSeat;
@@ -87,30 +86,18 @@ class DummyDataSeeder extends Seeder
             ]
         );
 
-        // 2. Ensure Realistic Vehicle Units across all 3 categories
-        $unit1 = VehicleUnit::firstOrCreate(
-            ['plate_number' => 'DK 1822 AB'],
-            ['category' => VehicleCategory::RegularFamilySUV->value, 'passenger_capacity' => 6, 'status' => VehicleUnitStatus::Available->value]
+        // 2. Ensure 3 Vehicle Unit Categories
+        $unitRegular = VehicleUnit::firstOrCreate(
+            ['category' => VehicleCategory::RegularFamilySUV->value],
+            ['passenger_capacity' => 6]
         );
-        $unit2 = VehicleUnit::firstOrCreate(
-            ['plate_number' => 'DK 2455 BC'],
-            ['category' => VehicleCategory::LuxuryTouringVan->value, 'passenger_capacity' => 8, 'status' => VehicleUnitStatus::Available->value]
+        $unitLuxury = VehicleUnit::firstOrCreate(
+            ['category' => VehicleCategory::LuxuryTouringVan->value],
+            ['passenger_capacity' => 8]
         );
-        $unit3 = VehicleUnit::firstOrCreate(
-            ['plate_number' => 'DK 3990 CD'],
-            ['category' => VehicleCategory::LuxuryTouringVan->value, 'passenger_capacity' => 7, 'status' => VehicleUnitStatus::Available->value]
-        );
-        $unit4 = VehicleUnit::firstOrCreate(
-            ['plate_number' => 'DK 7781 DE'],
-            ['category' => VehicleCategory::RegularFamilySUV->value, 'passenger_capacity' => 6, 'status' => VehicleUnitStatus::Available->value]
-        );
-        $unit5 = VehicleUnit::firstOrCreate(
-            ['plate_number' => 'DK 8892 EF'],
-            ['category' => VehicleCategory::FamilyMinibus->value, 'passenger_capacity' => 14, 'status' => VehicleUnitStatus::Available->value]
-        );
-        $unit6 = VehicleUnit::firstOrCreate(
-            ['plate_number' => 'DK 5512 GH'],
-            ['category' => VehicleCategory::FamilyMinibus->value, 'passenger_capacity' => 12, 'status' => VehicleUnitStatus::Available->value]
+        $unitBigVan = VehicleUnit::firstOrCreate(
+            ['category' => VehicleCategory::FamilyMinibus->value],
+            ['passenger_capacity' => 12]
         );
 
         // 3. Ensure Drivers (Drivers no longer have default vehicle_unit_id)

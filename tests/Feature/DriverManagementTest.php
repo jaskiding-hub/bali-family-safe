@@ -4,7 +4,6 @@ namespace Tests\Feature;
 
 use App\Enums\DriverStatus;
 use App\Enums\VehicleCategory;
-use App\Enums\VehicleUnitStatus;
 use App\Models\AdminUser;
 use App\Models\Driver;
 use App\Models\Vehicle;
@@ -45,8 +44,6 @@ class DriverManagementTest extends TestCase
         $this->vehicleUnit = VehicleUnit::create([
             'category' => VehicleCategory::RegularFamilySUV->value,
             'passenger_capacity' => 6,
-            'plate_number' => 'DK 1234 XX',
-            'status' => VehicleUnitStatus::Available->value,
         ]);
     }
 

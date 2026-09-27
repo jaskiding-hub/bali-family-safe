@@ -20,6 +20,7 @@ export default function Home({
     packages = [],
     services = [],
     vehicles = [],
+    vehicles_for_booking = [],
     testimonials = [],
     faqs = [],
     gallery = [],
@@ -57,7 +58,7 @@ export default function Home({
                 siteSettings={site_settings}
                 packages={packages}
                 childSeatTypes={child_seat_types}
-                vehicles={vehicles}
+                vehicles={vehicles_for_booking.length > 0 ? vehicles_for_booking : vehicles}
             />
 
             {/* Main content sections */}

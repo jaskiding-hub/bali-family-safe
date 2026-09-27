@@ -73,7 +73,7 @@ class DashboardController extends Controller
             'links' => $driversPaginated->linkCollection()->toArray(),
         ];
 
-        $availableVehicleUnits = VehicleUnit::where('status', 'Available')
+        $availableVehicleUnits = VehicleUnit::orderBy('passenger_capacity')
             ->get()
             ->map(function (VehicleUnit $unit) {
                 $categoryName = $unit->category instanceof \BackedEnum ? $unit->category->value : (string) $unit->category;
@@ -81,8 +81,7 @@ class DashboardController extends Controller
                     'id' => $unit->id,
                     'category' => $categoryName,
                     'passenger_capacity' => $unit->passenger_capacity,
-                    'plate_number' => $unit->plate_number,
-                    'label' => "{$unit->plate_number} — {$categoryName} ({$unit->passenger_capacity} seats)",
+                    'label' => "{$categoryName} (Max {$unit->passenger_capacity} penumpang)",
                 ];
             });
 
@@ -176,7 +175,7 @@ class DashboardController extends Controller
                     'driver_phone' => $booking->driver?->whatsapp_number ?: '-',
                     'vehicle_name' => $booking->vehicle?->name ?? $categoryStr,
                     'vehicle_category' => $categoryStr,
-                    'vehicle_plate' => $booking->vehicleUnit?->plate_number ?? '-',
+                    'vehicle_unit_category' => $booking->vehicleUnit ? ($booking->vehicleUnit->category instanceof \BackedEnum ? $booking->vehicleUnit->category->value : (string) $booking->vehicleUnit->category) : '-',
                     'child_seats_list' => $childSeatsList,
                 ];
             });

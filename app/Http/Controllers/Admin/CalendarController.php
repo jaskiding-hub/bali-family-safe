@@ -156,7 +156,7 @@ class CalendarController extends Controller
                 'vehicle_id' => $booking->vehicle_id,
                 'vehicle_name' => $booking->vehicle?->name ?? $categoryStr,
                 'vehicle_category' => $categoryStr,
-                'vehicle_plate' => $booking->vehicleUnit?->plate_number ?? '-',
+                'vehicle_unit_category' => $booking->vehicleUnit ? ($booking->vehicleUnit->category instanceof \BackedEnum ? $booking->vehicleUnit->category->value : (string) $booking->vehicleUnit->category) : '-',
                 'vehicle_driver_display' => "{$vehicleWord} ({$driverWord})",
                 'child_seats_count' => $childSeatsCount,
                 'child_seats_display' => $childSeatsCount > 0 ? "{$childSeatsCount} Child Seats" : 'No Child Seats',

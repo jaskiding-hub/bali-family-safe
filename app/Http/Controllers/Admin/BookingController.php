@@ -7,7 +7,6 @@ use App\Enums\BookingType;
 use App\Enums\DriverStatus;
 use App\Enums\TransferDirection;
 use App\Enums\VehicleCategory;
-use App\Enums\VehicleUnitStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Airport;
 use App\Models\Booking;
@@ -137,9 +136,8 @@ class BookingController extends Controller
                 ];
             });
 
-        // 3b. Available Vehicle Units for Assignment
-        $availableVehicleUnits = VehicleUnit::where('status', VehicleUnitStatus::Available->value)
-            ->orderBy('plate_number')
+        // 3b. Vehicle Unit Categories for Assignment (all categories available)
+        $availableVehicleUnits = VehicleUnit::orderBy('passenger_capacity')
             ->get()
             ->map(function (VehicleUnit $u) {
                 $cat = $u->category instanceof \BackedEnum ? $u->category->value : (string) $u->category;
@@ -147,9 +145,7 @@ class BookingController extends Controller
                     'id' => $u->id,
                     'category' => $cat,
                     'passenger_capacity' => $u->passenger_capacity,
-                    'plate_number' => $u->plate_number,
-                    'label' => "{$u->plate_number} ({$cat}, {$u->passenger_capacity} Pax)",
-                    'status' => 'Available',
+                    'label' => "{$cat} (Max {$u->passenger_capacity} penumpang)",
                 ];
             });
 
@@ -514,17 +510,10 @@ class BookingController extends Controller
         $expectedCategory = $booking->vehicle?->category;
         $expectedCategoryLabel = $expectedCategory instanceof \BackedEnum ? $expectedCategory->value : (string) $expectedCategory;
 
-        if ($vehicleUnit->category !== $expectedCategory) {
+        // Compare string to string (vehicle_unit.category is VARCHAR, vehicle.category is ENUM)
+        if ($vehicleUnit->category !== $expectedCategoryLabel) {
             return back()->withErrors([
                 'vehicle_unit_id' => 'Kategori unit kendaraan tidak sesuai dengan kategori yang dipilih tamu (' . $expectedCategoryLabel . ').',
-            ]);
-        }
-
-        // Validasi tambahan: unit harus berstatus Available (kecuali unit tersebut memang yang sedang ditugaskan ke booking ini)
-        $unitStatus = $vehicleUnit->status instanceof \BackedEnum ? $vehicleUnit->status : VehicleUnitStatus::tryFrom($vehicleUnit->status);
-        if ($unitStatus !== VehicleUnitStatus::Available && (int) $booking->vehicle_unit_id !== (int) $vehicleUnit->id) {
-            return back()->withErrors([
-                'vehicle_unit_id' => 'Unit kendaraan ini sedang tidak tersedia.',
             ]);
         }
 
@@ -562,17 +551,11 @@ class BookingController extends Controller
             ]);
         }
 
-        if ($booking->vehicle_unit_id && (int) $booking->vehicle_unit_id !== (int) $vehicleUnit->id) {
-            VehicleUnit::where('id', $booking->vehicle_unit_id)->update(['status' => VehicleUnitStatus::Available->value]);
-        }
-
         $booking->update([
             'driver_id' => $driver->id,
             'vehicle_unit_id' => $vehicleUnit->id,
             'status' => BookingStatus::Assigned->value,
         ]);
-
-        $vehicleUnit->update(['status' => VehicleUnitStatus::InUse->value]);
 
         // TODO: trigger Fonte WA notification setelah assignment berhasil
 

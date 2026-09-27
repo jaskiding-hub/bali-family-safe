@@ -136,10 +136,10 @@ export default function MasterData({
     };
 
     // -------------------------------------------------------------------------
-    // TAB: VEHICLE UNITS (Plat Nomor Kendaraan)
+    // -------------------------------------------------------------------------
+    // TAB: VEHICLE UNITS (Kategori Kendaraan)
     // -------------------------------------------------------------------------
     const [vehicleUnitSearch, setVehicleUnitSearch] = useState('');
-    const [vehicleUnitStatusFilter, setVehicleUnitStatusFilter] = useState('all');
     const [showAddVehicleUnitModal, setShowAddVehicleUnitModal] = useState(false);
     const [showEditVehicleUnitModal, setShowEditVehicleUnitModal] = useState(false);
     const [showDeleteVehicleUnitModal, setShowDeleteVehicleUnitModal] = useState(false);
@@ -148,15 +148,11 @@ export default function MasterData({
     const addVehicleUnitForm = useForm({
         category: 'Regular Family SUV',
         passenger_capacity: 6,
-        plate_number: '',
-        status: 'Available',
     });
 
     const editVehicleUnitForm = useForm({
         category: 'Regular Family SUV',
         passenger_capacity: 6,
-        plate_number: '',
-        status: 'Available',
     });
 
     const handleAddVehicleUnitSubmit = (e) => {
@@ -168,8 +164,6 @@ export default function MasterData({
                 addVehicleUnitForm.reset({
                     category: 'Regular Family SUV',
                     passenger_capacity: 6,
-                    plate_number: '',
-                    status: 'Available',
                 });
             },
         });
@@ -181,8 +175,6 @@ export default function MasterData({
         editVehicleUnitForm.setData({
             category: unit.category || 'Regular Family SUV',
             passenger_capacity: unit.passenger_capacity || 6,
-            plate_number: unit.plate_number || '',
-            status: unit.status || 'Available',
         });
         setShowEditVehicleUnitModal(true);
     };
@@ -218,11 +210,7 @@ export default function MasterData({
 
     const filteredVehicleUnits = (vehicle_units || []).filter((unit) => {
         const query = vehicleUnitSearch.trim().toLowerCase();
-        const matchesSearch = !query ||
-            unit.plate_number?.toLowerCase().includes(query) ||
-            unit.category?.toLowerCase().includes(query);
-        const matchesStatus = vehicleUnitStatusFilter === 'all' || unit.status === vehicleUnitStatusFilter;
-        return matchesSearch && matchesStatus;
+        return !query || unit.category?.toLowerCase().includes(query);
     });
 
     // -------------------------------------------------------------------------
@@ -1015,9 +1003,11 @@ export default function MasterData({
                                             className={selectBaseClass}
                                         >
                                             <option value="all">Semua Kategori Tier</option>
-                                            <option value="Regular Family SUV">Regular (Regular Family SUV)</option>
-                                            <option value="Luxury Touring Van">Luxury (Luxury Touring Van)</option>
-                                            <option value="Family Minibus">Big Van (Family Minibus)</option>
+                                            {(vehicle_units || []).map((unit) => (
+                                                <option key={unit.id} value={unit.category}>
+                                                    {unit.category}
+                                                </option>
+                                            ))}
                                         </select>
                                     </div>
                                 </div>
@@ -1141,9 +1131,9 @@ export default function MasterData({
                         <div className="bg-white rounded-2xl border border-slate-200/80 p-5 space-y-4">
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
                                 <div>
-                                    <h2 className="text-base font-bold text-slate-900">Unit Fisik Kendaraan & Plat Nomor</h2>
+                                    <h2 className="text-base font-bold text-slate-900">Kategori Kendaraan</h2>
                                     <p className="text-xs text-slate-500 mt-0.5">
-                                        Kelola daftar unit mobil fisik dan nomor polisi operasional yang ditugaskan kepada driver dan pemesanan.
+                                        Kelola kategori kendaraan yang tersedia (Regular, Luxury, Big Van) beserta kapasitas maksimal penumpang. Driver akan menyesuaikan dengan kategori yang dipesan tamu.
                                     </p>
                                 </div>
                                 <button
@@ -1154,8 +1144,6 @@ export default function MasterData({
                                         addVehicleUnitForm.setData({
                                             category: 'Regular Family SUV',
                                             passenger_capacity: 6,
-                                            plate_number: '',
-                                            status: 'Available',
                                         });
                                         setShowAddVehicleUnitModal(true);
                                     }}
@@ -1165,7 +1153,7 @@ export default function MasterData({
                                         <line x1="12" y1="5" x2="12" y2="19" />
                                         <line x1="5" y1="12" x2="19" y2="12" />
                                     </svg>
-                                    <span>Tambah Unit</span>
+                                    <span>Tambah Kategori</span>
                                 </button>
                             </div>
 
@@ -1174,7 +1162,7 @@ export default function MasterData({
                                     <div className="relative flex-1 max-w-sm">
                                         <input
                                             type="text"
-                                            placeholder="Cari plat nomor atau kategori..."
+                                            placeholder="Cari kategori kendaraan..."
                                             value={vehicleUnitSearch}
                                             onChange={(e) => setVehicleUnitSearch(e.target.value)}
                                             className="w-full pl-9 pr-4 py-2 text-xs rounded-xl border border-slate-200 bg-white text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition"
@@ -1184,19 +1172,9 @@ export default function MasterData({
                                             <line x1="21" y1="21" x2="16.65" y2="16.65" />
                                         </svg>
                                     </div>
-                                    <select
-                                        value={vehicleUnitStatusFilter}
-                                        onChange={(e) => setVehicleUnitStatusFilter(e.target.value)}
-                                        className="text-xs px-3 py-2 rounded-xl border border-slate-200 bg-white text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition cursor-pointer"
-                                    >
-                                        <option value="all">Semua Status</option>
-                                        <option value="Available">Available</option>
-                                        <option value="In Use">In Use</option>
-                                        <option value="Maintenance">Maintenance</option>
-                                    </select>
                                 </div>
                                 <div className="text-xs text-slate-500 shrink-0">
-                                    Total: <span className="font-bold text-slate-900">{filteredVehicleUnits.length}</span> unit
+                                    Total: <span className="font-bold text-slate-900">{filteredVehicleUnits.length}</span> kategori
                                 </div>
                             </div>
                         </div>
@@ -1207,10 +1185,8 @@ export default function MasterData({
                                 <table className="w-full text-left border-collapse">
                                     <thead>
                                         <tr className="border-b border-slate-200/80 bg-slate-50/75 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                                            <th className="px-6 py-3.5">Plat Nomor</th>
                                             <th className="px-6 py-3.5">Kategori</th>
-                                            <th className="px-6 py-3.5">Kapasitas</th>
-                                            <th className="px-6 py-3.5">Status</th>
+                                            <th className="px-6 py-3.5">Kapasitas Maksimal</th>
                                             <th className="px-6 py-3.5 text-right">Aksi</th>
                                         </tr>
                                     </thead>
@@ -1218,11 +1194,6 @@ export default function MasterData({
                                         {filteredVehicleUnits && filteredVehicleUnits.length > 0 ? (
                                             filteredVehicleUnits.map((unit) => (
                                                 <tr key={unit.id} className="hover:bg-slate-50/60 transition-colors">
-                                                    <td className="px-6 py-4">
-                                                        <div className="inline-flex items-center gap-2 bg-slate-900 text-white font-mono font-bold text-xs tracking-wider px-3 py-1.5 rounded-lg border border-slate-800 shadow-2xs">
-                                                            <span>{unit.plate_number}</span>
-                                                        </div>
-                                                    </td>
                                                     <td className="px-6 py-4">
                                                         <div className="font-bold text-slate-900 text-sm">
                                                             {unit.category || '-'}
@@ -1232,31 +1203,6 @@ export default function MasterData({
                                                         <span className="text-slate-700 font-medium text-xs">
                                                             {unit.passenger_capacity || 4} Penumpang
                                                         </span>
-                                                    </td>
-                                                    <td className="px-6 py-4">
-                                                        {unit.status === 'Available' && (
-                                                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/80">
-                                                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                                                                Available
-                                                            </span>
-                                                        )}
-                                                        {unit.status === 'In Use' && (
-                                                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-sky-50 text-sky-700 border border-sky-200/80">
-                                                                <span className="w-1.5 h-1.5 rounded-full bg-sky-500"></span>
-                                                                In Use
-                                                            </span>
-                                                        )}
-                                                        {unit.status === 'Maintenance' && (
-                                                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200/80">
-                                                                <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
-                                                                Maintenance
-                                                            </span>
-                                                        )}
-                                                        {!['Available', 'In Use', 'Maintenance'].includes(unit.status) && (
-                                                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-700 border border-slate-200/80">
-                                                                {unit.status}
-                                                            </span>
-                                                        )}
                                                     </td>
                                                     <td className="px-6 py-4 text-right">
                                                         <div className="flex items-center justify-end gap-1.5">
@@ -1280,8 +1226,8 @@ export default function MasterData({
                                             ))
                                         ) : (
                                             <tr>
-                                                <td colSpan={5} className="px-6 py-12 text-center text-slate-400 text-xs">
-                                                    Belum ada unit fisik kendaraan terdaftar.
+                                                <td colSpan={3} className="px-6 py-12 text-center text-slate-400 text-xs">
+                                                    Belum ada kategori kendaraan terdaftar.
                                                 </td>
                                             </tr>
                                         )}
@@ -2337,9 +2283,11 @@ export default function MasterData({
                                 onChange={(e) => addVehicleForm.setData('category', e.target.value)}
                                 className={selectBaseClass}
                             >
-                                <option value="Regular Family SUV">Regular (Regular Family SUV)</option>
-                                <option value="Luxury Touring Van">Luxury (Luxury Touring Van)</option>
-                                <option value="Family Minibus">Big Van (Family Minibus)</option>
+                                {(vehicle_units || []).map((unit) => (
+                                    <option key={unit.id} value={unit.category}>
+                                        {unit.category}
+                                    </option>
+                                ))}
                             </select>
                         </div>
 
@@ -2479,9 +2427,11 @@ export default function MasterData({
                                 onChange={(e) => editVehicleForm.setData('category', e.target.value)}
                                 className={selectBaseClass}
                             >
-                                <option value="Regular Family SUV">Regular (Regular Family SUV)</option>
-                                <option value="Luxury Touring Van">Luxury (Luxury Touring Van)</option>
-                                <option value="Family Minibus">Big Van (Family Minibus)</option>
+                                {(vehicle_units || []).map((unit) => (
+                                    <option key={unit.id} value={unit.category}>
+                                        {unit.category}
+                                    </option>
+                                ))}
                             </select>
                         </div>
 
@@ -4222,7 +4172,7 @@ export default function MasterData({
             <Modal
                 show={showAddVehicleUnitModal}
                 onClose={() => setShowAddVehicleUnitModal(false)}
-                title="Tambah Unit Fisik Kendaraan"
+                title="Tambah Kategori Kendaraan"
                 maxWidth="md"
                 footer={
                     <>
@@ -4253,26 +4203,27 @@ export default function MasterData({
                 <form id="add-vehicle-unit-form" onSubmit={handleAddVehicleUnitSubmit} className="space-y-4 text-xs">
                     <div>
                         <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                            Kategori Kendaraan <span className="text-red-500">*</span>
+                            Nama Kategori Kendaraan <span className="text-red-500">*</span>
                         </label>
-                        <select
+                        <input
+                            type="text"
                             required
+                            placeholder="Contoh: Premium MPV, Luxury SUV, Economy Car"
                             value={addVehicleUnitForm.data.category}
                             onChange={(e) => addVehicleUnitForm.setData('category', e.target.value)}
-                            className={selectBaseClass}
-                        >
-                            <option value="Regular Family SUV">Regular Family SUV (Regular)</option>
-                            <option value="Luxury Touring Van">Luxury Touring Van (Luxury)</option>
-                            <option value="Family Minibus">Family Minibus (Big Van)</option>
-                        </select>
+                            className={inputBaseClass}
+                        />
                         {addVehicleUnitForm.errors.category && (
                             <p className="text-red-500 text-xs mt-1">{addVehicleUnitForm.errors.category}</p>
                         )}
+                        <p className="text-xs text-slate-500 mt-1">
+                            Buat kategori baru sesuai kebutuhan. Nama harus unik.
+                        </p>
                     </div>
 
                     <div>
                         <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                            Kapasitas Penumpang <span className="text-red-500">*</span>
+                            Kapasitas Penumpang Maksimal <span className="text-red-500">*</span>
                         </label>
                         <input
                             type="number"
@@ -4287,42 +4238,9 @@ export default function MasterData({
                         {addVehicleUnitForm.errors.passenger_capacity && (
                             <p className="text-red-500 text-xs mt-1">{addVehicleUnitForm.errors.passenger_capacity}</p>
                         )}
-                    </div>
-
-                    <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                            Plat Nomor Kendaraan <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                            type="text"
-                            required
-                            placeholder="Contoh: DK 1234 ABC"
-                            value={addVehicleUnitForm.data.plate_number}
-                            onChange={(e) => addVehicleUnitForm.setData('plate_number', e.target.value.toUpperCase())}
-                            className={inputBaseClass}
-                        />
-                        {addVehicleUnitForm.errors.plate_number && (
-                            <p className="text-red-500 text-xs mt-1">{addVehicleUnitForm.errors.plate_number}</p>
-                        )}
-                    </div>
-
-                    <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                            Status Operasional <span className="text-red-500">*</span>
-                        </label>
-                        <select
-                            required
-                            value={addVehicleUnitForm.data.status}
-                            onChange={(e) => addVehicleUnitForm.setData('status', e.target.value)}
-                            className={selectBaseClass}
-                        >
-                            <option value="Available">Available (Tersedia)</option>
-                            <option value="In Use">In Use (Sedang Dipakai)</option>
-                            <option value="Maintenance">Maintenance (Servis / Perbaikan)</option>
-                        </select>
-                        {addVehicleUnitForm.errors.status && (
-                            <p className="text-red-500 text-xs mt-1">{addVehicleUnitForm.errors.status}</p>
-                        )}
+                        <p className="text-xs text-slate-500 mt-1">
+                            Kapasitas maksimal penumpang untuk kategori ini. Driver akan menyesuaikan dengan kategori yang dipesan tamu.
+                        </p>
                     </div>
                 </form>
             </Modal>
@@ -4331,7 +4249,7 @@ export default function MasterData({
             <Modal
                 show={showEditVehicleUnitModal}
                 onClose={() => setShowEditVehicleUnitModal(false)}
-                title="Edit Unit Fisik Kendaraan"
+                title="Edit Kategori Kendaraan"
                 maxWidth="md"
                 footer={
                     <>
@@ -4362,26 +4280,27 @@ export default function MasterData({
                 <form id="edit-vehicle-unit-form" onSubmit={handleEditVehicleUnitSubmit} className="space-y-4 text-xs">
                     <div>
                         <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                            Kategori Kendaraan <span className="text-red-500">*</span>
+                            Nama Kategori Kendaraan <span className="text-red-500">*</span>
                         </label>
-                        <select
+                        <input
+                            type="text"
                             required
+                            placeholder="Contoh: Premium MPV"
                             value={editVehicleUnitForm.data.category}
                             onChange={(e) => editVehicleUnitForm.setData('category', e.target.value)}
-                            className={selectBaseClass}
-                        >
-                            <option value="Regular Family SUV">Regular Family SUV (Regular)</option>
-                            <option value="Luxury Touring Van">Luxury Touring Van (Luxury)</option>
-                            <option value="Family Minibus">Family Minibus (Big Van)</option>
-                        </select>
+                            className={inputBaseClass}
+                        />
                         {editVehicleUnitForm.errors.category && (
                             <p className="text-red-500 text-xs mt-1">{editVehicleUnitForm.errors.category}</p>
                         )}
+                        <p className="text-xs text-slate-500 mt-1">
+                            Edit nama kategori. Nama harus tetap unik.
+                        </p>
                     </div>
 
                     <div>
                         <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                            Kapasitas Penumpang <span className="text-red-500">*</span>
+                            Kapasitas Penumpang Maksimal <span className="text-red-500">*</span>
                         </label>
                         <input
                             type="number"
@@ -4396,41 +4315,9 @@ export default function MasterData({
                         {editVehicleUnitForm.errors.passenger_capacity && (
                             <p className="text-red-500 text-xs mt-1">{editVehicleUnitForm.errors.passenger_capacity}</p>
                         )}
-                    </div>
-
-                    <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                            Plat Nomor Kendaraan <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                            type="text"
-                            required
-                            value={editVehicleUnitForm.data.plate_number}
-                            onChange={(e) => editVehicleUnitForm.setData('plate_number', e.target.value.toUpperCase())}
-                            className={inputBaseClass}
-                        />
-                        {editVehicleUnitForm.errors.plate_number && (
-                            <p className="text-red-500 text-xs mt-1">{editVehicleUnitForm.errors.plate_number}</p>
-                        )}
-                    </div>
-
-                    <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                            Status Operasional <span className="text-red-500">*</span>
-                        </label>
-                        <select
-                            required
-                            value={editVehicleUnitForm.data.status}
-                            onChange={(e) => editVehicleUnitForm.setData('status', e.target.value)}
-                            className={selectBaseClass}
-                        >
-                            <option value="Available">Available (Tersedia)</option>
-                            <option value="In Use">In Use (Sedang Dipakai)</option>
-                            <option value="Maintenance">Maintenance (Servis / Perbaikan)</option>
-                        </select>
-                        {editVehicleUnitForm.errors.status && (
-                            <p className="text-red-500 text-xs mt-1">{editVehicleUnitForm.errors.status}</p>
-                        )}
+                        <p className="text-xs text-slate-500 mt-1">
+                            Kapasitas maksimal penumpang untuk kategori ini. Driver akan menyesuaikan dengan kategori yang dipesan tamu.
+                        </p>
                     </div>
                 </form>
             </Modal>
@@ -4439,7 +4326,7 @@ export default function MasterData({
             <Modal
                 show={showDeleteVehicleUnitModal}
                 onClose={() => setShowDeleteVehicleUnitModal(false)}
-                title="Hapus Unit Fisik Kendaraan"
+                title="Hapus Kategori Kendaraan"
                 maxWidth="md"
                 footer={
                     <>
@@ -4455,21 +4342,21 @@ export default function MasterData({
                             onClick={handleDeleteVehicleUnit}
                             className="px-4 py-2 bg-red-600 text-white rounded-xl text-xs font-semibold hover:bg-red-700 transition cursor-pointer"
                         >
-                            Hapus Unit
+                            Hapus Kategori
                         </button>
                     </>
                 }
             >
                 <div className="space-y-2 text-xs">
                     <p className="text-slate-700">
-                        Apakah Anda yakin ingin menghapus unit kendaraan dengan plat nomor{' '}
-                        <strong className="text-slate-900 font-mono bg-slate-100 px-1.5 py-0.5 rounded">
-                            {selectedVehicleUnit?.plate_number}
+                        Apakah Anda yakin ingin menghapus kategori kendaraan{' '}
+                        <strong className="text-slate-900 font-bold">
+                            {selectedVehicleUnit?.category}
                         </strong>
-                        {selectedVehicleUnit?.category ? ` (${selectedVehicleUnit.category})` : ''}?
+                        {selectedVehicleUnit?.passenger_capacity ? ` (Kapasitas: ${selectedVehicleUnit.passenger_capacity} penumpang)` : ''}?
                     </p>
                     <p className="text-slate-500 text-[11px] bg-slate-50 border border-slate-200/80 p-2.5 rounded-lg">
-                        <strong>Perhatian:</strong> Unit tidak dapat dihapus jika masih ditugaskan kepada supir atau terhubung dengan riwayat pemesanan yang sedang berjalan.
+                        <strong>Perhatian:</strong> Kategori tidak dapat dihapus jika masih terhubung dengan pemesanan yang sedang berjalan (belum Completed/Cancelled).
                     </p>
                 </div>
             </Modal>

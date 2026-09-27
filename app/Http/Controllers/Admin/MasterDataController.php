@@ -188,7 +188,7 @@ class MasterDataController extends Controller
             'links' => $driversPaginated->linkCollection()->toArray(),
         ];
 
-        $availableVehicleUnits = VehicleUnit::where('status', 'Available')
+        $vehicleUnits = VehicleUnit::orderBy('passenger_capacity', 'asc')
             ->get()
             ->map(function (VehicleUnit $unit) {
                 $categoryName = $unit->category instanceof \BackedEnum ? $unit->category->value : (string) $unit->category;
@@ -196,21 +196,7 @@ class MasterDataController extends Controller
                     'id' => $unit->id,
                     'category' => $categoryName,
                     'passenger_capacity' => $unit->passenger_capacity,
-                    'plate_number' => $unit->plate_number,
-                    'label' => "{$unit->plate_number} - {$categoryName} ({$unit->passenger_capacity} seats)",
-                ];
-            });
-
-        $vehicleUnits = VehicleUnit::orderBy('plate_number', 'asc')
-            ->get()
-            ->map(function (VehicleUnit $unit) {
-                $categoryName = $unit->category instanceof \BackedEnum ? $unit->category->value : (string) $unit->category;
-                return [
-                    'id' => $unit->id,
-                    'category' => $categoryName,
-                    'passenger_capacity' => $unit->passenger_capacity,
-                    'plate_number' => $unit->plate_number,
-                    'status' => $unit->status instanceof \BackedEnum ? $unit->status->value : (string) $unit->status,
+                    'label' => "{$categoryName} (Max {$unit->passenger_capacity} penumpang)",
                 ];
             });
 
@@ -328,7 +314,6 @@ class MasterDataController extends Controller
             'package_types' => $packageTypes,
             'package_duration_types' => $packageDurationTypes,
             'drivers' => $driversData,
-            'available_vehicle_units' => $availableVehicleUnits,
             'vehicle_units' => $vehicleUnits,
             'hotels' => $hotels,
             'airports' => $airports,

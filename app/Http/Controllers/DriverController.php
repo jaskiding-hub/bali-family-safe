@@ -53,6 +53,12 @@ class DriverController extends Controller
             ? $booking->status->value
             : (string) $booking->status;
 
+        // Use vehicle_unit category (operasional), bukan showcase vehicle name
+        $vehicleCategory = $booking->vehicleUnit?->category
+            ?? ($booking->vehicle?->category instanceof \BackedEnum
+                ? $booking->vehicle->category->value
+                : (string) ($booking->vehicle?->category ?? 'Vehicle'));
+
         return [
             'id' => $booking->id,
             'booking_code' => $booking->booking_code,
@@ -68,7 +74,7 @@ class DriverController extends Controller
             'guest_phone' => $booking->whatsapp_number,
             'pax' => $pax ?: 1,
             'pax_description' => $paxDesc,
-            'vehicle_type' => $booking->vehicle?->name ?? 'Vehicle',
+            'vehicle_type' => $vehicleCategory,
             'pickup_location' => $pickup ?? 'Pickup Location',
             'dropoff_location' => $dropoff ?? 'Dropoff Location',
             'special_requirements' => $booking->notes,
@@ -82,14 +88,14 @@ class DriverController extends Controller
         $driver = Auth::guard('driver')->user() ?? Driver::first();
         $driverId = $driver?->id;
 
-        $activeBooking = Booking::with(['vehicle', 'package', 'pickupHotel', 'dropoffHotel', 'airport', 'tripExpenses'])
+        $activeBooking = Booking::with(['vehicle', 'vehicleUnit', 'package', 'pickupHotel', 'dropoffHotel', 'airport', 'tripExpenses'])
             ->when($driverId, fn($q) => $q->where('driver_id', $driverId))
             ->whereIn('status', [BookingStatus::OnGoing->value, BookingStatus::Assigned->value])
             ->orderBy('booking_date', 'asc')
             ->orderBy('pickup_time', 'asc')
             ->first();
 
-        $laterTodayBookings = Booking::with(['vehicle', 'package', 'pickupHotel', 'dropoffHotel', 'airport', 'tripExpenses'])
+        $laterTodayBookings = Booking::with(['vehicle', 'vehicleUnit', 'package', 'pickupHotel', 'dropoffHotel', 'airport', 'tripExpenses'])
             ->when($driverId, fn($q) => $q->where('driver_id', $driverId))
             ->whereIn('status', [BookingStatus::Confirmed->value, BookingStatus::Assigned->value])
             ->when($activeBooking, fn($q) => $q->where('id', '!=', $activeBooking->id))
@@ -125,7 +131,7 @@ class DriverController extends Controller
         $startOfWeek = $currentMonth->copy()->startOfWeek(Carbon::SUNDAY);
         $endOfWeek = $currentMonth->copy()->endOfMonth()->endOfWeek(Carbon::SATURDAY);
 
-        $bookings = Booking::with(['vehicle', 'package', 'pickupHotel', 'dropoffHotel', 'airport', 'tripExpenses'])
+        $bookings = Booking::with(['vehicle', 'vehicleUnit', 'package', 'pickupHotel', 'dropoffHotel', 'airport', 'tripExpenses'])
             ->when($driverId, fn($q) => $q->where('driver_id', $driverId))
             ->whereBetween('booking_date', [$startOfWeek->format('Y-m-d'), $endOfWeek->format('Y-m-d')])
             ->get();
@@ -154,7 +160,7 @@ class DriverController extends Controller
             $dayPtr->addDay();
         }
 
-        $selectedBookings = Booking::with(['vehicle', 'package', 'pickupHotel', 'dropoffHotel', 'airport', 'tripExpenses'])
+        $selectedBookings = Booking::with(['vehicle', 'vehicleUnit', 'package', 'pickupHotel', 'dropoffHotel', 'airport', 'tripExpenses'])
             ->when($driverId, fn($q) => $q->where('driver_id', $driverId))
             ->where('booking_date', $selectedDate)
             ->orderBy('pickup_time', 'asc')
@@ -177,7 +183,7 @@ class DriverController extends Controller
 
     public function tripDetail($id)
     {
-        $booking = Booking::with(['vehicle', 'package', 'pickupHotel', 'dropoffHotel', 'airport', 'tripExpenses', 'childSeats.childSeatType'])
+        $booking = Booking::with(['vehicle', 'vehicleUnit', 'package', 'pickupHotel', 'dropoffHotel', 'airport', 'tripExpenses', 'childSeats.childSeatType'])
             ->findOrFail($id);
 
         $authDriver = Auth::guard('driver')->user() ?? Driver::first();
