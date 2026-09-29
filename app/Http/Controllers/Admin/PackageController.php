@@ -31,6 +31,7 @@ class PackageController extends Controller
             'highlights' => ['nullable', 'array'],
             'highlights.*.title' => ['required_with:highlights', 'string', 'max:255'],
             'highlights.*.description' => ['nullable', 'string'],
+            'highlights.*.photo' => ['nullable', 'file', 'mimes:svg,png,jpg,jpeg,webp,gif', 'max:2048'],
         ]);
 
         DB::transaction(function () use ($request, $validated) {
@@ -65,12 +66,19 @@ class PackageController extends Controller
             if (!empty($validated['highlights'])) {
                 foreach ($validated['highlights'] as $order => $hl) {
                     if (!empty($hl['title'])) {
-                        PackageHighlight::create([
+                        $highlightData = [
                             'package_id' => $package->id,
                             'title' => $hl['title'],
                             'description' => $hl['description'] ?? null,
                             'display_order' => $order + 1,
-                        ]);
+                        ];
+
+                        if ($request->hasFile("highlights.{$order}.photo")) {
+                            $path = $request->file("highlights.{$order}.photo")->store('package-highlights', 'public');
+                            $highlightData['photo_url'] = Storage::url($path);
+                        }
+
+                        PackageHighlight::create($highlightData);
                     }
                 }
             }
@@ -95,6 +103,8 @@ class PackageController extends Controller
             'highlights' => ['nullable', 'array'],
             'highlights.*.title' => ['required_with:highlights', 'string', 'max:255'],
             'highlights.*.description' => ['nullable', 'string'],
+            'highlights.*.photo' => ['nullable', 'file', 'mimes:svg,png,jpg,jpeg,webp,gif', 'max:2048'],
+            'highlights.*.existing_photo_url' => ['nullable', 'string'],
         ]);
 
         DB::transaction(function () use ($request, $package, $validated) {
@@ -121,12 +131,21 @@ class PackageController extends Controller
                 $package->highlights()->delete();
                 foreach ($validated['highlights'] as $order => $hl) {
                     if (!empty($hl['title'])) {
-                        PackageHighlight::create([
+                        $highlightData = [
                             'package_id' => $package->id,
                             'title' => $hl['title'],
                             'description' => $hl['description'] ?? null,
                             'display_order' => $order + 1,
-                        ]);
+                        ];
+
+                        if ($request->hasFile("highlights.{$order}.photo")) {
+                            $path = $request->file("highlights.{$order}.photo")->store('package-highlights', 'public');
+                            $highlightData['photo_url'] = Storage::url($path);
+                        } elseif (!empty($hl['existing_photo_url'])) {
+                            $highlightData['photo_url'] = $hl['existing_photo_url'];
+                        }
+
+                        PackageHighlight::create($highlightData);
                     }
                 }
             }

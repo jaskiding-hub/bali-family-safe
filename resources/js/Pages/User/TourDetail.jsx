@@ -501,7 +501,7 @@ export default function TourDetail({ tourId, tour: initialTour = null }) {
                             textAlign: 'center',
                             margin: '0 0 16px 0',
                         }}>
-                            {tour?.highlightsTitle || 'Top Highlights in Ubud'}
+                            Poin Destinasi & Itinerary Tour
                         </h3>
 
                         <p style={{
@@ -514,7 +514,7 @@ export default function TourDetail({ tourId, tour: initialTour = null }) {
                             maxWidth: '672px',
                             margin: '0 0 64px 0',
                         }}>
-                            {tour?.highlightsSubtitle || 'Discover the must-visit locations that make Ubud a world-renowned destination for families and explorers alike.'}
+                            Destinasi dan poin perjalanan yang akan Anda kunjungi dalam tour ini
                         </p>
 
                         {/* Highlights 3 Cards Grid */}
