@@ -6,6 +6,8 @@ use App\Enums\BookingStatus;
 use App\Enums\BookingType;
 use App\Enums\TransferDirection;
 use App\Models\Booking;
+use App\Models\BookingChildSeat;
+use App\Models\ChildSeatType;
 use App\Models\Driver;
 use App\Models\TripExpense;
 use App\Models\Vehicle;
@@ -214,5 +216,48 @@ class DriverSystemFlowTest extends TestCase
         $this->assertDatabaseMissing('trip_expenses', [
             'id' => $expenseId,
         ]);
+    }
+
+    public function test_driver_can_view_trip_detail_with_child_seats_and_single_notes(): void
+    {
+        $seatType1 = ChildSeatType::create([
+            'name' => 'Rear-Facing Infant',
+            'age_range' => '0-2 tahun',
+            'weight_range' => '0-13 kg',
+        ]);
+        $seatType2 = ChildSeatType::create([
+            'name' => 'Booster Seat',
+            'age_range' => '4-12 tahun',
+            'weight_range' => '15-36 kg',
+        ]);
+
+        BookingChildSeat::create([
+            'booking_id' => $this->booking->id,
+            'child_seat_type_id' => $seatType1->id,
+            'quantity' => 1,
+        ]);
+        BookingChildSeat::create([
+            'booking_id' => $this->booking->id,
+            'child_seat_type_id' => $seatType2->id,
+            'quantity' => 2,
+        ]);
+
+        $this->booking->update(['notes' => 'Please provide clean child seats']);
+
+        $response = $this->actingAs($this->driver, 'driver')->get(route('driver.trip.detail', ['id' => $this->booking->id]));
+        $response->assertOk();
+        $response->assertInertia(fn (Assert $page) => $page
+            ->component('Driver/TripDetail')
+            ->has('trip')
+            ->has('trip.child_seats', 2)
+            ->where('trip.child_seats.0.name', 'Rear-Facing Infant')
+            ->where('trip.child_seats.0.age_range', '0-2 tahun')
+            ->where('trip.child_seats.0.quantity', 1)
+            ->where('trip.child_seats.1.name', 'Booster Seat')
+            ->where('trip.child_seats.1.age_range', '4-12 tahun')
+            ->where('trip.child_seats.1.quantity', 2)
+            ->where('trip.notes', 'Please provide clean child seats')
+            ->missing('trip.special_requirements')
+        );
     }
 }

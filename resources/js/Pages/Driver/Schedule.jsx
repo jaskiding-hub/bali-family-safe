@@ -226,7 +226,7 @@ export default function Schedule({
                     {currentTrips.length > 0 ? (
                         currentTrips.map((trip, index) => {
                             const delayClass = `delay-${Math.min(5, index + 3)}`;
-                            const style = styleMap[trip.trip_type] || styleMap['Airport Pick-Up'];
+                            const style = styleMap[trip.trip_type] || (trip.booking_type === 'Day Tour' ? styleMap['Day Tour'] : styleMap['Airport Pick-Up']);
                             const isCompleted = trip.status === 'completed';
                             const durText = trip.duration_est ? trip.duration_est.replace(/^Est\.\s*/i, '').trim() : null;
 

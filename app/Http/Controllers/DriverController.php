@@ -59,17 +59,44 @@ class DriverController extends Controller
                 ? $booking->vehicle->category->value
                 : (string) ($booking->vehicle?->category ?? 'Vehicle'));
 
+        // FIX 3: duration_est kondisional berdasarkan booking_type dan durasi paket
+        $durationEst = 'Est. 1h 30m duration';
+        if ($bookingTypeStr === 'Day Tour') {
+            $durationVal = $booking->package?->duration_type instanceof \BackedEnum
+                ? $booking->package->duration_type->value
+                : (string) ($booking->package?->duration_type ?? '');
+
+            $durationEst = $durationVal === \App\Enums\PackageDurationType::HalfDay->value
+                ? 'Half Day (Est. 4-6 hours)'
+                : 'Full Day (Est. 8-10 hours)';
+        }
+
+        // FIX 4: Nama paket Day Tour sebagai judul trip, fallback ke 'Day Tour'
+        $tripType = $bookingTypeStr === 'Day Tour'
+            ? ($booking->package?->name ?? 'Day Tour')
+            : $bookingTypeStr;
+
+        // FIX 1: Mapping child seats dari relasi childSeats yang di-eager-load
+        $childSeats = $booking->childSeats ? $booking->childSeats->map(function ($cs) {
+            return [
+                'name' => $cs->childSeatType->name ?? 'Unknown',
+                'age_range' => $cs->childSeatType->age_range ?? '',
+                'quantity' => $cs->quantity,
+            ];
+        })->all() : [];
+
         return [
             'id' => $booking->id,
             'booking_code' => $booking->booking_code,
             'status' => $statusStr,
-            'trip_type' => $bookingTypeStr,
+            'trip_type' => $tripType,
             'booking_type' => $bookingTypeStr,
+            'package_name' => $booking->package?->name,
             'trip_date' => $booking->booking_date ? (is_string($booking->booking_date) ? $booking->booking_date : $booking->booking_date->format('Y-m-d')) : '',
             'trip_time' => $pickupTimeStr,
             'pickup_time' => $pickupTimeStr,
             'flight_number' => $booking->flight_number,
-            'duration_est' => 'Est. 1h 30m duration',
+            'duration_est' => $durationEst,
             'guest_name' => $booking->guest_name,
             'guest_phone' => $booking->whatsapp_number,
             'pax' => $pax ?: 1,
@@ -77,8 +104,8 @@ class DriverController extends Controller
             'vehicle_type' => $vehicleCategory,
             'pickup_location' => $pickup ?? 'Pickup Location',
             'dropoff_location' => $dropoff ?? 'Dropoff Location',
-            'special_requirements' => $booking->notes,
             'notes' => $booking->notes,
+            'child_seats' => $childSeats,
             'expenses' => $expenses,
         ];
     }
@@ -88,14 +115,14 @@ class DriverController extends Controller
         $driver = Auth::guard('driver')->user() ?? Driver::first();
         $driverId = $driver?->id;
 
-        $activeBooking = Booking::with(['vehicle', 'vehicleUnit', 'package', 'pickupHotel', 'dropoffHotel', 'airport', 'tripExpenses'])
+        $activeBooking = Booking::with(['vehicle', 'vehicleUnit', 'package', 'pickupHotel', 'dropoffHotel', 'airport', 'tripExpenses', 'childSeats.childSeatType'])
             ->when($driverId, fn($q) => $q->where('driver_id', $driverId))
             ->whereIn('status', [BookingStatus::OnGoing->value, BookingStatus::Assigned->value])
             ->orderBy('booking_date', 'asc')
             ->orderBy('pickup_time', 'asc')
             ->first();
 
-        $laterTodayBookings = Booking::with(['vehicle', 'vehicleUnit', 'package', 'pickupHotel', 'dropoffHotel', 'airport', 'tripExpenses'])
+        $laterTodayBookings = Booking::with(['vehicle', 'vehicleUnit', 'package', 'pickupHotel', 'dropoffHotel', 'airport', 'tripExpenses', 'childSeats.childSeatType'])
             ->when($driverId, fn($q) => $q->where('driver_id', $driverId))
             ->whereIn('status', [BookingStatus::Confirmed->value, BookingStatus::Assigned->value])
             ->when($activeBooking, fn($q) => $q->where('id', '!=', $activeBooking->id))
@@ -131,7 +158,7 @@ class DriverController extends Controller
         $startOfWeek = $currentMonth->copy()->startOfWeek(Carbon::SUNDAY);
         $endOfWeek = $currentMonth->copy()->endOfMonth()->endOfWeek(Carbon::SATURDAY);
 
-        $bookings = Booking::with(['vehicle', 'vehicleUnit', 'package', 'pickupHotel', 'dropoffHotel', 'airport', 'tripExpenses'])
+        $bookings = Booking::with(['vehicle', 'vehicleUnit', 'package', 'pickupHotel', 'dropoffHotel', 'airport', 'tripExpenses', 'childSeats.childSeatType'])
             ->when($driverId, fn($q) => $q->where('driver_id', $driverId))
             ->whereBetween('booking_date', [$startOfWeek->format('Y-m-d'), $endOfWeek->format('Y-m-d')])
             ->get();
@@ -160,7 +187,7 @@ class DriverController extends Controller
             $dayPtr->addDay();
         }
 
-        $selectedBookings = Booking::with(['vehicle', 'vehicleUnit', 'package', 'pickupHotel', 'dropoffHotel', 'airport', 'tripExpenses'])
+        $selectedBookings = Booking::with(['vehicle', 'vehicleUnit', 'package', 'pickupHotel', 'dropoffHotel', 'airport', 'tripExpenses', 'childSeats.childSeatType'])
             ->when($driverId, fn($q) => $q->where('driver_id', $driverId))
             ->where('booking_date', $selectedDate)
             ->orderBy('pickup_time', 'asc')
@@ -217,7 +244,7 @@ class DriverController extends Controller
 
     public function expense($id)
     {
-        $booking = Booking::with('tripExpenses')->findOrFail($id);
+        $booking = Booking::with(['tripExpenses', 'package', 'childSeats.childSeatType'])->findOrFail($id);
         $authDriver = Auth::guard('driver')->user() ?? Driver::first();
 
         return Inertia::render('Driver/Expense', [

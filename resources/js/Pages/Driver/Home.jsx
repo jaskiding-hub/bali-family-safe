@@ -2,7 +2,10 @@ import React from 'react';
 import { Link, usePage } from '@inertiajs/react';
 import DriverLayout, { useDriverProfile } from '../../Layouts/DriverLayout';
 
-function getBadgeColor(tripType) {
+function getBadgeColor(tripType, bookingType) {
+    if (tripType === 'Day Tour' || bookingType === 'Day Tour') {
+        return 'bg-[#E5DEFF] text-[#372773] border border-[#C7B8FF]';
+    }
     switch (tripType) {
         case 'Hotel Transfers':
             return 'bg-[#D1F2E0] text-[#0A5A36] border border-[#A3E5C2]';
@@ -10,10 +13,8 @@ function getBadgeColor(tripType) {
             return 'bg-[#D7E8FF] text-[#004C6B] border border-[#ABC7FF]';
         case 'Airport Drop-Off':
             return 'bg-[#FFDCC0] text-[#6B3B00] border border-[#FFB876]';
-        case 'Day Tour':
-            return 'bg-[#E5DEFF] text-[#372773] border border-[#C7B8FF]';
         default:
-            return 'bg-[#D1F2E0] text-[#0A5A36] border border-[#A3E5C2]';
+            return 'bg-[#E5DEFF] text-[#372773] border border-[#C7B8FF]';
     }
 }
 
@@ -92,7 +93,7 @@ export default function Home({ driver, activeTrip, laterTodayTrips = [] }) {
                                     </span>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    <span className={`px-3 py-1 rounded-full text-xs font-semibold shrink-0 whitespace-nowrap shadow-2xs ${getBadgeColor(activeTrip.trip_type)}`}>
+                                    <span className={`px-3 py-1 rounded-full text-xs font-semibold shrink-0 whitespace-nowrap shadow-2xs ${getBadgeColor(activeTrip.trip_type, activeTrip.booking_type)}`}>
                                         {activeTrip.trip_type}
                                     </span>
                                     {activeTrip.flight_number && (
@@ -182,13 +183,13 @@ export default function Home({ driver, activeTrip, laterTodayTrips = [] }) {
                                 </div>
                             </div>
 
-                            {/* Special Requirements Alert if present */}
-                            {activeTrip.special_requirements && (
+                            {/* Guest Notes Alert if present */}
+                            {activeTrip.notes && (
                                 <div className="bg-amber-50/80 border border-amber-200/80 rounded-xl p-3.5 flex items-center gap-2.5 text-amber-800 text-xs font-semibold mt-1">
                                     <svg className="w-4 h-4 text-amber-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                                     </svg>
-                                    <span>{activeTrip.special_requirements}</span>
+                                    <span>{activeTrip.notes}</span>
                                 </div>
                             )}
 
@@ -240,7 +241,7 @@ export default function Home({ driver, activeTrip, laterTodayTrips = [] }) {
                                                 <div className="flex-1 flex flex-col justify-center min-w-0">
                                                     <span className="text-slate-900 text-sm sm:text-base font-bold truncate">{laterTrip.guest_name}</span>
                                                     <div className="mt-1 flex items-center">
-                                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold shrink-0 whitespace-nowrap ${getBadgeColor(laterTrip.trip_type)}`}>
+                                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold shrink-0 whitespace-nowrap ${getBadgeColor(laterTrip.trip_type, laterTrip.booking_type)}`}>
                                                             {laterTrip.trip_type}
                                                         </span>
                                                     </div>

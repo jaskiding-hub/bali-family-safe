@@ -71,11 +71,11 @@ export default function TripDetail({ trip, authDriver }) {
 
     // Badge styling
     let detailBadgeStyle = 'bg-[#D7E8FF] border border-[#ABC7FF] text-[#004C6B]';
-    if (trip.trip_type === 'Airport Drop-Off') {
+    if (trip.trip_type === 'Airport Drop-Off' || (trip.booking_type === 'Airport Transfer' && trip.trip_type?.includes('Drop-Off'))) {
         detailBadgeStyle = 'bg-[#FFDCC0] border border-[#FFB876] text-[#6B3B00]';
-    } else if (trip.trip_type === 'Hotel Transfers') {
+    } else if (trip.trip_type === 'Hotel Transfers' || trip.booking_type === 'Hotel Transfer') {
         detailBadgeStyle = 'bg-[#D1F2E0] border border-[#A3E5C2] text-[#0A5A36]';
-    } else if (trip.trip_type === 'Day Tour') {
+    } else if (trip.trip_type === 'Day Tour' || trip.booking_type === 'Day Tour') {
         detailBadgeStyle = 'bg-[#E5DEFF] border border-[#C7B8FF] text-[#372773]';
     }
 
@@ -442,27 +442,36 @@ export default function TripDetail({ trip, authDriver }) {
                             )}
                         </div>
 
-                        {/* Special Requirements Highlight */}
-                        {trip.special_requirements && (
-                            <div className="bg-amber-50/90 border border-amber-200 rounded-xl p-3.5 flex items-start gap-2.5 text-amber-900 text-xs sm:text-sm font-semibold shadow-2xs">
+                        {/* Child Car Seats Card */}
+                        {trip.child_seats && trip.child_seats.length > 0 && (
+                            <div className="bg-amber-50/90 border border-amber-200 rounded-xl p-3.5 flex items-start gap-2.5 text-amber-900 text-xs sm:text-sm shadow-2xs">
                                 <svg className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                                 </svg>
-                                <div>
-                                    <span className="font-bold block text-amber-950 uppercase text-[10px] tracking-wider mb-0.5">Special Request</span>
-                                    <span>{trip.special_requirements}</span>
+                                <div className="grow">
+                                    <span className="font-bold block text-amber-950 uppercase text-[10px] tracking-wider mb-1">Child Car Seats</span>
+                                    <div className="space-y-1">
+                                        {trip.child_seats.map((cs, idx) => (
+                                            <div key={idx} className="font-semibold text-amber-900 text-xs sm:text-sm">
+                                                {cs.quantity}x {cs.name} {cs.age_range ? `(${cs.age_range})` : ''}
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <span className="text-[11px] text-amber-700 block mt-1.5 font-normal">
+                                        Siapkan sebelum penjemputan
+                                    </span>
                                 </div>
                             </div>
                         )}
 
-                        {/* Notes Box */}
+                        {/* Guest Notes Box */}
                         {trip.notes && (
                             <div className="bg-[#EFF4FA] rounded-xl p-3.5 flex items-start gap-2.5 text-xs sm:text-sm text-slate-700 leading-relaxed border border-[#DEE3E8]/60 shadow-2xs">
                                 <div className="w-4 h-4 min-w-[16px] rounded-full bg-[#00658D] text-white flex items-center justify-center text-[9px] font-bold mt-0.5 shadow-xs">
                                     i
                                 </div>
                                 <div>
-                                    <span className="font-bold text-[#171C20] block mb-0.5 uppercase tracking-wider text-[10px]">Important Note</span>
+                                    <span className="font-bold text-[#171C20] block mb-0.5 uppercase tracking-wider text-[10px]">Guest Notes</span>
                                     <span>"{trip.notes}"</span>
                                 </div>
                             </div>
