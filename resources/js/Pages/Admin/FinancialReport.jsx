@@ -391,35 +391,30 @@ export default function FinancialReport({
                             </div>
                         </div>
 
-                        {/* Right: Month/Year Picker (Desktop) */}
-                        <div className="hidden md:flex items-center gap-3">
-                            <div className="flex items-center gap-2 bg-slate-100/80 p-1.5 rounded-xl border border-slate-200/60">
-                                <select
-                                    value={filters.month || ''}
-                                    onChange={(e) => {
-                                        const val = e.target.value;
-                                        if (val === 'this_year') {
-                                            handleSelectPeriod('this_year');
-                                        } else if (val === 'all_time') {
-                                            handleSelectPeriod('all_time');
-                                        } else if (val) {
-                                            handleSelectPeriod('', val);
-                                        } else {
-                                            handleSelectPeriod('this_month');
-                                        }
-                                    }}
-                                    className="px-4 py-2 rounded-lg text-xs font-semibold bg-white text-slate-700 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#00AEEF]/50 cursor-pointer"
-                                >
-                                    <option value="">This Month</option>
-                                    {available_months.map((m) => (
-                                        <option key={m.ym} value={m.ym}>
-                                            {m.label}
-                                        </option>
-                                    ))}
-                                    <option value="this_year">This Year</option>
-                                    <option value="all_time">All Time</option>
-                                </select>
-                            </div>
+                        {/* Right: Quick-Period Switcher Tabs (Desktop) */}
+                        <div className="hidden md:flex items-center gap-1.5 bg-slate-100/80 p-1.5 rounded-xl border border-slate-200/60">
+                            {[
+                                { key: 'this_month', label: 'This Month' },
+                                { key: 'last_month', label: 'Last Month' },
+                                { key: 'this_year', label: 'This Year' },
+                                { key: 'all_time', label: 'All Time' },
+                            ].map((tab) => {
+                                const isActive = filters.period === tab.key && !filters.month;
+                                return (
+                                    <button
+                                        key={tab.key}
+                                        type="button"
+                                        onClick={() => handleSelectPeriod(tab.key)}
+                                        className={`px-4 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                                            isActive
+                                                ? 'bg-white text-[#0A2540] shadow-xs border border-slate-200/80 font-bold'
+                                                : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                                        }`}
+                                    >
+                                        {tab.label}
+                                    </button>
+                                );
+                            })}
                         </div>
                     </div>
 
@@ -439,30 +434,18 @@ export default function FinancialReport({
                                         <span className="w-2 h-2 rounded-full bg-[#00AEEF]"></span>
                                     )}
                                 </button>
-
-                                {available_months.length > 0 && (
-                                    <>
-                                        <div className="px-3.5 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                                            Previous Months
-                                        </div>
-                                        {available_months.slice(0, 6).map((m) => (
-                                            <button
-                                                key={m.ym}
-                                                type="button"
-                                                onClick={() => handleSelectPeriod('', m.ym)}
-                                                className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-colors flex items-center justify-between ${
-                                                    filters.month === m.ym ? 'bg-[#EFF4FA] text-[#00658D]' : 'text-slate-700 hover:bg-slate-50'
-                                                }`}
-                                            >
-                                                <span>{m.label}</span>
-                                                {filters.month === m.ym && (
-                                                    <span className="w-2 h-2 rounded-full bg-[#00AEEF]"></span>
-                                                )}
-                                            </button>
-                                        ))}
-                                    </>
-                                )}
-
+                                <button
+                                    type="button"
+                                    onClick={() => handleSelectPeriod('last_month')}
+                                    className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-colors flex items-center justify-between ${
+                                        filters.period === 'last_month' ? 'bg-[#EFF4FA] text-[#00658D]' : 'text-slate-700 hover:bg-slate-50'
+                                    }`}
+                                >
+                                    <span>Last Month</span>
+                                    {filters.period === 'last_month' && (
+                                        <span className="w-2 h-2 rounded-full bg-[#00AEEF]"></span>
+                                    )}
+                                </button>
                                 <button
                                     type="button"
                                     onClick={() => handleSelectPeriod('this_year')}

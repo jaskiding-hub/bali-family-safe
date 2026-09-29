@@ -21,7 +21,6 @@ class VehicleController extends Controller
             'daily_rate' => ['nullable', 'numeric', 'min:0'],
             'passenger_capacity' => ['required', 'integer', 'min:1', 'max:50'],
             'luggage_capacity' => ['required', 'integer', 'min:0', 'max:50'],
-            'detailed_description' => ['nullable', 'string', 'max:5000'],
             'is_popular' => ['boolean'],
             'photo' => ['nullable', 'file', 'mimes:svg,png,jpg,jpeg,webp,gif', 'max:2048'],
         ]);
@@ -50,7 +49,6 @@ class VehicleController extends Controller
             'daily_rate' => ['nullable', 'numeric', 'min:0'],
             'passenger_capacity' => ['required', 'integer', 'min:1', 'max:50'],
             'luggage_capacity' => ['required', 'integer', 'min:0', 'max:50'],
-            'detailed_description' => ['nullable', 'string', 'max:5000'],
             'is_popular' => ['boolean'],
             'photo' => ['nullable', 'file', 'mimes:svg,png,jpg,jpeg,webp,gif', 'max:2048'],
         ]);

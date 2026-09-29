@@ -108,18 +108,9 @@ export default function DayTourForm({ packages = [], vehicles = [], childSeatTyp
 
     const handleFormSubmit = (e) => {
         if (e) e.preventDefault();
-
-        // U8: Validasi kapasitas
-        if (isOverCapacity) {
-            alert(`Jumlah penumpang (${totalPax}) melebihi kapasitas kendaraan (${selectedVehicle.passenger_capacity}). Silakan kurangi jumlah penumpang atau pilih kendaraan yang lebih besar.`);
-            return;
-        }
-
         post('/booking', {
             preserveScroll: true,
             onSuccess: () => {
-                // U7: Alert sukses
-                alert('Booking berhasil dibuat! Kami akan segera menghubungi Anda.');
                 reset();
                 setSelectedSeats({});
                 setEstimatedFee(null);
@@ -128,12 +119,6 @@ export default function DayTourForm({ packages = [], vehicles = [], childSeatTyp
     };
 
     const handleWA = () => {
-        // U8: Validasi kapasitas
-        if (isOverCapacity) {
-            alert(`Jumlah penumpang (${totalPax}) melebihi kapasitas kendaraan (${selectedVehicle.passenger_capacity}). Silakan kurangi jumlah penumpang atau pilih kendaraan yang lebih besar.`);
-            return;
-        }
-
         const pObj = packages.find((p) => String(p.id) === String(data.package_id));
         const vehObj = vehicles.find((v) => String(v.id) === String(data.vehicle_id));
 

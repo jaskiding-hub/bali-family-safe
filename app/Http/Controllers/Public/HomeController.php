@@ -53,7 +53,6 @@ class HomeController extends Controller
                     'title' => $h->title,
                     'desc' => $h->description,
                     'description' => $h->description,
-                    'photo_url' => $h->photo_url,
                 ])->all(),
                 'tags' => $p->tags->pluck('tag_name')->all(),
             ];
@@ -123,7 +122,6 @@ class HomeController extends Controller
                 'passenger_capacity' => (int) $v->passenger_capacity,
                 'capacity' => '1–' . $v->passenger_capacity . ' Passengers',
                 'luggage_capacity' => (int) $v->luggage_capacity,
-                'detailed_description' => $v->detailed_description,
                 'photo_url' => $v->photo_url,
                 'img' => $v->photo_url ?: 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=600&q=80',
                 'is_popular' => (bool) $v->is_popular,

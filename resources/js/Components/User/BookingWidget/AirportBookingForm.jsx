@@ -200,13 +200,6 @@ export default function AirportBookingForm({ vehicles = [], childSeatTypes = [] 
     // Handle standard submission via Inertia with validation guards
     const handleFormSubmit = (e) => {
         if (e) e.preventDefault();
-
-        // U8: Validasi kapasitas
-        if (isOverCapacity) {
-            alert(`Jumlah penumpang (${totalPax}) melebihi kapasitas kendaraan (${selectedVehicle.passenger_capacity}). Silakan kurangi jumlah penumpang atau pilih kendaraan yang lebih besar.`);
-            return;
-        }
-
         if (!selectedArea) {
             setValidationWarning(
                 direction === 'Pick-Up'
@@ -227,8 +220,6 @@ export default function AirportBookingForm({ vehicles = [], childSeatTypes = [] 
         post('/booking', {
             preserveScroll: true,
             onSuccess: () => {
-                // U7: Alert sukses
-                alert('Booking berhasil dibuat! Kami akan segera menghubungi Anda.');
                 reset();
                 setSelectedSeats({});
                 setSelectedHotelId('');
@@ -241,12 +232,6 @@ export default function AirportBookingForm({ vehicles = [], childSeatTypes = [] 
 
     // Handle WhatsApp fallback with validation guards
     const handleWA = () => {
-        // U8: Validasi kapasitas
-        if (isOverCapacity) {
-            alert(`Jumlah penumpang (${totalPax}) melebihi kapasitas kendaraan (${selectedVehicle.passenger_capacity}). Silakan kurangi jumlah penumpang atau pilih kendaraan yang lebih besar.`);
-            return;
-        }
-
         if (!selectedArea) {
             setValidationWarning(
                 direction === 'Pick-Up'

@@ -13,9 +13,11 @@ class TeamMember extends Model
         'driver_id',
         'name',
         'role_title',
+        'bio',
         'photo_url',
         'years_experience',
         'languages',
+        'specialty_route',
         'is_founder',
         'display_order',
     ];

@@ -18,7 +18,6 @@ class Vehicle extends Model
         'daily_rate',
         'passenger_capacity',
         'luggage_capacity',
-        'detailed_description',
         'photo_url',
         'is_popular',
     ];

@@ -31,18 +31,15 @@ export default function Navbar() {
     useEffect(() => {
         const observer = new IntersectionObserver(
             (entries) => {
-                // Sort by intersection ratio descending, pick highest
-                const sorted = entries
-                    .filter(e => e.isIntersecting)
-                    .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
-
-                if (sorted.length > 0) {
-                    setActiveSection(`#${sorted[0].target.id}`);
-                }
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        setActiveSection(`#${entry.target.id}`);
+                    }
+                });
             },
             {
-                rootMargin: '-15% 0px -50% 0px',
-                threshold: [0, 0.15, 0.3, 0.5, 0.7],
+                rootMargin: '-100px 0px -66% 0px',
+                threshold: 0,
             }
         );
 

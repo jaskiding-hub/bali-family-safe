@@ -17,7 +17,6 @@ class SiteSetting extends Model
         'whatsapp_number',
         'instagram_url',
         'facebook_url',
-        'google_maps_url',
         'google_maps_embed',
     ];
 }

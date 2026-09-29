@@ -144,9 +144,11 @@ export default function WebsiteContent({
     const addTeamForm = useForm({
         name: '',
         role_title: '',
+        bio: '',
         photo: null,
         years_experience: '',
         languages: 'English, Indonesian',
+        specialty_route: '',
         is_founder: false,
         driver_id: '',
     });
@@ -155,9 +157,11 @@ export default function WebsiteContent({
         _method: 'put',
         name: '',
         role_title: '',
+        bio: '',
         photo: null,
         years_experience: '',
         languages: '',
+        specialty_route: '',
         is_founder: false,
         driver_id: '',
     });
@@ -180,9 +184,11 @@ export default function WebsiteContent({
             _method: 'put',
             name: member.name || '',
             role_title: member.role_title || '',
+            bio: member.bio || '',
             photo: null,
             years_experience: member.years_experience || '',
             languages: member.languages || '',
+            specialty_route: member.specialty_route || '',
             is_founder: Boolean(member.is_founder),
             driver_id: member.driver_id || '',
         });
@@ -1639,25 +1645,22 @@ export default function WebsiteContent({
                         </div>
                     </div>
 
-                    <div>
-                        <label className="block text-xs font-bold text-slate-700 mb-1">
-                            Tautkan ke Akun Driver <span className="text-xs font-normal text-slate-500">(Opsional – hanya isi jika anggota tim ini juga seorang driver)</span>
-                        </label>
-                        <select
-                            value={addTeamForm.data.driver_id}
-                            onChange={(e) => addTeamForm.setData('driver_id', e.target.value)}
-                            className={selectBaseClass}
-                        >
-                            <option value="">-- Bukan Driver / Staf Umum --</option>
-                            {drivers.map((drv) => (
-                                <option key={drv.id} value={drv.id}>
-                                    {drv.full_name || drv.name} {drv.whatsapp_number || drv.phone ? `(${drv.whatsapp_number || drv.phone})` : ''}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-
                     <div className="grid grid-cols-2 gap-3">
+                        <div>
+                            <label className="block text-xs font-bold text-slate-700 mb-1">Tautkan ke Akun Driver (Opsional)</label>
+                            <select
+                                value={addTeamForm.data.driver_id}
+                                onChange={(e) => addTeamForm.setData('driver_id', e.target.value)}
+                                className={selectBaseClass}
+                            >
+                                <option value="">-- Bukan Driver / Staf Umum --</option>
+                                {drivers.map((drv) => (
+                                    <option key={drv.id} value={drv.id}>
+                                        {drv.full_name || drv.name} {drv.whatsapp_number || drv.phone ? `(${drv.whatsapp_number || drv.phone})` : ''}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
                         <div>
                             <label className="block text-xs font-bold text-slate-700 mb-1">Pengalaman</label>
                             <input
@@ -1668,6 +1671,9 @@ export default function WebsiteContent({
                                 className={inputBaseClass}
                             />
                         </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
                         <div>
                             <label className="block text-xs font-bold text-slate-700 mb-1">Bahasa</label>
                             <input
@@ -1678,6 +1684,27 @@ export default function WebsiteContent({
                                 className={inputBaseClass}
                             />
                         </div>
+                        <div>
+                            <label className="block text-xs font-bold text-slate-700 mb-1">Spesialisasi Rute</label>
+                            <input
+                                type="text"
+                                value={addTeamForm.data.specialty_route}
+                                onChange={(e) => addTeamForm.setData('specialty_route', e.target.value)}
+                                placeholder="e.g. Ubud & North Bali"
+                                className={inputBaseClass}
+                            />
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">Bio Singkat</label>
+                        <textarea
+                            rows="2"
+                            value={addTeamForm.data.bio}
+                            onChange={(e) => addTeamForm.setData('bio', e.target.value)}
+                            placeholder="Profil ramah keluarga dan latar belakang pengalaman"
+                            className={inputBaseClass}
+                        />
                     </div>
 
                     <div>
@@ -1762,25 +1789,22 @@ export default function WebsiteContent({
                         </div>
                     </div>
 
-                    <div>
-                        <label className="block text-xs font-bold text-slate-700 mb-1">
-                            Tautkan ke Driver <span className="text-xs font-normal text-slate-500">(Opsional – hanya isi jika anggota tim ini juga seorang driver)</span>
-                        </label>
-                        <select
-                            value={editTeamForm.data.driver_id}
-                            onChange={(e) => editTeamForm.setData('driver_id', e.target.value)}
-                            className={selectBaseClass}
-                        >
-                            <option value="">-- Bukan Driver / Staf Umum --</option>
-                            {drivers.map((drv) => (
-                                <option key={drv.id} value={drv.id}>
-                                    {drv.full_name || drv.name} {drv.whatsapp_number || drv.phone ? `(${drv.whatsapp_number || drv.phone})` : ''}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-
                     <div className="grid grid-cols-2 gap-3">
+                        <div>
+                            <label className="block text-xs font-bold text-slate-700 mb-1">Tautkan ke Driver</label>
+                            <select
+                                value={editTeamForm.data.driver_id}
+                                onChange={(e) => editTeamForm.setData('driver_id', e.target.value)}
+                                className={selectBaseClass}
+                            >
+                                <option value="">-- Bukan Driver / Staf Umum --</option>
+                                {drivers.map((drv) => (
+                                    <option key={drv.id} value={drv.id}>
+                                        {drv.full_name || drv.name} {drv.whatsapp_number || drv.phone ? `(${drv.whatsapp_number || drv.phone})` : ''}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
                         <div>
                             <label className="block text-xs font-bold text-slate-700 mb-1">Pengalaman</label>
                             <input
@@ -1790,6 +1814,9 @@ export default function WebsiteContent({
                                 className={inputBaseClass}
                             />
                         </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
                         <div>
                             <label className="block text-xs font-bold text-slate-700 mb-1">Bahasa</label>
                             <input
@@ -1799,6 +1826,25 @@ export default function WebsiteContent({
                                 className={inputBaseClass}
                             />
                         </div>
+                        <div>
+                            <label className="block text-xs font-bold text-slate-700 mb-1">Spesialisasi Rute</label>
+                            <input
+                                type="text"
+                                value={editTeamForm.data.specialty_route}
+                                onChange={(e) => editTeamForm.setData('specialty_route', e.target.value)}
+                                className={inputBaseClass}
+                            />
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">Bio Singkat</label>
+                        <textarea
+                            rows="2"
+                            value={editTeamForm.data.bio}
+                            onChange={(e) => editTeamForm.setData('bio', e.target.value)}
+                            className={inputBaseClass}
+                        />
                     </div>
 
                     <div>
@@ -2454,20 +2500,14 @@ export default function WebsiteContent({
 
                     <div className="grid grid-cols-2 gap-3">
                         <div>
-                            <label className="block text-xs font-bold text-slate-700 mb-1">
-                                Ikon <span className="text-xs font-normal text-slate-500">(pilih dari daftar ikon yang tersedia)</span>
-                            </label>
-                            <select
-                                value={addFeatureForm.data.icon || ''}
+                            <label className="block text-xs font-bold text-slate-700 mb-1">Icon Name</label>
+                            <input
+                                type="text"
+                                value={addFeatureForm.data.icon}
                                 onChange={(e) => addFeatureForm.setData('icon', e.target.value)}
+                                placeholder="e.g. ShieldCheck, Heart"
                                 className={inputBaseClass}
-                            >
-                                <option value="">-- Pilih Ikon --</option>
-                                <option value="car-seat">🚗 Car Seat (Kursi Mobil)</option>
-                                <option value="fixed-price">💰 Fixed Price (Harga Tetap)</option>
-                                <option value="flight-tracking">✈️ Flight Tracking (Pelacakan Penerbangan)</option>
-                                <option value="family-drivers">👨‍👩‍👧 Family Drivers (Driver Keluarga)</option>
-                            </select>
+                            />
                         </div>
                         <div>
                             <label className="block text-xs font-bold text-slate-700 mb-1">Urutan Tampil</label>
@@ -2530,20 +2570,13 @@ export default function WebsiteContent({
 
                     <div className="grid grid-cols-2 gap-3">
                         <div>
-                            <label className="block text-xs font-bold text-slate-700 mb-1">
-                                Ikon <span className="text-xs font-normal text-slate-500">(pilih dari daftar ikon yang tersedia)</span>
-                            </label>
-                            <select
-                                value={editFeatureForm.data.icon || ''}
+                            <label className="block text-xs font-bold text-slate-700 mb-1">Icon Name</label>
+                            <input
+                                type="text"
+                                value={editFeatureForm.data.icon}
                                 onChange={(e) => editFeatureForm.setData('icon', e.target.value)}
                                 className={inputBaseClass}
-                            >
-                                <option value="">-- Pilih Ikon --</option>
-                                <option value="car-seat">🚗 Car Seat (Kursi Mobil)</option>
-                                <option value="fixed-price">💰 Fixed Price (Harga Tetap)</option>
-                                <option value="flight-tracking">✈️ Flight Tracking (Pelacakan Penerbangan)</option>
-                                <option value="family-drivers">👨‍👩‍👧 Family Drivers (Driver Keluarga)</option>
-                            </select>
+                            />
                         </div>
                         <div>
                             <label className="block text-xs font-bold text-slate-700 mb-1">Urutan Tampil</label>

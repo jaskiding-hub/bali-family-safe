@@ -16,9 +16,11 @@ class TeamMemberController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'role_title' => ['required', 'string', 'max:255'],
+            'bio' => ['nullable', 'string'],
             'photo' => ['nullable', 'file', 'mimes:svg,png,jpg,jpeg,webp,gif', 'max:3072'],
             'years_experience' => ['nullable', 'string', 'max:50'],
             'languages' => ['nullable', 'string', 'max:255'],
+            'specialty_route' => ['nullable', 'string', 'max:255'],
             'is_founder' => ['nullable', 'boolean'],
             'driver_id' => ['nullable', 'integer', 'exists:drivers,id'],
         ]);
@@ -27,8 +29,10 @@ class TeamMemberController extends Controller
             $data = [
                 'name' => $validated['name'],
                 'role_title' => $validated['role_title'],
+                'bio' => $validated['bio'] ?? null,
                 'years_experience' => $validated['years_experience'] ?? null,
                 'languages' => $validated['languages'] ?? null,
+                'specialty_route' => $validated['specialty_route'] ?? null,
                 'is_founder' => ! empty($validated['is_founder']),
                 'driver_id' => ! empty($validated['driver_id']) ? $validated['driver_id'] : null,
                 'display_order' => (int) (TeamMember::max('display_order') ?? 0) + 1,
@@ -51,9 +55,11 @@ class TeamMemberController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'role_title' => ['required', 'string', 'max:255'],
+            'bio' => ['nullable', 'string'],
             'photo' => ['nullable', 'file', 'mimes:svg,png,jpg,jpeg,webp,gif', 'max:3072'],
             'years_experience' => ['nullable', 'string', 'max:50'],
             'languages' => ['nullable', 'string', 'max:255'],
+            'specialty_route' => ['nullable', 'string', 'max:255'],
             'is_founder' => ['nullable', 'boolean'],
             'driver_id' => ['nullable', 'integer', 'exists:drivers,id'],
         ]);
@@ -62,8 +68,10 @@ class TeamMemberController extends Controller
             $data = [
                 'name' => $validated['name'],
                 'role_title' => $validated['role_title'],
+                'bio' => $validated['bio'] ?? null,
                 'years_experience' => $validated['years_experience'] ?? null,
                 'languages' => $validated['languages'] ?? null,
+                'specialty_route' => $validated['specialty_route'] ?? null,
                 'is_founder' => ! empty($validated['is_founder']),
                 'driver_id' => ! empty($validated['driver_id']) ? $validated['driver_id'] : null,
             ];

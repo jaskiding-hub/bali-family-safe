@@ -143,6 +143,9 @@ function FleetModal({ vehicle, onClose }) {
                             <span className="text-xs font-semibold text-sky-800 bg-sky-50 px-2 py-0.5 rounded-md border border-sky-100">
                                 {vehicle.seats}
                             </span>
+                            <span className="text-xs font-bold text-sky-900 ml-auto">
+                                {vehicle.price}
+                            </span>
                         </div>
                     </div>
                     <button
@@ -217,20 +220,21 @@ export default function FleetSection({ vehicles = [] }) {
                 title: car.name,
                 capacity: `1–${car.passenger_capacity || 6} Passengers`,
                 seats: car.category?.includes('HiAce') ? '3+ Car Seats' : (car.passenger_capacity > 5 ? '2 Car Seats' : '1 Car Seat'),
-                badge: car.is_popular ? 'MOST POPULAR' : null,
+                price: car.daily_rate ? `From Rp ${Number(car.daily_rate).toLocaleString()} / day` : fallback.price,
+                badge: i === 1 ? 'MOST POPULAR' : null,
                 img: car.photo_url || fallback.img,
-                shortDesc: car.detailed_description || fallback.shortDesc,
-                highlighted: car.is_popular,
+                shortDesc: car.description || fallback.shortDesc,
+                highlighted: i === 1,
                 details: {
                     heading: car.name,
-                    description: car.detailed_description || fallback.details.description,
+                    description: car.description || fallback.details.description,
                     specs: [
                         { label: 'Passenger Capacity', value: `1–${car.passenger_capacity || 6} passengers + driver` },
                         { label: 'Car Seats', value: car.passenger_capacity > 5 ? 'Up to 2 certified child seats' : '1 certified child seat' },
                         { label: 'Luggage Space', value: `${car.luggage_capacity || 3} medium/large suitcases + stroller` },
                         { label: 'Air Conditioning', value: 'Dual-zone climate control with rear vents' },
                     ],
-                    features: car.features && car.features.length > 0 ? car.features : fallback.details.features,
+                    features: fallback.details.features,
                     bestFor: fallback.details.bestFor,
                 },
             };
@@ -351,6 +355,17 @@ export default function FleetSection({ vehicles = [] }) {
                                     }}>
                                         {car.seats}
                                     </span>
+                                </div>
+
+                                {/* Starting price */}
+                                <div style={{
+                                    fontFamily: 'Inter, sans-serif',
+                                    fontWeight: 700,
+                                    fontSize: '14px',
+                                    color: '#00658D',
+                                    marginBottom: '8px',
+                                }}>
+                                    {car.price}
                                 </div>
 
                                 <p style={{
