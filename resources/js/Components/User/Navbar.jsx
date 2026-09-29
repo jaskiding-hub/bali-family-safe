@@ -18,12 +18,37 @@ export default function Navbar() {
     const [scrolled, setScrolled] = useState(false);
     const [mobileOpen, setMobileOpen] = useState(false);
     const [mounted, setMounted] = useState(false);
+    const [activeSection, setActiveSection] = useState('#hero');
 
     useEffect(() => {
         setMounted(true);
         const onScroll = () => setScrolled(window.scrollY > 60);
         window.addEventListener('scroll', onScroll, { passive: true });
         return () => window.removeEventListener('scroll', onScroll);
+    }, []);
+
+    // Track active section with IntersectionObserver
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        setActiveSection(`#${entry.target.id}`);
+                    }
+                });
+            },
+            {
+                rootMargin: '-100px 0px -66% 0px',
+                threshold: 0,
+            }
+        );
+
+        NAV_LINKS.forEach((link) => {
+            const el = document.querySelector(link.href);
+            if (el) observer.observe(el);
+        });
+
+        return () => observer.disconnect();
     }, []);
 
     useEffect(() => {
@@ -103,34 +128,30 @@ export default function Navbar() {
                             zIndex: 10,
                         }}
                     >
-                        {NAV_LINKS.map((link, i) => (
-                            <a
-                                key={i}
-                                href={link.href}
-                                onClick={(e) => scrollTo(e, link.href)}
-                                style={{
-                                    fontFamily: 'Inter, sans-serif',
-                                    fontWeight: i === 0 ? 700 : 600,
-                                    fontSize: '14px',
-                                    lineHeight: '20px',
-                                    color: scrolled
-                                        ? (i === 0 ? '#00658D' : '#334155')
-                                        : '#FFFFFF',
-                                    textDecoration: 'none',
-                                    whiteSpace: 'nowrap',
-                                    letterSpacing: '0.1px',
-                                    transition: 'color 0.2s ease',
-                                    textShadow: scrolled ? 'none' : '0 1px 3px rgba(0,0,0,0.4)',
-                                    padding: '4px 2px',
-                                }}
-                                onMouseEnter={e => e.target.style.color = '#00AEEF'}
-                                onMouseLeave={e => e.target.style.color = scrolled
-                                    ? (i === 0 ? '#00658D' : '#334155')
-                                    : '#FFFFFF'}
-                            >
-                                {link.label}
-                            </a>
-                        ))}
+                        {NAV_LINKS.map((link, i) => {
+                            const isActive = link.href === activeSection;
+                            return (
+                                <a
+                                    key={i}
+                                    href={link.href}
+                                    onClick={(e) => scrollTo(e, link.href)}
+                                    className={`text-sm tracking-tight font-medium rounded-full px-3 py-1.5 transition-all duration-200 cursor-pointer whitespace-nowrap ${
+                                        scrolled
+                                            ? (isActive
+                                                ? 'text-sky-700 font-bold bg-sky-50'
+                                                : 'text-slate-700 hover:text-sky-600 hover:bg-slate-100/80')
+                                            : (isActive
+                                                ? 'text-white font-bold bg-white/20 backdrop-blur-xs'
+                                                : 'text-white/90 hover:text-white hover:bg-white/15 backdrop-blur-xs')
+                                    }`}
+                                    style={{
+                                        textShadow: scrolled ? 'none' : '0 1px 3px rgba(0,0,0,0.3)',
+                                    }}
+                                >
+                                    {link.label}
+                                </a>
+                            );
+                        })}
                     </nav>
 
                     {/* Right slot for Mobile Hamburger */}
@@ -218,33 +239,36 @@ export default function Navbar() {
                         gap: '6px',
                         flex: 1,
                     }}>
-                        {NAV_LINKS.map((link, i) => (
-                            <a
-                                key={i}
-                                href={link.href}
-                                onClick={(e) => scrollTo(e, link.href)}
-                                style={{
-                                    fontFamily: 'Inter, sans-serif',
-                                    fontWeight: 600,
-                                    fontSize: '18px',
-                                    lineHeight: '26px',
-                                    color: i === 0 ? '#00658D' : '#1E293B',
-                                    background: i === 0 ? 'rgba(0, 101, 141, 0.06)' : 'transparent',
-                                    textDecoration: 'none',
-                                    padding: '12px 16px',
-                                    borderRadius: '12px',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'space-between',
-                                    transition: 'background 0.15s, color 0.15s',
-                                }}
-                            >
-                                <span>{link.label}</span>
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={i === 0 ? '#00658D' : '#94A3B8'} strokeWidth="2.5" strokeLinecap="round">
-                                    <polyline points="9 18 15 12 9 6"></polyline>
-                                </svg>
-                            </a>
-                        ))}
+                        {NAV_LINKS.map((link, i) => {
+                            const isActive = link.href === activeSection;
+                            return (
+                                <a
+                                    key={i}
+                                    href={link.href}
+                                    onClick={(e) => scrollTo(e, link.href)}
+                                    style={{
+                                        fontFamily: 'Inter, sans-serif',
+                                        fontWeight: 600,
+                                        fontSize: '18px',
+                                        lineHeight: '26px',
+                                        color: isActive ? '#00658D' : '#1E293B',
+                                        background: isActive ? 'rgba(0, 101, 141, 0.06)' : 'transparent',
+                                        textDecoration: 'none',
+                                        padding: '12px 16px',
+                                        borderRadius: '12px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'space-between',
+                                        transition: 'background 0.15s, color 0.15s',
+                                    }}
+                                >
+                                    <span>{link.label}</span>
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={isActive ? '#00658D' : '#94A3B8'} strokeWidth="2.5" strokeLinecap="round">
+                                        <polyline points="9 18 15 12 9 6"></polyline>
+                                    </svg>
+                                </a>
+                            );
+                        })}
                     </nav>
 
                     {/* Drawer Footer Actions */}
@@ -281,7 +305,7 @@ export default function Navbar() {
                             <span>Book via WhatsApp</span>
                         </a>
                         <div style={{ textAlign: 'center', fontFamily: 'Inter, sans-serif', fontSize: '13px', color: '#64748B' }}>
-                            Fast & Direct Driver Confirmation 🌴
+                            Fast & Direct Driver Confirmation
                         </div>
                     </div>
                 </div>,

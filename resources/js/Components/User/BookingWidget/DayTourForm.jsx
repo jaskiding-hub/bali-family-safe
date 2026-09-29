@@ -172,7 +172,7 @@ export default function DayTourForm({ packages = [], vehicles = [], childSeatTyp
                             value={data.package_id}
                             onChange={(e) => setData('package_id', e.target.value ? parseInt(e.target.value, 10) : '')}
                         >
-                            <option value="">-- Choose Tour Itinerary --</option>
+                            <option value="">Choose Tour Itinerary</option>
                             {packages.map((pkg) => (
                                 <option key={pkg.id} value={pkg.id}>
                                     {pkg.name} ({pkg.duration_type || 'Full Day'})

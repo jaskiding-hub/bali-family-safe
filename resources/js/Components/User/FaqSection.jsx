@@ -45,18 +45,20 @@ function AccordionItem({ faq, isOpen, onToggle }) {
 
     return (
         <div
+            className="transition-all duration-300"
             style={{
-                borderRadius: '12px',
-                border: isOpen ? '1px solid #00658D' : '1px solid #E1E3E4',
+                borderRadius: '14px',
+                border: isOpen ? '1.5px solid #00AEEF' : '1px solid #E1E3E4',
                 background: '#FFFFFF',
                 overflow: 'hidden',
-                transition: 'border-color 0.3s ease, box-shadow 0.3s ease',
-                boxShadow: isOpen ? '0px 4px 12px rgba(0, 101, 141, 0.08)' : '0px 1px 2px rgba(0,0,0,0.04)',
+                transition: 'border-color 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
+                boxShadow: isOpen ? '0px 8px 24px -4px rgba(0, 174, 239, 0.12)' : '0px 1px 3px rgba(0,0,0,0.04)',
             }}
         >
             <button
                 type="button"
                 onClick={onToggle}
+                className="hover:bg-slate-50/80 transition-colors duration-200"
                 style={{
                     width: '100%',
                     display: 'flex',
@@ -82,13 +84,13 @@ function AccordionItem({ faq, isOpen, onToggle }) {
                 {/* Rotating plus/minus icon */}
                 <div style={{
                     flexShrink: 0,
-                    width: '24px',
-                    height: '24px',
+                    width: '26px',
+                    height: '26px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    color: isOpen ? '#00658D' : '#BDC8D1',
-                    transition: 'color 0.25s ease, transform 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
+                    color: isOpen ? '#00AEEF' : '#94A3B8',
+                    transition: 'color 0.25s ease, transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
                     transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
                 }}>
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
@@ -102,7 +104,7 @@ function AccordionItem({ faq, isOpen, onToggle }) {
                 style={{
                     maxHeight: isOpen ? `${height + 40}px` : '0px',
                     opacity: isOpen ? 1 : 0,
-                    transition: 'max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease',
+                    transition: 'max-height 0.45s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
                     overflow: 'hidden',
                 }}
             >

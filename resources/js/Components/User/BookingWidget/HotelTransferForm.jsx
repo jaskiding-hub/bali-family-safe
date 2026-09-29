@@ -248,7 +248,7 @@ export default function HotelTransferForm({ vehicles = [], childSeatTypes = [] }
                             value={data.pickup_hotel_id}
                             onChange={handlePickupHotelChange}
                         >
-                            <option value="">-- Select Pick-Up Hotel / Resort --</option>
+                            <option value="">Select Pick-Up Hotel / Resort</option>
                             {hotels.map((h) => (
                                 <option key={h.id} value={h.id}>{h.nama_hotel}</option>
                             ))}
@@ -278,8 +278,8 @@ export default function HotelTransferForm({ vehicles = [], childSeatTypes = [] }
                         >
                             <option value="">
                                 {!data.pickup_hotel_id
-                                    ? '⚠️ Select Pick-Up Hotel (Origin) first...'
-                                    : '-- Select Drop-Off Hotel / Resort --'}
+                                    ? 'Select Pick-Up Hotel first'
+                                    : 'Select Drop-Off Hotel / Resort'}
                             </option>
                             {hotels
                                 .filter((h) => String(h.id) !== String(data.pickup_hotel_id))

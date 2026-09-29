@@ -97,12 +97,13 @@ export default function TestimonialsSection({ testimonials = [] }) {
                     {displayReviews.map((review, i) => (
                         <div
                             key={i}
+                            className="card-hover-fluid"
                             style={{
                                 flex: '1 1 0',
                                 maxWidth: '336px',
                                 background: '#FFFFFF',
-                                border: '1px solid rgba(189,200,209,0.2)',
-                                boxShadow: '0px 1px 2px rgba(0,0,0,0.05)',
+                                border: '1px solid rgba(189,200,209,0.25)',
+                                boxShadow: '0px 1px 3px rgba(0,0,0,0.05)',
                                 borderRadius: '16px',
                                 padding: '32px',
                                 display: 'flex',

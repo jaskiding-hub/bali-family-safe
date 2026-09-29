@@ -28,6 +28,8 @@ export default function Home({
     site_settings = null,
     team_members = [],
     child_seat_types = [],
+    about_content = null,
+    car_seat_content = [],
 }) {
     return (
         <div style={{
@@ -63,8 +65,8 @@ export default function Home({
 
             {/* Main content sections */}
             <main>
-                <ScrollReveal><CarSeatsSection /></ScrollReveal>
-                <ScrollReveal><AboutSection /></ScrollReveal>
+                <ScrollReveal><CarSeatsSection carSeatContent={car_seat_content} /></ScrollReveal>
+                <ScrollReveal><AboutSection aboutContent={about_content} /></ScrollReveal>
                 <ScrollReveal><WhyChooseUsSection siteFeatures={site_features} /></ScrollReveal>
                 <ScrollReveal><DriversSection teamMembers={team_members} /></ScrollReveal>
                 <ScrollReveal><ServicesSection services={services} /></ScrollReveal>

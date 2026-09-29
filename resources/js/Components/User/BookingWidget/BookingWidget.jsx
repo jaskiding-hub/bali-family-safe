@@ -64,30 +64,38 @@ export default function BookingWidget({ packages = [], childSeatTypes = [], vehi
                             key={tab.id}
                             type="button"
                             onClick={() => setActiveTab(i)}
+                            className="cursor-pointer transition-all duration-200"
                             style={{
                                 flex: '1 1 0',
-                                minHeight: '52px',
+                                minHeight: '54px',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
                                 gap: '8px',
                                 border: 'none',
-                                borderBottom: isActive ? '2px solid #00658D' : '2px solid transparent',
-                                background: 'transparent',
-                                cursor: 'pointer',
+                                borderBottom: isActive ? '2.5px solid #00658D' : '2.5px solid transparent',
+                                background: isActive ? '#F8FAFC' : 'transparent',
                                 fontFamily: 'Inter, sans-serif',
-                                fontWeight: isActive ? 600 : 500,
+                                fontWeight: isActive ? 700 : 500,
                                 fontSize: '14px',
                                 color: isActive ? '#00658D' : '#64748B',
                                 padding: '14px 20px',
                                 whiteSpace: 'nowrap',
-                                transition: 'color 0.15s ease, border-color 0.15s ease',
+                                transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+                            }}
+                            onMouseEnter={e => {
+                                if (!isActive) e.currentTarget.style.background = '#F8FAFC';
+                            }}
+                            onMouseLeave={e => {
+                                if (!isActive) e.currentTarget.style.background = 'transparent';
                             }}
                         >
                             <span style={{
                                 display: 'inline-flex',
                                 alignItems: 'center',
                                 opacity: isActive ? 1 : 0.7,
+                                transform: isActive ? 'scale(1.08)' : 'scale(1)',
+                                transition: 'transform 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
                             }}>
                                 {tab.icon}
                             </span>

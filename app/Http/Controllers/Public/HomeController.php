@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Public;
 
 use App\Http\Controllers\Controller;
+use App\Models\AboutContent;
+use App\Models\CarSeatContent;
 use App\Models\ChildSeatType;
 use App\Models\Faq;
 use App\Models\GalleryImage;
@@ -201,6 +203,14 @@ class HomeController extends Controller
 
         $childSeatTypes = ChildSeatType::orderBy('id', 'asc')->get();
 
+        $aboutContent = AboutContent::where('is_active', true)
+            ->orderBy('display_order', 'asc')
+            ->first();
+
+        $carSeatContent = CarSeatContent::where('is_active', true)
+            ->orderBy('display_order', 'asc')
+            ->get();
+
         return Inertia::render('User/Home', [
             'packages' => $packages,
             'services' => $services,
@@ -213,6 +223,8 @@ class HomeController extends Controller
             'site_settings' => $siteSettings,
             'team_members' => $teamMembers,
             'child_seat_types' => $childSeatTypes,
+            'about_content' => $aboutContent,
+            'car_seat_content' => $carSeatContent,
         ]);
     }
 }

@@ -126,13 +126,56 @@ input, select, textarea, button {
     }
 }
 
-/* ── Smooth Global Animations ── */
+/* ── Modern Fluid Animation Tokens & Keyframes ── */
+:root {
+    --ease-fluid: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --ease-smooth: cubic-bezier(0.25, 1, 0.5, 1);
+    --shadow-ambient: 0 20px 35px -10px rgba(0, 76, 107, 0.12), 0 10px 18px -6px rgba(0, 0, 0, 0.04);
+    --shadow-hover-card: 0 24px 44px -12px rgba(0, 101, 141, 0.18), 0 12px 20px -8px rgba(0, 0, 0, 0.06);
+    --shadow-hover-btn: 0 10px 25px -4px rgba(0, 174, 239, 0.45), 0 4px 10px -2px rgba(0, 101, 141, 0.25);
+}
+
+/* Modal and Overlay Keyframes */
+@keyframes fadeInBackdrop {
+    from {
+        opacity: 0;
+        backdrop-filter: blur(0px);
+        -webkit-backdrop-filter: blur(0px);
+    }
+    to {
+        opacity: 1;
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+    }
+}
+
+@keyframes zoomInPanel {
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(12px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.modal-backdrop-anim {
+    animation: fadeInBackdrop 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    will-change: opacity, backdrop-filter;
+}
+
+.modal-panel-anim {
+    animation: zoomInPanel 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    will-change: transform, opacity;
+}
 
 /* Fade-in on scroll (applied via IntersectionObserver) */
 @keyframes fadeInUp {
     from {
         opacity: 0;
-        transform: translateY(24px);
+        transform: translateY(20px);
     }
     to {
         opacity: 1;
@@ -142,54 +185,128 @@ input, select, textarea, button {
 
 .animate-fade-in {
     opacity: 0;
-    animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    animation: fadeInUp 0.75s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    will-change: transform, opacity;
 }
 
 /* Staggered delays for child elements */
-.animate-fade-in-delay-1 { animation-delay: 0.1s; }
-.animate-fade-in-delay-2 { animation-delay: 0.2s; }
-.animate-fade-in-delay-3 { animation-delay: 0.3s; }
-.animate-fade-in-delay-4 { animation-delay: 0.4s; }
+.animate-fade-in-delay-1 { animation-delay: 0.08s; }
+.animate-fade-in-delay-2 { animation-delay: 0.16s; }
+.animate-fade-in-delay-3 { animation-delay: 0.24s; }
+.animate-fade-in-delay-4 { animation-delay: 0.32s; }
 
-/* Smooth hover lift effect for cards */
+/* ── Fluid Hover Utilities ── */
+
+/* Smooth, physics-based card hover lift */
+.card-hover-fluid {
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), 
+                box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1), 
+                border-color 0.3s ease;
+    will-change: transform, box-shadow;
+    backface-visibility: hidden;
+}
+.card-hover-fluid:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 24px 44px -12px rgba(0, 101, 141, 0.16), 0 12px 20px -8px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Smooth button hover with micro-tactile push on active */
+.btn-hover-fluid {
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), 
+                box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1), 
+                background-color 0.25s ease, 
+                color 0.25s ease,
+                border-color 0.25s ease;
+    will-change: transform, box-shadow;
+}
+.btn-hover-fluid:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 22px -4px rgba(0, 174, 239, 0.38), 0 4px 10px -2px rgba(0, 101, 141, 0.2);
+}
+.btn-hover-fluid:active {
+    transform: translateY(0px) scale(0.97);
+}
+
+/* Secondary / Dark button hover */
+.btn-secondary-hover-fluid {
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), 
+                box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1), 
+                background-color 0.25s ease, 
+                color 0.25s ease;
+    will-change: transform, box-shadow;
+}
+.btn-secondary-hover-fluid:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px -4px rgba(62, 94, 149, 0.35);
+}
+.btn-secondary-hover-fluid:active {
+    transform: translateY(0px) scale(0.97);
+}
+
+/* Legacy .hover-lift updated with fluid physics */
 .hover-lift {
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: transform, box-shadow;
 }
 .hover-lift:hover {
-    transform: translateY(-4px);
-    box-shadow: 0px 20px 40px rgba(0, 45, 99, 0.1);
+    transform: translateY(-5px);
+    box-shadow: 0 20px 40px -8px rgba(0, 45, 99, 0.12);
 }
 
-/* Smooth scale on hover for buttons */
+/* Smooth scale on hover */
 .hover-scale {
-    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: transform;
 }
 .hover-scale:hover {
-    transform: scale(1.02);
+    transform: scale(1.03);
+}
+.hover-scale:active {
+    transform: scale(0.97);
 }
 
-/* Smooth color transition for links and interactive text */
+/* Smooth color transition for links */
 .smooth-color {
-    transition: color 0.25s ease, background-color 0.25s ease;
+    transition: color 0.25s ease, background-color 0.25s ease, border-color 0.25s ease;
 }
 
-/* Pulse animation for WhatsApp button */
-@keyframes pulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.05); }
+/* Non-jittering, elegant breathing pulse for WhatsApp */
+@keyframes waRingGlow {
+    0% {
+        box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.65), 0 8px 25px rgba(37, 211, 102, 0.35);
+    }
+    70% {
+        box-shadow: 0 0 0 14px rgba(37, 211, 102, 0), 0 12px 30px rgba(37, 211, 102, 0.45);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(37, 211, 102, 0), 0 8px 25px rgba(37, 211, 102, 0.35);
+    }
 }
 
 .whatsapp-pulse {
-    animation: pulse 2s ease-in-out infinite;
+    animation: waRingGlow 2.4s ease-out infinite;
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), filter 0.3s ease !important;
+}
+.whatsapp-pulse:hover {
+    transform: scale(1.08) translateY(-2px) !important;
+    filter: brightness(1.05);
+}
+.whatsapp-pulse:active {
+    transform: scale(0.95) !important;
 }
 
-/* Image zoom on hover */
+/* Smooth, cinematic image zoom on hover */
 .img-zoom {
-    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     overflow: hidden;
 }
-.img-zoom:hover img {
-    transform: scale(1.05);
+.img-zoom img {
+    transition: transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: transform;
+    backface-visibility: hidden;
+}
+.img-zoom:hover img,
+.group:hover .img-zoom img {
+    transform: scale(1.07);
 }
 
 /* Skeleton loading shimmer */

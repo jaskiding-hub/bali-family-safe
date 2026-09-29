@@ -69,7 +69,7 @@ export default function TourPackagesSection({ packages = [] }) {
                         return (
                             <div
                                 key={tourKey}
-                                className="w-full bg-white border border-slate-200/60 shadow-sm rounded-2xl overflow-hidden relative flex flex-col"
+                                className="group card-hover-fluid w-full bg-white border border-slate-200/70 hover:border-sky-300/80 shadow-xs rounded-2xl overflow-hidden relative flex flex-col"
                             >
                                 {/* POPULAR badge */}
                                 {tour.badge && (
@@ -84,7 +84,7 @@ export default function TourPackagesSection({ packages = [] }) {
                                 )}
 
                                 {/* Image */}
-                                <Link href={tourLink} style={{ height: '192px', background: '#EDEEEF', overflow: 'hidden', display: 'block' }}>
+                                <Link href={tourLink} className="img-zoom block" style={{ height: '192px', background: '#EDEEEF', overflow: 'hidden' }}>
                                     <img src={tourImg} alt={tourTitle} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                 </Link>
 
@@ -143,24 +143,8 @@ export default function TourPackagesSection({ packages = [] }) {
                                     }}>
                                         <Link
                                             href={tourLink}
-                                            style={{
-                                                display: 'inline-flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                padding: '8px 16px',
-                                                height: '32px',
-                                                background: '#3E5E96',
-                                                borderRadius: '8px',
-                                                fontFamily: 'Inter, sans-serif',
-                                                fontWeight: 500,
-                                                fontSize: '12px',
-                                                lineHeight: '16px',
-                                                color: '#FFFFFF',
-                                                textDecoration: 'none',
-                                                transition: 'background 0.15s',
-                                            }}
-                                            onMouseEnter={e => e.currentTarget.style.background = '#2e4f82'}
-                                            onMouseLeave={e => e.currentTarget.style.background = '#3E5E96'}
+                                            className="btn-secondary-hover-fluid inline-flex items-center justify-center px-4 py-2 rounded-xl text-white font-medium text-xs bg-[#3E5E96] hover:bg-[#2e4f82] cursor-pointer shadow-xs"
+                                            style={{ textDecoration: 'none' }}
                                         >
                                             View Details
                                         </Link>

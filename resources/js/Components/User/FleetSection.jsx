@@ -123,11 +123,11 @@ function FleetModal({ vehicle, onClose }) {
 
     return createPortal(
         <div
-            className="fixed inset-0 z-[999999] flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-md animate-in fade-in duration-200"
+            className="fixed inset-0 z-[999999] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md modal-backdrop-anim"
             onClick={onClose}
         >
             <div
-                className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden text-slate-800 my-auto"
+                className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden text-slate-800 my-auto modal-panel-anim"
                 onClick={e => e.stopPropagation()}
             >
                 {/* Header */}
@@ -298,7 +298,7 @@ export default function FleetSection({ vehicles = [] }) {
                     {displayFleet.map((car, i) => (
                         <div
                             key={i}
-                            className="w-full bg-white border border-slate-200/60 shadow-sm rounded-2xl overflow-hidden relative flex flex-col"
+                            className="group card-hover-fluid w-full bg-white border border-slate-200/70 hover:border-sky-300/80 shadow-xs rounded-2xl overflow-hidden relative flex flex-col"
                         >
                             {/* Badge */}
                             {car.badge && (
@@ -313,7 +313,7 @@ export default function FleetSection({ vehicles = [] }) {
                             )}
 
                             {/* Vehicle Image */}
-                            <div style={{ height: '192px', background: '#EDEEEF', overflow: 'hidden' }}>
+                            <div className="img-zoom" style={{ height: '192px', background: '#EDEEEF', overflow: 'hidden' }}>
                                 <img src={car.img} alt={car.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                             </div>
 
@@ -389,22 +389,7 @@ export default function FleetSection({ vehicles = [] }) {
                                     <button
                                         type="button"
                                         onClick={() => setSelectedVehicle(car)}
-                                        style={{
-                                            padding: '8px 16px',
-                                            height: '32px',
-                                            background: '#3E5E96',
-                                            borderRadius: '8px',
-                                            border: 'none',
-                                            fontFamily: 'Inter, sans-serif',
-                                            fontWeight: 500,
-                                            fontSize: '12px',
-                                            lineHeight: '16px',
-                                            color: '#FFFFFF',
-                                            cursor: 'pointer',
-                                            transition: 'background 0.15s',
-                                        }}
-                                        onMouseEnter={e => e.currentTarget.style.background = '#2e4f82'}
-                                        onMouseLeave={e => e.currentTarget.style.background = '#3E5E96'}
+                                        className="btn-secondary-hover-fluid inline-flex items-center justify-center px-4 py-2 rounded-xl text-white font-medium text-xs bg-[#3E5E96] hover:bg-[#2e4f82] cursor-pointer shadow-xs"
                                     >
                                         View Details
                                     </button>

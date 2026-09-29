@@ -264,7 +264,7 @@ export default function AirportBookingForm({ vehicles = [], childSeatTypes = [] 
             .join(', ') || '1x Free Included';
 
         const msg = `Hi Bali Family Safe!\n\n*Airport Transfer Booking:*
-- Type: ${direction === 'Pick-Up' ? 'DPS Airport → Hotel (Pick-Up)' : 'Hotel → DPS Airport (Drop-Off)'}
+- Type: ${direction === 'Pick-Up' ? 'DPS Airport → Hotel' : 'Hotel → DPS Airport'}
 - Area: ${selectedArea}
 - Hotel: ${hotelName}
 - Guest Name: ${data.guest_name}
@@ -341,7 +341,7 @@ export default function AirportBookingForm({ vehicles = [], childSeatTypes = [] 
                         }}
                     >
                         <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: direction === 'Pick-Up' ? '#00658D' : '#94A3B8' }} />
-                        <span>Airport Pick-Up (DPS Airport → Hotel)</span>
+                        <span>Airport Pick-Up</span>
                     </button>
 
                     <button
@@ -366,7 +366,7 @@ export default function AirportBookingForm({ vehicles = [], childSeatTypes = [] 
                         }}
                     >
                         <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: direction === 'Drop-Off' ? '#00658D' : '#94A3B8' }} />
-                        <span>Airport Drop-Off (Hotel → DPS Airport)</span>
+                        <span>Airport Drop-Off</span>
                     </button>
                 </div>
             </div>
@@ -403,7 +403,7 @@ export default function AirportBookingForm({ vehicles = [], childSeatTypes = [] 
 
                 <div style={{ gridColumn: 'span 2' }}>
                     <FieldWithIcon
-                        label={direction === 'Pick-Up' ? '1. Destination Area in Bali *' : '1. Pick-Up Area in Bali *'}
+                        label={direction === 'Pick-Up' ? '1. Destination Area in Bali' : '1. Pick-Up Area in Bali'}
                         isSelect={true}
                         icon={<IconLocation />}
                     >
@@ -418,7 +418,7 @@ export default function AirportBookingForm({ vehicles = [], childSeatTypes = [] 
                             onChange={handleAreaChange}
                         >
                             <option value="">
-                                {direction === 'Pick-Up' ? '-- Choose Destination Area in Bali --' : '-- Choose Pick-Up Area in Bali --'}
+                                {direction === 'Pick-Up' ? 'Choose Destination Area in Bali' : 'Choose Pick-Up Area in Bali'}
                             </option>
                             {availableDestinations.map((dest) => (
                                 <option key={dest} value={dest}>{dest}</option>
@@ -431,8 +431,8 @@ export default function AirportBookingForm({ vehicles = [], childSeatTypes = [] 
                     <FieldWithIcon
                         label={
                             selectedArea
-                                ? (direction === 'Drop-Off' ? `2. Pick-Up Hotel in ${selectedArea} *` : `2. Drop-Off Hotel in ${selectedArea} *`)
-                                : (direction === 'Drop-Off' ? '2. Pick-Up Hotel / Resort *' : '2. Drop-Off Hotel / Resort *')
+                                ? (direction === 'Drop-Off' ? `2. Pick-Up Hotel in ${selectedArea}` : `2. Drop-Off Hotel in ${selectedArea}`)
+                                : (direction === 'Drop-Off' ? '2. Pick-Up Hotel / Resort' : '2. Drop-Off Hotel / Resort')
                         }
                         isSelect={true}
                         icon={<IconHotel />}
@@ -456,10 +456,10 @@ export default function AirportBookingForm({ vehicles = [], childSeatTypes = [] 
                         >
                             <option value="">
                                 {!selectedArea
-                                    ? (direction === 'Pick-Up' ? '⚠️ Choose destination area first...' : '⚠️ Choose pick-up area first...')
+                                    ? (direction === 'Pick-Up' ? 'Choose destination area first' : 'Choose pick-up area first')
                                     : (filteredHotels.length > 0
-                                        ? `-- Select Hotel / Resort (${filteredHotels.length} available) --`
-                                        : `-- No hotels registered in ${selectedArea} --`)}
+                                        ? `Select Hotel / Resort (${filteredHotels.length} available)`
+                                        : `No hotels registered in ${selectedArea}`)}
                             </option>
                             {filteredHotels.map((h) => (
                                 <option key={h.id} value={h.id}>
@@ -552,7 +552,7 @@ export default function AirportBookingForm({ vehicles = [], childSeatTypes = [] 
                 padding: '16px 32px 0',
             }}>
                 <div>
-                    <FieldWithIcon label="Arrival / Pickup Date *" icon={<IconCalendar />}>
+                    <FieldWithIcon label="Arrival / Pickup Date" icon={<IconCalendar />}>
                         <input
                             type="date"
                             required
@@ -570,7 +570,7 @@ export default function AirportBookingForm({ vehicles = [], childSeatTypes = [] 
                 </div>
 
                 <div>
-                    <FieldWithIcon label="Flight Arrival Time *" icon={<IconClock />}>
+                    <FieldWithIcon label="Flight Arrival Time" icon={<IconClock />}>
                         <input
                             type="time"
                             required
@@ -591,7 +591,7 @@ export default function AirportBookingForm({ vehicles = [], childSeatTypes = [] 
                     <FieldWithIcon label="Flight Number" icon={<IconFlight />} optional={true}>
                         <input
                             type="text"
-                            placeholder="e.g. GA-404, VA-045"
+                            placeholder="GA-404, VA-045"
                             style={inputStyle}
                             value={data.flight_number}
                             onChange={(e) => setData('flight_number', e.target.value)}
@@ -619,11 +619,11 @@ export default function AirportBookingForm({ vehicles = [], childSeatTypes = [] 
                 padding: '16px 32px 0',
             }}>
                 <div>
-                    <FieldWithIcon label="Full Name *" icon={<IconUser />}>
+                    <FieldWithIcon label="Full Name" icon={<IconUser />}>
                         <input
                             type="text"
                             required
-                            placeholder="e.g. Sarah Miller"
+                            placeholder="Sarah Miller"
                             style={{
                                 ...inputStyle,
                                 borderColor: errors.guest_name ? '#F43F5E' : '#CBD5E1',
@@ -638,11 +638,11 @@ export default function AirportBookingForm({ vehicles = [], childSeatTypes = [] 
                 </div>
 
                 <div>
-                    <FieldWithIcon label="WhatsApp Number *" icon={<IconPhone />}>
+                    <FieldWithIcon label="WhatsApp Number" icon={<IconPhone />}>
                         <input
                             type="tel"
                             required
-                            placeholder="e.g. +61 412 345 678"
+                            placeholder="+61 412 345 678"
                             style={{
                                 ...inputStyle,
                                 borderColor: errors.whatsapp_number ? '#F43F5E' : '#CBD5E1',
@@ -711,10 +711,10 @@ export default function AirportBookingForm({ vehicles = [], childSeatTypes = [] 
 
             {/* 6. Special Requests */}
             <div style={{ padding: '16px 32px 0' }}>
-                <FieldWithIcon label="Special Instructions & Requests" icon={<IconNote />} optional={true}>
+                <FieldWithIcon label="Special Instructions & Requests" optional={true}>
                     <textarea
                         rows="2"
-                        placeholder="e.g. Flight delay details, pram size, driver meeting instructions..."
+                        placeholder="Flight delay details, pram size, driver meeting instructions..."
                         style={textareaStyle}
                         value={data.notes}
                         onChange={(e) => setData('notes', e.target.value)}

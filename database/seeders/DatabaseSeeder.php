@@ -22,6 +22,8 @@ class DatabaseSeeder extends Seeder
             DriverSeeder::class,
             DriverBookingSeeder::class,
             DummyDataSeeder::class,
+            AboutContentSeeder::class,
+            CarSeatContentSeeder::class,
         ]);
     }
 }

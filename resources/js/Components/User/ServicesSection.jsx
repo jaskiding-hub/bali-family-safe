@@ -111,11 +111,11 @@ function ServiceModal({ service, onClose }) {
 
     return createPortal(
         <div
-            className="fixed inset-0 z-[999999] flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-md animate-in fade-in duration-200"
+            className="fixed inset-0 z-[999999] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md modal-backdrop-anim"
             onClick={onClose}
         >
             <div
-                className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden text-slate-800 my-auto"
+                className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden text-slate-800 my-auto modal-panel-anim"
                 onClick={e => e.stopPropagation()}
             >
                 {/* Header */}
@@ -285,12 +285,13 @@ export default function ServicesSection({ services = [] }) {
                     {displayServices.map((srv, i) => (
                         <div
                             key={i}
+                            className="card-hover-fluid group"
                             style={{
                                 flex: '1 1 0',
                                 maxWidth: '336px',
                                 background: '#FFFFFF',
-                                border: '1px solid rgba(189,200,209,0.2)',
-                                boxShadow: '0px 1px 2px rgba(0,0,0,0.05)',
+                                border: '1px solid rgba(189,200,209,0.25)',
+                                boxShadow: '0px 1px 3px rgba(0,0,0,0.05)',
                                 borderRadius: '16px',
                                 padding: '32px',
                                 display: 'flex',
@@ -301,16 +302,19 @@ export default function ServicesSection({ services = [] }) {
                         >
                             {/* Top: icon + title + desc */}
                             <div>
-                                <div style={{
-                                    width: '56px',
-                                    height: '56px',
-                                    background: 'rgba(0, 174, 239, 0.2)',
-                                    borderRadius: '9999px',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    marginBottom: '24px',
-                                }}>
+                                <div
+                                    className="transition-transform duration-300 ease-out group-hover:scale-110"
+                                    style={{
+                                        width: '56px',
+                                        height: '56px',
+                                        background: 'rgba(0, 174, 239, 0.15)',
+                                        borderRadius: '9999px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        marginBottom: '24px',
+                                    }}
+                                >
                                     {srv.icon}
                                 </div>
 
@@ -342,23 +346,30 @@ export default function ServicesSection({ services = [] }) {
                             <button
                                 type="button"
                                 onClick={() => setSelectedService(srv)}
+                                className="btn-hover-fluid"
                                 style={{
                                     width: '100%',
                                     height: '48px',
                                     border: '2px solid #00AEEF',
-                                    borderRadius: '8px',
+                                    borderRadius: '12px',
                                     background: 'transparent',
                                     fontFamily: 'Inter, sans-serif',
                                     fontWeight: 600,
                                     fontSize: '14px',
                                     lineHeight: '20px',
                                     letterSpacing: '0.14px',
-                                    color: '#00AEEF',
+                                    color: '#00658D',
                                     cursor: 'pointer',
-                                    transition: 'background 0.15s',
+                                    transition: 'all 0.25s ease',
                                 }}
-                                onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,174,239,0.05)'}
-                                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                                onMouseEnter={e => {
+                                    e.currentTarget.style.background = '#00AEEF';
+                                    e.currentTarget.style.color = '#FFFFFF';
+                                }}
+                                onMouseLeave={e => {
+                                    e.currentTarget.style.background = 'transparent';
+                                    e.currentTarget.style.color = '#00658D';
+                                }}
                             >
                                 View Details
                             </button>

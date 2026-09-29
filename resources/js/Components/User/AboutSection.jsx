@@ -1,6 +1,16 @@
 import React from 'react';
 
-export default function AboutSection() {
+export default function AboutSection({ aboutContent = null }) {
+    // Fallback ke hardcoded jika belum ada data
+    const defaultContent = {
+        title: 'Your Trusted Partner for Family Adventures in Bali',
+        description: "Bali Family Safe was founded by a family for families. We understand the unique challenges of traveling with little ones — from navigating car seat logistics to finding family-friendly routes across Bali.\n\nOur fleet of modern, air-conditioned vehicles comes with complimentary certified child seats, friendly English-speaking drivers, and a commitment to punctuality and safety that families across Australia, New Zealand and Europe have trusted since 2018.",
+        image_url: 'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=800&q=80',
+    };
+
+    const content = aboutContent || defaultContent;
+    const paragraphs = content.description.split('\n\n');
+
     return (
         <section
             id="about"
@@ -19,24 +29,27 @@ export default function AboutSection() {
                 alignItems: 'center',
                 gap: '48px',
             }}>
-                {/* Left: Photo — Figma: 512x500, borderRadius 16px, shadow */}
-                <div style={{
-                    flex: '1 1 0',
-                    maxWidth: '512px',
-                    height: '500px',
-                    borderRadius: '16px',
-                    overflow: 'hidden',
-                    boxShadow: '0px 10px 15px -3px rgba(0,0,0,0.1), 0px 4px 6px -4px rgba(0,0,0,0.1)',
-                    flexShrink: 0,
-                }}>
+                {/* Left: Photo */}
+                <div
+                    className="card-hover-fluid img-zoom"
+                    style={{
+                        flex: '1 1 0',
+                        maxWidth: '512px',
+                        height: '500px',
+                        borderRadius: '20px',
+                        overflow: 'hidden',
+                        boxShadow: '0px 10px 25px -5px rgba(0,76,107,0.12), 0px 8px 10px -6px rgba(0,0,0,0.06)',
+                        flexShrink: 0,
+                    }}
+                >
                     <img
-                        src="https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=800&q=80"
+                        src={content.image_url}
                         alt="Bali Family Safe Team and Vehicle"
                         style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                     />
                 </div>
 
-                {/* Right: Content — Figma: 512px */}
+                {/* Right: Content */}
                 <div style={{
                     flex: '1 1 0',
                     maxWidth: '512px',
@@ -66,7 +79,7 @@ export default function AboutSection() {
                         </div>
                     </div>
 
-                    {/* H2 — Figma: 40px bold */}
+                    {/* H2 */}
                     <h2 style={{
                         fontFamily: 'Inter, sans-serif',
                         fontWeight: 700,
@@ -77,31 +90,23 @@ export default function AboutSection() {
                         marginBottom: '24px',
                         maxWidth: '492px',
                     }}>
-                        Your Trusted Partner for Family Adventures in Bali
+                        {content.title}
                     </h2>
 
                     {/* Description paragraphs */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
-                        <p style={{
-                            fontFamily: 'Inter, sans-serif',
-                            fontWeight: 400,
-                            fontSize: '18px',
-                            lineHeight: '28px',
-                            color: '#3E4850',
-                            margin: 0,
-                        }}>
-                            Bali Family Safe was founded by a family for families. We understand the unique challenges of traveling with little ones — from navigating car seat logistics to finding family-friendly routes across Bali.
-                        </p>
-                        <p style={{
-                            fontFamily: 'Inter, sans-serif',
-                            fontWeight: 400,
-                            fontSize: '18px',
-                            lineHeight: '28px',
-                            color: '#3E4850',
-                            margin: 0,
-                        }}>
-                            Our fleet of modern, air-conditioned vehicles comes with complimentary certified child seats, friendly English-speaking drivers, and a commitment to punctuality and safety that families across Australia, New Zealand and Europe have trusted since 2018.
-                        </p>
+                        {paragraphs.map((para, i) => (
+                            <p key={i} style={{
+                                fontFamily: 'Inter, sans-serif',
+                                fontWeight: 400,
+                                fontSize: '18px',
+                                lineHeight: '28px',
+                                color: '#3E4850',
+                                margin: 0,
+                            }}>
+                                {para}
+                            </p>
+                        ))}
                     </div>
                 </div>
             </div>

@@ -1,27 +1,30 @@
 import React from 'react';
 
-const seats = [
-    {
-        tag: 'Age 0 – 12 Months',
-        title: 'Rear-Facing Infant',
-        desc: 'Ideal for newborns and infants up to 12 months. Provides maximum protection for delicate necks and spines during transit.',
-        img: 'https://images.unsplash.com/photo-1555252333-9f8e92e65df9?auto=format&fit=crop&w=600&q=80',
-    },
-    {
-        tag: 'Age 1 – 4 Years',
-        title: 'Forward-Facing Toddler',
-        desc: 'Secure 5-point harness systems for active toddlers aged 1 to 4 years old. Engineered for long-distance comfort and side-impact protection.',
-        img: 'https://images.unsplash.com/photo-1617137968427-85924c800a22?auto=format&fit=crop&w=600&q=80',
-    },
-    {
-        tag: 'Age 4 – 8+ Years',
-        title: 'Booster Seat',
-        desc: 'Designed for children aged 4 to 8+ years old needing elevated height for proper vehicle seatbelt positioning. Ensures maximum safety and visibility.',
-        img: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=600&q=80',
-    },
-];
+export default function CarSeatsSection({ carSeatContent = [] }) {
+    // Fallback ke hardcoded jika belum ada data
+    const defaultSeats = [
+        {
+            tag: 'Age 0 – 12 Months',
+            title: 'Rear-Facing Infant',
+            description: 'Ideal for newborns and infants up to 12 months. Provides maximum protection for delicate necks and spines during transit.',
+            image_url: 'https://images.unsplash.com/photo-1555252333-9f8e92e65df9?auto=format&fit=crop&w=600&q=80',
+        },
+        {
+            tag: 'Age 1 – 4 Years',
+            title: 'Forward-Facing Toddler',
+            description: 'Secure 5-point harness systems for active toddlers aged 1 to 4 years old. Engineered for long-distance comfort and side-impact protection.',
+            image_url: 'https://images.unsplash.com/photo-1617137968427-85924c800a22?auto=format&fit=crop&w=600&q=80',
+        },
+        {
+            tag: 'Age 4 – 8+ Years',
+            title: 'Booster Seat',
+            description: 'Designed for children aged 4 to 8+ years old needing elevated height for proper vehicle seatbelt positioning. Ensures maximum safety and visibility.',
+            image_url: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=600&q=80',
+        },
+    ];
 
-export default function CarSeatsSection() {
+    const seats = carSeatContent.length > 0 ? carSeatContent : defaultSeats;
+
     return (
         <section
             id="car-seats"
@@ -43,7 +46,7 @@ export default function CarSeatsSection() {
                     alignItems: 'center',
                     paddingBottom: '64px',
                 }}>
-                    {/* Eyebrow pill — Figma: bg #C6E7FF, text #003E58 */}
+                    {/* Eyebrow pill */}
                     <div style={{
                         display: 'flex',
                         alignItems: 'center',
@@ -67,7 +70,7 @@ export default function CarSeatsSection() {
                         </span>
                     </div>
 
-                    {/* H2 — Figma: 48px bold */}
+                    {/* H2 */}
                     <h2 style={{
                         fontFamily: 'Inter, sans-serif',
                         fontWeight: 700,
@@ -79,81 +82,91 @@ export default function CarSeatsSection() {
                         margin: 0,
                         marginBottom: '24px',
                     }}>
-                        Complimentary Child Car Seats
+                        Certified Child Car Seats – 100% Free
                     </h2>
 
+                    {/* Subheading */}
                     <p style={{
                         fontFamily: 'Inter, sans-serif',
                         fontWeight: 400,
-                        fontSize: '18px',
-                        lineHeight: '28px',
+                        fontSize: '20px',
+                        lineHeight: '32px',
                         color: '#3E4850',
                         textAlign: 'center',
-                        maxWidth: '729px',
                         margin: 0,
+                        maxWidth: '660px',
                     }}>
-                        Every booking includes a complimentary certified car seat at no extra cost — sanitized before every trip.
+                        Every Bali Family Safe trip includes complimentary, sanitized certified child seats for all age groups. No extra charges, no hassle.
                     </p>
                 </div>
 
-                {/* 3 Cards — Figma: 336px wide, border #E1E3E4, borderRadius 16px */}
-                <div className="bfs-row" style={{
-                    display: 'flex',
-                    flexDirection: 'row',
-                    justifyContent: 'center',
-                    alignItems: 'stretch',
+                {/* 3 Cards Grid */}
+                <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
                     gap: '32px',
+                    alignItems: 'start',
                 }}>
-                    {seats.map((seat, i) => (
+                    {seats.map((seat, index) => (
                         <div
-                            key={i}
+                            key={seat.id || index}
+                            className="card-hover-fluid"
                             style={{
-                                flex: '1 1 0',
-                                maxWidth: '336px',
                                 background: '#FFFFFF',
-                                border: '1px solid #E1E3E4',
                                 borderRadius: '16px',
                                 overflow: 'hidden',
+                                boxShadow: '0px 4px 12px rgba(0,0,0,0.04), 0px 1px 3px rgba(0,0,0,0.03)',
                                 display: 'flex',
                                 flexDirection: 'column',
+                                transition: 'box-shadow 0.3s ease',
                             }}
                         >
-                            {/* Card Image */}
-                            <div style={{
-                                height: '186px',
-                                overflow: 'hidden',
-                                background: '#E1E3E4',
-                            }}>
+                            {/* Image */}
+                            <div
+                                className="img-zoom"
+                                style={{
+                                    width: '100%',
+                                    height: '240px',
+                                    overflow: 'hidden',
+                                    flexShrink: 0,
+                                }}
+                            >
                                 <img
-                                    src={seat.img}
+                                    src={seat.image_url}
                                     alt={seat.title}
                                     style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                                 />
                             </div>
 
-                            {/* Card Body */}
-                            <div style={{ padding: '32px', display: 'flex', flexDirection: 'column', gap: 0, flex: 1 }}>
-                                {/* Age Tag — Figma: bg rgba(0,101,141,0.1), text #00658D */}
+                            {/* Content */}
+                            <div style={{
+                                padding: '28px 24px 32px',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '12px',
+                            }}>
+                                {/* Tag */}
                                 <div style={{
                                     display: 'inline-flex',
-                                    alignSelf: 'flex-start',
-                                    background: 'rgba(0, 101, 141, 0.1)',
+                                    alignItems: 'center',
+                                    background: '#E0F2FE',
                                     borderRadius: '9999px',
                                     padding: '4px 12px',
-                                    marginBottom: '16px',
+                                    alignSelf: 'flex-start',
                                 }}>
                                     <span style={{
                                         fontFamily: 'Inter, sans-serif',
-                                        fontWeight: 400,
-                                        fontSize: '16px',
-                                        lineHeight: '24px',
-                                        color: '#00658D',
+                                        fontWeight: 600,
+                                        fontSize: '12px',
+                                        lineHeight: '16px',
+                                        letterSpacing: '0.4px',
+                                        color: '#0369A1',
                                     }}>
                                         {seat.tag}
                                     </span>
                                 </div>
 
-                                {/* Title — Figma: 24px bold */}
+                                {/* Title */}
                                 <h3 style={{
                                     fontFamily: 'Inter, sans-serif',
                                     fontWeight: 700,
@@ -161,7 +174,6 @@ export default function CarSeatsSection() {
                                     lineHeight: '32px',
                                     color: '#191C1D',
                                     margin: 0,
-                                    marginBottom: '16px',
                                 }}>
                                     {seat.title}
                                 </h3>
@@ -172,10 +184,10 @@ export default function CarSeatsSection() {
                                     fontWeight: 400,
                                     fontSize: '16px',
                                     lineHeight: '24px',
-                                    color: '#3E4850',
+                                    color: '#64748B',
                                     margin: 0,
                                 }}>
-                                    {seat.desc}
+                                    {seat.description}
                                 </p>
                             </div>
                         </div>

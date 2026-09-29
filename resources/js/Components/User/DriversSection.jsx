@@ -211,7 +211,7 @@ export default function DriversSection({ teamMembers = [] }) {
                         {displayTeam.map((member, i) => (
                             <div
                                 key={i}
-                                className="group w-full bg-white border border-slate-200/80 hover:border-sky-300 shadow-sm hover:shadow-md rounded-2xl overflow-hidden relative flex flex-col transition-all duration-200"
+                                className="group card-hover-fluid w-full bg-white border border-slate-200/80 hover:border-sky-300 shadow-xs rounded-2xl overflow-hidden relative flex flex-col"
                             >
                                 {/* Role category badge on photo */}
                                 <div className="absolute top-3.5 left-3.5 z-10">
@@ -233,11 +233,10 @@ export default function DriversSection({ teamMembers = [] }) {
                                 </div>
 
                                 {/* Photo */}
-                                <div style={{ height: '240px', overflow: 'hidden', background: '#E2E8F0' }}>
+                                <div className="img-zoom" style={{ height: '240px', overflow: 'hidden', background: '#E2E8F0' }}>
                                     <img
                                         src={member.img}
                                         alt={member.name}
-                                        className="group-hover:scale-105 transition-transform duration-300"
                                         style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                                     />
                                 </div>

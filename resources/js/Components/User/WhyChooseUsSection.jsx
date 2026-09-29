@@ -112,13 +112,14 @@ export default function WhyChooseUsSection({ siteFeatures = [] }) {
                     {displayPillars.map((pillar, i) => (
                         <div
                             key={i}
+                            className="card-hover-fluid group"
                             style={{
                                 flex: '1 1 0',
                                 background: '#FFFFFF',
-                                border: '1px solid rgba(189,200,209,0.2)',
-                                boxShadow: '0px 1px 2px rgba(0,0,0,0.05)',
-                                borderRadius: '8px',
-                                padding: '24px',
+                                border: '1px solid rgba(189,200,209,0.3)',
+                                boxShadow: '0px 1px 3px rgba(0,0,0,0.05)',
+                                borderRadius: '12px',
+                                padding: '28px 24px',
                                 display: 'flex',
                                 flexDirection: 'column',
                                 alignItems: 'center',
@@ -127,17 +128,20 @@ export default function WhyChooseUsSection({ siteFeatures = [] }) {
                             }}
                         >
                             {/* Icon circle — Figma: bg rgba(0,174,239,0.2), 64px round */}
-                            <div style={{
-                                width: '64px',
-                                height: '64px',
-                                background: 'rgba(0, 174, 239, 0.2)',
-                                borderRadius: '9999px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                marginBottom: '24px',
-                                flexShrink: 0,
-                            }}>
+                            <div
+                                className="transition-all duration-300 ease-out group-hover:scale-110 group-hover:shadow-md group-hover:shadow-sky-500/20"
+                                style={{
+                                    width: '64px',
+                                    height: '64px',
+                                    background: 'rgba(0, 174, 239, 0.15)',
+                                    borderRadius: '9999px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    marginBottom: '24px',
+                                    flexShrink: 0,
+                                }}
+                            >
                                 {pillar.icon}
                             </div>
 

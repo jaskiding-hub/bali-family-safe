@@ -234,7 +234,7 @@ export default function Footer({ siteSettings = null }) {
                         color: '#9CA3AF',
                         margin: 0,
                     }}>
-                        Designed for stress-free family travel in Bali 🌴
+                        Designed for stress-free family travel in Bali
                     </p>
                 </div>
             </div>

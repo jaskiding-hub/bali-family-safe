@@ -42,7 +42,7 @@ class BookingController extends Controller
 
         // 2. Bookings Query
         $bookingSearch = $request->input('search_booking');
-        $bookingsQuery = Booking::with(['driver', 'pickupHotel', 'dropoffHotel', 'airport', 'package', 'vehicle']);
+        $bookingsQuery = Booking::with(['driver', 'pickupHotel', 'dropoffHotel', 'airport', 'package', 'vehicle', 'childSeats.childSeatType']);
 
         if ($bookingSearch) {
             $bookingsQuery->where(function ($q) use ($bookingSearch) {
@@ -101,6 +101,10 @@ class BookingController extends Controller
                     'hotel_transfer_price_list_id' => $booking->hotel_transfer_price_list_id,
                     'adults' => $booking->adults,
                     'children' => $booking->children,
+                    'child_seats' => $booking->childSeats->map(fn($cs) => [
+                        'type' => $cs->childSeatType->name ?? 'Car Seat',
+                        'quantity' => $cs->quantity,
+                    ])->all(),
                     'total_fee' => $booking->total_fee,
                     'notes' => $booking->notes,
                     'detail' => $detail,

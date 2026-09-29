@@ -23,14 +23,17 @@ export default function Hero({ siteSettings = null, packages = [], childSeatType
             {/* Hero Content — centered text over the photo */}
             <div className="bfs-hero-text">
                 {/* Eyebrow pill */}
-                <div style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    background: '#00AEEF',
-                    borderRadius: '9999px',
-                    padding: '4px 16px',
-                    height: '24px',
-                }}>
+                <div
+                    className="animate-fade-in animate-fade-in-delay-1"
+                    style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        background: '#00AEEF',
+                        borderRadius: '9999px',
+                        padding: '4px 16px',
+                        height: '24px',
+                    }}
+                >
                     <span style={{
                         fontFamily: 'Inter, sans-serif',
                         fontWeight: 500,
@@ -45,41 +48,47 @@ export default function Hero({ siteSettings = null, packages = [], childSeatType
                 </div>
 
                 {/* H1 */}
-                <h1 style={{
-                    fontFamily: 'Inter, sans-serif',
-                    fontWeight: 700,
-                    fontSize: '56px',
-                    lineHeight: '64px',
-                    letterSpacing: '-1.12px',
-                    color: '#FFFFFF',
-                    textAlign: 'center',
-                    maxWidth: '1166px',
-                    textShadow: '0 2px 8px rgba(0,0,0,0.4)',
-                    margin: 0,
-                    whiteSpace: 'pre-line',
-                }}>
+                <h1
+                    className="animate-fade-in animate-fade-in-delay-2"
+                    style={{
+                        fontFamily: 'Inter, sans-serif',
+                        fontWeight: 700,
+                        fontSize: '56px',
+                        lineHeight: '64px',
+                        letterSpacing: '-1.12px',
+                        color: '#FFFFFF',
+                        textAlign: 'center',
+                        maxWidth: '1166px',
+                        textShadow: '0 2px 8px rgba(0,0,0,0.4)',
+                        margin: 0,
+                        whiteSpace: 'pre-line',
+                    }}
+                >
                     {headline}
                 </h1>
 
                 {/* Subheading */}
-                <p style={{
-                    fontFamily: 'Inter, sans-serif',
-                    fontWeight: 400,
-                    fontSize: '18px',
-                    lineHeight: '28px',
-                    color: '#FFFFFF',
-                    textAlign: 'center',
-                    maxWidth: '964px',
-                    opacity: 0.9,
-                    textShadow: '0 1px 4px rgba(0,0,0,0.3)',
-                    margin: 0,
-                }}>
+                <p
+                    className="animate-fade-in animate-fade-in-delay-3"
+                    style={{
+                        fontFamily: 'Inter, sans-serif',
+                        fontWeight: 400,
+                        fontSize: '18px',
+                        lineHeight: '28px',
+                        color: '#FFFFFF',
+                        textAlign: 'center',
+                        maxWidth: '964px',
+                        opacity: 0.9,
+                        textShadow: '0 1px 4px rgba(0,0,0,0.3)',
+                        margin: 0,
+                    }}
+                >
                     {subheadline}
                 </p>
             </div>
 
             {/* Floating Booking Form — positioned via CSS (absolute on desktop, relative on mobile) */}
-            <div className="bfs-hero-booking">
+            <div className="bfs-hero-booking animate-fade-in animate-fade-in-delay-4">
                 <BookingWidget
                     packages={packages}
                     childSeatTypes={childSeatTypes}
