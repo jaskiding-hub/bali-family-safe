@@ -47,6 +47,9 @@ export default function MasterData({
         passenger_capacity: 6,
         luggage_capacity: 4,
         photo: null,
+        description: '',
+        key_features: [''],
+        ac_info: '',
     });
 
     const editVehicleForm = useForm({
@@ -101,6 +104,9 @@ export default function MasterData({
             passenger_capacity: vehicle.passenger_capacity || 6,
             luggage_capacity: vehicle.luggage_capacity || 4,
             photo: null,
+            description: vehicle.description || '',
+            key_features: vehicle.key_features && vehicle.key_features.length > 0 ? vehicle.key_features : [''],
+            ac_info: vehicle.ac_info || '',
         });
         setEditVehiclePhotoPreview(vehicle.photo_url || null);
         setShowEditVehicleModal(true);
@@ -237,6 +243,7 @@ export default function MasterData({
         regular_price: '',
         luxury_price: '',
         big_van_price: '',
+        unit_prices: {},
         hero_image: null,
         highlights: [{ title: '', description: '' }],
     });
@@ -251,6 +258,7 @@ export default function MasterData({
         regular_price: '',
         luxury_price: '',
         big_van_price: '',
+        unit_prices: {},
         hero_image: null,
         highlights: [],
     });
@@ -304,6 +312,7 @@ export default function MasterData({
             regular_price: pkg.regular_price || '',
             luxury_price: pkg.luxury_price || '',
             big_van_price: pkg.big_van_price || '',
+            unit_prices: pkg.unit_prices || {},
             hero_image: null,
             highlights: pkg.highlights && pkg.highlights.length > 0
                 ? pkg.highlights.map(h => ({ title: h.title || '', description: h.description || '' }))
@@ -550,6 +559,7 @@ export default function MasterData({
         type: 'Pick-Up',
         price_regular: '',
         price_luxury: '',
+        unit_prices: {},
     });
 
     const editAirportForm = useForm({
@@ -558,6 +568,7 @@ export default function MasterData({
         type: 'Pick-Up',
         price_regular: '',
         price_luxury: '',
+        unit_prices: {},
     });
 
     const handleAirportFilterSubmit = (e) => {
@@ -587,6 +598,7 @@ export default function MasterData({
             type: airport.type || 'Pick-Up',
             price_regular: airport.price_regular || '',
             price_luxury: airport.price_luxury || '',
+            unit_prices: airport.unit_prices || {},
         });
         setShowEditAirportModal(true);
     };
@@ -632,6 +644,7 @@ export default function MasterData({
         hotel_id_dropoff: hotels_list[1]?.id ? String(hotels_list[1].id) : '',
         regular_price: '',
         luxury_price: '',
+        unit_prices: {},
     });
 
     const editHotelPriceForm = useForm({
@@ -640,6 +653,7 @@ export default function MasterData({
         hotel_id_dropoff: '',
         regular_price: '',
         luxury_price: '',
+        unit_prices: {},
     });
 
     const handleHotelPriceSearch = (e) => {
@@ -673,6 +687,7 @@ export default function MasterData({
             hotel_id_dropoff: item.hotel_id_dropoff ? String(item.hotel_id_dropoff) : '',
             regular_price: item.regular_price || '',
             luxury_price: item.luxury_price || '',
+            unit_prices: item.unit_prices || {},
         });
         setShowEditHotelPriceModal(true);
     };
@@ -1097,14 +1112,14 @@ export default function MasterData({
                                             <button
                                                 type="button"
                                                 onClick={() => openEditVehicleModal(v)}
-                                                className="px-3 py-1.5 bg-white border border-slate-200 hover:border-slate-300 text-slate-700 text-xs font-semibold rounded-lg transition cursor-pointer"
+                                                className="px-3 py-1.5 text-xs font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-lg transition-colors cursor-pointer"
                                             >
                                                 Edit
                                             </button>
                                             <button
                                                 type="button"
                                                 onClick={() => openDeleteVehicleModal(v)}
-                                                className="px-3 py-1.5 bg-white border border-slate-200 hover:border-red-300 hover:text-red-600 text-slate-700 text-xs font-semibold rounded-lg transition cursor-pointer"
+                                                className="px-3 py-1.5 text-xs font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-lg transition-colors cursor-pointer"
                                             >
                                                 Hapus
                                             </button>
@@ -1209,14 +1224,14 @@ export default function MasterData({
                                                             <button
                                                                 type="button"
                                                                 onClick={() => openEditVehicleUnitModal(unit)}
-                                                                className="px-2.5 py-1 text-xs font-semibold text-slate-700 hover:text-slate-900 border border-slate-200 hover:bg-slate-50 rounded-lg transition cursor-pointer"
+                                                                className="px-2.5 py-1 text-xs font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-lg transition-colors cursor-pointer"
                                                             >
                                                                 Edit
                                                             </button>
                                                             <button
                                                                 type="button"
                                                                 onClick={() => openDeleteVehicleUnitModal(unit)}
-                                                                className="px-2.5 py-1 text-xs font-semibold text-red-700 hover:text-red-900 border border-slate-200 hover:bg-red-50 rounded-lg transition cursor-pointer"
+                                                                className="px-2.5 py-1 text-xs font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-lg transition-colors cursor-pointer"
                                                             >
                                                                 Hapus
                                                             </button>
@@ -1450,14 +1465,14 @@ export default function MasterData({
                                             <button
                                                 type="button"
                                                 onClick={() => openEditPackageModal(pkg)}
-                                                className="px-3.5 py-1.5 bg-white border border-slate-200 hover:border-slate-300 text-slate-700 text-xs font-semibold rounded-xl transition cursor-pointer shadow-2xs"
+                                                className="px-3.5 py-1.5 text-xs font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-xl transition-colors cursor-pointer"
                                             >
                                                 Edit
                                             </button>
                                             <button
                                                 type="button"
                                                 onClick={() => openDeletePackageModal(pkg)}
-                                                className="px-3.5 py-1.5 bg-white border border-slate-200 hover:border-red-300 hover:text-red-600 text-slate-700 text-xs font-semibold rounded-xl transition cursor-pointer shadow-2xs"
+                                                className="px-3.5 py-1.5 text-xs font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-xl transition-colors cursor-pointer"
                                             >
                                                 Hapus
                                             </button>
@@ -1601,14 +1616,14 @@ export default function MasterData({
                                                             <button
                                                                 type="button"
                                                                 onClick={() => openEditDriverModal(driver)}
-                                                                className="px-2.5 py-1 text-xs font-semibold text-slate-700 hover:text-slate-900 border border-slate-200 hover:bg-slate-50 rounded-lg transition cursor-pointer"
+                                                                className="px-2.5 py-1 text-xs font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-lg transition-colors cursor-pointer"
                                                             >
                                                                 Edit
                                                             </button>
                                                             <button
                                                                 type="button"
                                                                 onClick={() => openDeleteDriverModal(driver)}
-                                                                className="px-2.5 py-1 text-xs font-semibold text-red-700 hover:text-red-900 border border-slate-200 hover:bg-red-50 rounded-lg transition cursor-pointer"
+                                                                className="px-2.5 py-1 text-xs font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-lg transition-colors cursor-pointer"
                                                             >
                                                                 Hapus
                                                             </button>
@@ -1659,14 +1674,14 @@ export default function MasterData({
                                                 <button
                                                     type="button"
                                                     onClick={() => openEditDriverModal(driver)}
-                                                    className="px-3 py-1 text-xs font-semibold text-slate-700 border border-slate-200 rounded-lg"
+                                                    className="px-3 py-1 text-xs font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-lg transition-colors cursor-pointer"
                                                 >
                                                     Edit
                                                 </button>
                                                 <button
                                                     type="button"
                                                     onClick={() => openDeleteDriverModal(driver)}
-                                                    className="px-3 py-1 text-xs font-semibold text-red-700 border border-slate-200 rounded-lg"
+                                                    className="px-3 py-1 text-xs font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-lg transition-colors cursor-pointer"
                                                 >
                                                     Hapus
                                                 </button>
@@ -1780,14 +1795,14 @@ export default function MasterData({
                                                             <button
                                                                 type="button"
                                                                 onClick={() => openEditHotelModal(hotel)}
-                                                                className="px-2.5 py-1 text-xs font-semibold text-slate-700 hover:text-slate-900 border border-slate-200 hover:bg-slate-50 rounded-lg transition cursor-pointer"
+                                                                className="px-2.5 py-1 text-xs font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-lg transition-colors cursor-pointer"
                                                             >
                                                                 Edit
                                                             </button>
                                                             <button
                                                                 type="button"
                                                                 onClick={() => openDeleteHotelModal(hotel)}
-                                                                className="px-2.5 py-1 text-xs font-semibold text-red-700 hover:text-red-900 border border-slate-200 hover:bg-red-50 rounded-lg transition cursor-pointer"
+                                                                className="px-2.5 py-1 text-xs font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-lg transition-colors cursor-pointer"
                                                             >
                                                                 Hapus
                                                             </button>
@@ -1813,18 +1828,18 @@ export default function MasterData({
                                         <div key={hotel.id} className="p-4 space-y-2.5">
                                             <div className="flex items-start justify-between gap-2">
                                                 <span className="font-bold text-slate-900 text-sm">{hotel.nama_hotel}</span>
-                                                <div className="flex items-center gap-1">
+                                                <div className="flex items-center gap-1.5">
                                                     <button
                                                         type="button"
                                                         onClick={() => openEditHotelModal(hotel)}
-                                                        className="px-2.5 py-1 text-xs font-semibold text-slate-700 border border-slate-200 rounded-lg"
+                                                        className="px-2.5 py-1 text-xs font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-lg transition-colors cursor-pointer"
                                                     >
                                                         Edit
                                                     </button>
                                                     <button
                                                         type="button"
                                                         onClick={() => openDeleteHotelModal(hotel)}
-                                                        className="px-2.5 py-1 text-xs font-semibold text-red-700 border border-slate-200 rounded-lg"
+                                                        className="px-2.5 py-1 text-xs font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-lg transition-colors cursor-pointer"
                                                     >
                                                         Hapus
                                                     </button>
@@ -1936,8 +1951,6 @@ export default function MasterData({
                                         <tr className="border-b border-slate-200/80 bg-slate-50/75 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                                             <th className="px-6 py-3.5">Wilayah Destinasi</th>
                                             <th className="px-6 py-3.5">Tipe Transfer</th>
-                                            <th className="px-6 py-3.5">Tarif Regular</th>
-                                            <th className="px-6 py-3.5">Tarif Luxury</th>
                                             <th className="px-6 py-3.5 text-right">Aksi</th>
                                         </tr>
                                     </thead>
@@ -1953,25 +1966,19 @@ export default function MasterData({
                                                             {ap.type}
                                                         </span>
                                                     </td>
-                                                    <td className="px-6 py-4 font-semibold text-slate-900 font-mono">
-                                                        {ap.price_regular_formatted}
-                                                    </td>
-                                                    <td className="px-6 py-4 font-semibold text-slate-900 font-mono">
-                                                        {ap.price_luxury_formatted}
-                                                    </td>
                                                     <td className="px-6 py-4 text-right">
                                                         <div className="flex items-center justify-end gap-1.5">
                                                             <button
                                                                 type="button"
                                                                 onClick={() => openEditAirportModal(ap)}
-                                                                className="px-2.5 py-1 text-xs font-semibold text-slate-700 hover:text-slate-900 border border-slate-200 hover:bg-slate-50 rounded-lg transition cursor-pointer"
+                                                                className="px-2.5 py-1 text-xs font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-lg transition-colors cursor-pointer"
                                                             >
                                                                 Edit
                                                             </button>
                                                             <button
                                                                 type="button"
                                                                 onClick={() => openDeleteAirportModal(ap)}
-                                                                className="px-2.5 py-1 text-xs font-semibold text-red-700 hover:text-red-900 border border-slate-200 hover:bg-red-50 rounded-lg transition cursor-pointer"
+                                                                className="px-2.5 py-1 text-xs font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-lg transition-colors cursor-pointer"
                                                             >
                                                                 Hapus
                                                             </button>
@@ -1981,7 +1988,7 @@ export default function MasterData({
                                             ))
                                         ) : (
                                             <tr>
-                                                <td colSpan={5} className="px-6 py-8 text-center text-slate-400 text-sm">
+                                                <td colSpan={3} className="px-6 py-8 text-center text-slate-400 text-sm">
                                                     Belum ada data tarif destinasi bandara terdaftar.
                                                 </td>
                                             </tr>
@@ -1994,7 +2001,7 @@ export default function MasterData({
                             <div className="block lg:hidden divide-y divide-slate-100">
                                 {airports && airports.length > 0 ? (
                                     airports.map((ap) => (
-                                        <div key={ap.id} className="p-4 space-y-2.5">
+                                        <div key={ap.id} className="p-4 space-y-2">
                                             <div className="flex items-start justify-between gap-2">
                                                 <div>
                                                     <span className="font-bold text-slate-900 text-sm block">{ap.destinasi}</span>
@@ -2002,32 +2009,21 @@ export default function MasterData({
                                                         {ap.type}
                                                     </span>
                                                 </div>
-                                                <div className="flex items-center gap-1">
+                                                <div className="flex items-center gap-1.5">
                                                     <button
                                                         type="button"
                                                         onClick={() => openEditAirportModal(ap)}
-                                                        className="px-2.5 py-1 text-xs font-semibold text-slate-700 border border-slate-200 rounded-lg"
+                                                        className="px-2.5 py-1 text-xs font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-lg transition-colors cursor-pointer"
                                                     >
                                                         Edit
                                                     </button>
                                                     <button
                                                         type="button"
                                                         onClick={() => openDeleteAirportModal(ap)}
-                                                        className="px-2.5 py-1 text-xs font-semibold text-red-700 border border-slate-200 rounded-lg"
+                                                        className="px-2.5 py-1 text-xs font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-lg transition-colors cursor-pointer"
                                                     >
                                                         Hapus
                                                     </button>
-                                                </div>
-                                            </div>
-
-                                            <div className="grid grid-cols-2 gap-2 text-xs bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                                                <div>
-                                                    <span className="text-slate-400 block text-[10px] uppercase font-semibold">Regular</span>
-                                                    <span className="font-semibold text-slate-800">{ap.price_regular_formatted}</span>
-                                                </div>
-                                                <div>
-                                                    <span className="text-slate-400 block text-[10px] uppercase font-semibold">Luxury</span>
-                                                    <span className="font-semibold text-slate-800">{ap.price_luxury_formatted}</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -2112,8 +2108,6 @@ export default function MasterData({
                                     <thead>
                                         <tr className="border-b border-slate-200/80 bg-slate-50/75 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                                             <th className="px-6 py-3.5">Rute Hotel (Asal &rarr; Tujuan)</th>
-                                            <th className="px-6 py-3.5">Tarif Regular</th>
-                                            <th className="px-6 py-3.5">Tarif Luxury</th>
                                             <th className="px-6 py-3.5 text-right">Aksi</th>
                                         </tr>
                                     </thead>
@@ -2128,25 +2122,19 @@ export default function MasterData({
                                                             <span className="font-bold text-slate-900">{item.dropoff_hotel_name}</span>
                                                         </div>
                                                     </td>
-                                                    <td className="px-6 py-4 font-semibold text-slate-900 font-mono">
-                                                        {item.regular_price_formatted}
-                                                    </td>
-                                                    <td className="px-6 py-4 font-semibold text-slate-900 font-mono">
-                                                        {item.luxury_price_formatted}
-                                                    </td>
                                                     <td className="px-6 py-4 text-right">
                                                         <div className="flex items-center justify-end gap-1.5">
                                                             <button
                                                                 type="button"
                                                                 onClick={() => openEditHotelPriceModal(item)}
-                                                                className="px-2.5 py-1 text-xs font-semibold text-slate-700 hover:text-slate-900 border border-slate-200 hover:bg-slate-50 rounded-lg transition cursor-pointer"
+                                                                className="px-2.5 py-1 text-xs font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-lg transition-colors cursor-pointer"
                                                             >
                                                                 Edit
                                                             </button>
                                                             <button
                                                                 type="button"
                                                                 onClick={() => openDeleteHotelPriceModal(item)}
-                                                                className="px-2.5 py-1 text-xs font-semibold text-red-700 hover:text-red-900 border border-slate-200 hover:bg-red-50 rounded-lg transition cursor-pointer"
+                                                                className="px-2.5 py-1 text-xs font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-lg transition-colors cursor-pointer"
                                                             >
                                                                 Hapus
                                                             </button>
@@ -2156,7 +2144,7 @@ export default function MasterData({
                                             ))
                                         ) : (
                                             <tr>
-                                                <td colSpan={4} className="px-6 py-8 text-center text-slate-400 text-sm">
+                                                <td colSpan={2} className="px-6 py-8 text-center text-slate-400 text-sm">
                                                     Belum ada tarif transfer antar hotel terdaftar.
                                                 </td>
                                             </tr>
@@ -2169,7 +2157,7 @@ export default function MasterData({
                             <div className="block lg:hidden divide-y divide-slate-100">
                                 {hotel_transfer_price_lists && hotel_transfer_price_lists.length > 0 ? (
                                     hotel_transfer_price_lists.map((item) => (
-                                        <div key={item.id} className="p-4 space-y-2.5">
+                                        <div key={item.id} className="p-4 space-y-2">
                                             <div className="flex items-start justify-between gap-2">
                                                 <div className="text-sm font-bold text-slate-900">
                                                     <div>{item.pickup_hotel_name}</div>
@@ -2178,32 +2166,21 @@ export default function MasterData({
                                                     </div>
                                                     <div>{item.dropoff_hotel_name}</div>
                                                 </div>
-                                                <div className="flex items-center gap-1">
+                                                <div className="flex items-center gap-1.5">
                                                     <button
                                                         type="button"
                                                         onClick={() => openEditHotelPriceModal(item)}
-                                                        className="px-2.5 py-1 text-xs font-semibold text-slate-700 border border-slate-200 rounded-lg"
+                                                        className="px-2.5 py-1 text-xs font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-lg transition-colors cursor-pointer"
                                                     >
                                                         Edit
                                                     </button>
                                                     <button
                                                         type="button"
                                                         onClick={() => openDeleteHotelPriceModal(item)}
-                                                        className="px-2.5 py-1 text-xs font-semibold text-red-700 border border-slate-200 rounded-lg"
+                                                        className="px-2.5 py-1 text-xs font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-lg transition-colors cursor-pointer"
                                                     >
                                                         Hapus
                                                     </button>
-                                                </div>
-                                            </div>
-
-                                            <div className="grid grid-cols-2 gap-2 text-xs bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                                                <div>
-                                                    <span className="text-slate-400 block text-[10px] uppercase font-semibold">Regular</span>
-                                                    <span className="font-semibold text-slate-800">{item.regular_price_formatted}</span>
-                                                </div>
-                                                <div>
-                                                    <span className="text-slate-400 block text-[10px] uppercase font-semibold">Luxury</span>
-                                                    <span className="font-semibold text-slate-800">{item.luxury_price_formatted}</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -2336,6 +2313,77 @@ export default function MasterData({
                                 className={inputBaseClass}
                             />
                         </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                            Deskripsi Detail Armada
+                        </label>
+                        <textarea
+                            rows="3"
+                            value={addVehicleForm.data.description || ''}
+                            onChange={(e) => addVehicleForm.setData('description', e.target.value)}
+                            placeholder="Deskripsi detail tentang armada ini..."
+                            className={inputBaseClass}
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                            Key Features
+                        </label>
+                        <div className="space-y-2">
+                            {(addVehicleForm.data.key_features || ['']).map((feat, idx) => (
+                                <div key={idx} className="flex gap-2">
+                                    <input
+                                        type="text"
+                                        value={feat}
+                                        onChange={(e) => {
+                                            const newFeats = [...(addVehicleForm.data.key_features || [''])];
+                                            newFeats[idx] = e.target.value;
+                                            addVehicleForm.setData('key_features', newFeats);
+                                        }}
+                                        placeholder="e.g. Smooth suspension perfect for families with babies"
+                                        className={inputBaseClass}
+                                    />
+                                    {(addVehicleForm.data.key_features || ['']).length > 1 && (
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                const newFeats = (addVehicleForm.data.key_features || ['']).filter((_, i) => i !== idx);
+                                                addVehicleForm.setData('key_features', newFeats);
+                                            }}
+                                            className="px-2 text-red-500 hover:text-red-700"
+                                        >
+                                            ✕
+                                        </button>
+                                    )}
+                                </div>
+                            ))}
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    const newFeats = [...(addVehicleForm.data.key_features || ['']), ''];
+                                    addVehicleForm.setData('key_features', newFeats);
+                                }}
+                                className="text-xs text-[#00AEEF] hover:text-[#008dbf] font-semibold"
+                            >
+                                + Tambah Feature
+                            </button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                            AC Info
+                        </label>
+                        <input
+                            type="text"
+                            value={addVehicleForm.data.ac_info || ''}
+                            onChange={(e) => addVehicleForm.setData('ac_info', e.target.value)}
+                            placeholder="e.g. Dual-zone climate control with rear vents"
+                            className={inputBaseClass}
+                        />
                     </div>
 
                     <div>
@@ -2479,6 +2527,77 @@ export default function MasterData({
                                 className={inputBaseClass}
                             />
                         </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                            Deskripsi Detail Armada
+                        </label>
+                        <textarea
+                            rows="3"
+                            value={editVehicleForm.data.description || ''}
+                            onChange={(e) => editVehicleForm.setData('description', e.target.value)}
+                            placeholder="Deskripsi detail tentang armada ini..."
+                            className={inputBaseClass}
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                            Key Features
+                        </label>
+                        <div className="space-y-2">
+                            {(editVehicleForm.data.key_features || ['']).map((feat, idx) => (
+                                <div key={idx} className="flex gap-2">
+                                    <input
+                                        type="text"
+                                        value={feat}
+                                        onChange={(e) => {
+                                            const newFeats = [...(editVehicleForm.data.key_features || [''])];
+                                            newFeats[idx] = e.target.value;
+                                            editVehicleForm.setData('key_features', newFeats);
+                                        }}
+                                        placeholder="e.g. Smooth suspension perfect for families with babies"
+                                        className={inputBaseClass}
+                                    />
+                                    {(editVehicleForm.data.key_features || ['']).length > 1 && (
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                const newFeats = (editVehicleForm.data.key_features || ['']).filter((_, i) => i !== idx);
+                                                editVehicleForm.setData('key_features', newFeats);
+                                            }}
+                                            className="px-2 text-red-500 hover:text-red-700"
+                                        >
+                                            ✕
+                                        </button>
+                                    )}
+                                </div>
+                            ))}
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    const newFeats = [...(editVehicleForm.data.key_features || ['']), ''];
+                                    editVehicleForm.setData('key_features', newFeats);
+                                }}
+                                className="text-xs text-[#00AEEF] hover:text-[#008dbf] font-semibold"
+                            >
+                                + Tambah Feature
+                            </button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                            AC Info
+                        </label>
+                        <input
+                            type="text"
+                            value={editVehicleForm.data.ac_info || ''}
+                            onChange={(e) => editVehicleForm.setData('ac_info', e.target.value)}
+                            placeholder="e.g. Dual-zone climate control with rear vents"
+                            className={inputBaseClass}
+                        />
                     </div>
 
                     <div>
@@ -2664,59 +2783,49 @@ export default function MasterData({
                         />
                     </div>
 
-                    {/* Tier Rates */}
-                    <div className="p-3.5 bg-slate-50 border border-slate-200/80 rounded-xl space-y-3">
-                        <span className="text-xs font-bold text-slate-900 block">
-                            Tarif Harga Paket per Tier Mobil
-                        </span>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                            <div>
-                                <label className="block text-[11px] font-semibold text-slate-600 mb-1">
-                                    Tarif Regular (Rp) <span className="text-red-500">*</span>
-                                </label>
-                                <input
-                                    type="number"
-                                    required
-                                    min="0"
-                                    step="10000"
-                                    placeholder="650000"
-                                    value={addPackageForm.data.regular_price}
-                                    onChange={(e) => addPackageForm.setData('regular_price', e.target.value)}
-                                    className={inputBaseClass}
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-[11px] font-semibold text-slate-600 mb-1">
-                                    Tarif Luxury (Rp) <span className="text-red-500">*</span>
-                                </label>
-                                <input
-                                    type="number"
-                                    required
-                                    min="0"
-                                    step="10000"
-                                    placeholder="1200000"
-                                    value={addPackageForm.data.luxury_price}
-                                    onChange={(e) => addPackageForm.setData('luxury_price', e.target.value)}
-                                    className={inputBaseClass}
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-[11px] font-semibold text-slate-600 mb-1">
-                                    Tarif Big Van (Rp) <span className="text-red-500">*</span>
-                                </label>
-                                <input
-                                    type="number"
-                                    required
-                                    min="0"
-                                    step="10000"
-                                    placeholder="1500000"
-                                    value={addPackageForm.data.big_van_price}
-                                    onChange={(e) => addPackageForm.setData('big_van_price', e.target.value)}
-                                    className={inputBaseClass}
-                                />
-                            </div>
+                    {/* Dynamic Pricing per Vehicle Unit */}
+                    <div className="space-y-2 pt-1 border-t border-slate-100">
+                        <div className="flex items-center justify-between">
+                            <label className="block text-xs font-semibold text-slate-700">
+                                Tarif per Kategori Unit Kendaraan <span className="text-red-500">*</span>
+                            </label>
+                            <span className="text-[11px] text-slate-400">
+                                Otomatis menyesuaikan unit di master data
+                            </span>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-50 p-3.5 rounded-xl border border-slate-200/80">
+                            {vehicle_units && vehicle_units.map((unit) => (
+                                <div key={unit.id}>
+                                    <label className="block text-[11px] font-semibold text-slate-700 mb-1 truncate">
+                                        {unit.category} (Max {unit.passenger_capacity} pax)
+                                    </label>
+                                    <div className="relative">
+                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-semibold text-xs">Rp</span>
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            step="10000"
+                                            placeholder="650000"
+                                            value={addPackageForm.data.unit_prices?.[unit.id] ?? ''}
+                                            onChange={(e) => {
+                                                const val = e.target.value;
+                                                const newPrices = { ...(addPackageForm.data.unit_prices || {}) };
+                                                newPrices[unit.id] = val;
+                                                const isBigVan = unit.category.toLowerCase().includes('minibus') || unit.category.toLowerCase().includes('big van');
+                                                const isLux = unit.category.toLowerCase().includes('luxury');
+                                                addPackageForm.setData((prev) => ({
+                                                    ...prev,
+                                                    unit_prices: newPrices,
+                                                    regular_price: (!isBigVan && !isLux) ? val : prev.regular_price,
+                                                    luxury_price: isLux ? val : prev.luxury_price,
+                                                    big_van_price: isBigVan ? val : prev.big_van_price,
+                                                }));
+                                            }}
+                                            className={`${inputBaseClass} pl-8 font-semibold text-xs`}
+                                        />
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     </div>
 
@@ -2797,6 +2906,16 @@ export default function MasterData({
                                                 addPackageForm.setData('highlights', newHl);
                                             }}
                                             className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-xs text-slate-600 placeholder-slate-400 focus:outline-none focus:border-[#00AEEF]"
+                                        />
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={(e) => {
+                                                const newHl = [...addPackageForm.data.highlights];
+                                                newHl[idx].photo = e.target.files[0];
+                                                addPackageForm.setData('highlights', newHl);
+                                            }}
+                                            className="w-full text-xs text-slate-600 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200"
                                         />
                                     </div>
                                     {addPackageForm.data.highlights.length > 1 && (
@@ -2931,56 +3050,48 @@ export default function MasterData({
                         />
                     </div>
 
-                    {/* Tier Rates */}
-                    <div className="p-3.5 bg-slate-50 border border-slate-200/80 rounded-xl space-y-3">
-                        <span className="text-xs font-bold text-slate-900 block">
-                            Tarif Harga Paket per Tier Mobil
-                        </span>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                            <div>
-                                <label className="block text-[11px] font-semibold text-slate-600 mb-1">
-                                    Tarif Regular (Rp) <span className="text-red-500">*</span>
-                                </label>
-                                <input
-                                    type="number"
-                                    required
-                                    min="0"
-                                    step="10000"
-                                    value={editPackageForm.data.regular_price}
-                                    onChange={(e) => editPackageForm.setData('regular_price', e.target.value)}
-                                    className={inputBaseClass}
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-[11px] font-semibold text-slate-600 mb-1">
-                                    Tarif Luxury (Rp) <span className="text-red-500">*</span>
-                                </label>
-                                <input
-                                    type="number"
-                                    required
-                                    min="0"
-                                    step="10000"
-                                    value={editPackageForm.data.luxury_price}
-                                    onChange={(e) => editPackageForm.setData('luxury_price', e.target.value)}
-                                    className={inputBaseClass}
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-[11px] font-semibold text-slate-600 mb-1">
-                                    Tarif Big Van (Rp) <span className="text-red-500">*</span>
-                                </label>
-                                <input
-                                    type="number"
-                                    required
-                                    min="0"
-                                    step="10000"
-                                    value={editPackageForm.data.big_van_price}
-                                    onChange={(e) => editPackageForm.setData('big_van_price', e.target.value)}
-                                    className={inputBaseClass}
-                                />
-                            </div>
+                    {/* Dynamic Pricing per Vehicle Unit */}
+                    <div className="space-y-2 pt-1 border-t border-slate-100">
+                        <div className="flex items-center justify-between">
+                            <label className="block text-xs font-semibold text-slate-700">
+                                Tarif per Kategori Unit Kendaraan <span className="text-red-500">*</span>
+                            </label>
+                            <span className="text-[11px] text-slate-400">
+                                Otomatis menyesuaikan unit di master data
+                            </span>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-50 p-3.5 rounded-xl border border-slate-200/80">
+                            {vehicle_units && vehicle_units.map((unit) => (
+                                <div key={unit.id}>
+                                    <label className="block text-[11px] font-semibold text-slate-700 mb-1 truncate">
+                                        {unit.category} (Max {unit.passenger_capacity} pax)
+                                    </label>
+                                    <div className="relative">
+                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-semibold text-xs">Rp</span>
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            step="10000"
+                                            value={editPackageForm.data.unit_prices?.[unit.id] ?? ''}
+                                            onChange={(e) => {
+                                                const val = e.target.value;
+                                                const newPrices = { ...(editPackageForm.data.unit_prices || {}) };
+                                                newPrices[unit.id] = val;
+                                                const isBigVan = unit.category.toLowerCase().includes('minibus') || unit.category.toLowerCase().includes('big van');
+                                                const isLux = unit.category.toLowerCase().includes('luxury');
+                                                editPackageForm.setData((prev) => ({
+                                                    ...prev,
+                                                    unit_prices: newPrices,
+                                                    regular_price: (!isBigVan && !isLux) ? val : prev.regular_price,
+                                                    luxury_price: isLux ? val : prev.luxury_price,
+                                                    big_van_price: isBigVan ? val : prev.big_van_price,
+                                                }));
+                                            }}
+                                            className={`${inputBaseClass} pl-8 font-semibold text-xs`}
+                                        />
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     </div>
 
@@ -3061,6 +3172,16 @@ export default function MasterData({
                                                 editPackageForm.setData('highlights', newHl);
                                             }}
                                             className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-xs text-slate-600 placeholder-slate-400 focus:outline-none focus:border-[#00AEEF]"
+                                        />
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={(e) => {
+                                                const newHl = [...editPackageForm.data.highlights];
+                                                newHl[idx].photo = e.target.files[0];
+                                                editPackageForm.setData('highlights', newHl);
+                                            }}
+                                            className="w-full text-xs text-slate-600 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200"
                                         />
                                     </div>
                                     {editPackageForm.data.highlights.length > 1 && (
@@ -3772,37 +3893,47 @@ export default function MasterData({
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                                Tarif Regular (Rp) <span className="text-red-500">*</span>
+                    {/* Dynamic Pricing per Vehicle Unit */}
+                    <div className="space-y-2 pt-1 border-t border-slate-100">
+                        <div className="flex items-center justify-between">
+                            <label className="block text-xs font-semibold text-slate-700">
+                                Tarif per Kategori Unit Kendaraan <span className="text-red-500">*</span>
                             </label>
-                            <input
-                                type="number"
-                                required
-                                min="0"
-                                step="10000"
-                                placeholder="350000"
-                                value={addAirportForm.data.price_regular}
-                                onChange={(e) => addAirportForm.setData('price_regular', e.target.value)}
-                                className={inputBaseClass}
-                            />
+                            <span className="text-[11px] text-slate-400">
+                                Otomatis menyesuaikan unit di master data
+                            </span>
                         </div>
-
-                        <div>
-                            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                                Tarif Luxury (Rp) <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                                type="number"
-                                required
-                                min="0"
-                                step="10000"
-                                placeholder="700000"
-                                value={addAirportForm.data.price_luxury}
-                                onChange={(e) => addAirportForm.setData('price_luxury', e.target.value)}
-                                className={inputBaseClass}
-                            />
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-50 p-3.5 rounded-xl border border-slate-200/80">
+                            {vehicle_units && vehicle_units.map((unit) => (
+                                <div key={unit.id}>
+                                    <label className="block text-[11px] font-semibold text-slate-700 mb-1 truncate">
+                                        {unit.category} (Max {unit.passenger_capacity} pax)
+                                    </label>
+                                    <div className="relative">
+                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-semibold text-xs">Rp</span>
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            step="5000"
+                                            placeholder="350000"
+                                            value={addAirportForm.data.unit_prices?.[unit.id] ?? ''}
+                                            onChange={(e) => {
+                                                const val = e.target.value;
+                                                const newPrices = { ...(addAirportForm.data.unit_prices || {}) };
+                                                newPrices[unit.id] = val;
+                                                const isLux = unit.category.toLowerCase().includes('luxury');
+                                                addAirportForm.setData((prev) => ({
+                                                    ...prev,
+                                                    unit_prices: newPrices,
+                                                    price_regular: !isLux ? val || prev.price_regular : prev.price_regular,
+                                                    price_luxury: isLux ? val : prev.price_luxury,
+                                                }));
+                                            }}
+                                            className={`${inputBaseClass} pl-8 font-semibold text-xs`}
+                                        />
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     </div>
                 </form>
@@ -3870,37 +4001,50 @@ export default function MasterData({
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                                Tarif Regular (Rp) <span className="text-red-500">*</span>
+                    {/* Dynamic Pricing per Vehicle Unit */}
+                    <div className="space-y-2 pt-1 border-t border-slate-100">
+                        <div className="flex items-center justify-between">
+                            <label className="block text-xs font-semibold text-slate-700">
+                                Tarif per Kategori Unit Kendaraan <span className="text-red-500">*</span>
                             </label>
-                            <input
-                                type="number"
-                                required
-                                min="0"
-                                step="10000"
-                                value={editAirportForm.data.price_regular}
-                                onChange={(e) => editAirportForm.setData('price_regular', e.target.value)}
-                                className={inputBaseClass}
-                            />
+                            <span className="text-[11px] text-slate-400">
+                                Otomatis menyesuaikan unit di master data
+                            </span>
                         </div>
-
-                        <div>
-                            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                                Tarif Luxury (Rp) <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                                type="number"
-                                required
-                                min="0"
-                                step="10000"
-                                value={editAirportForm.data.price_luxury}
-                                onChange={(e) => editAirportForm.setData('price_luxury', e.target.value)}
-                                className={inputBaseClass}
-                            />
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-50 p-3.5 rounded-xl border border-slate-200/80">
+                            {vehicle_units && vehicle_units.map((unit) => (
+                                <div key={unit.id}>
+                                    <label className="block text-[11px] font-semibold text-slate-700 mb-1 truncate">
+                                        {unit.category} (Max {unit.passenger_capacity} pax)
+                                    </label>
+                                    <div className="relative">
+                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-semibold text-xs">Rp</span>
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            step="5000"
+                                            placeholder="350000"
+                                            value={editAirportForm.data.unit_prices?.[unit.id] ?? ''}
+                                            onChange={(e) => {
+                                                const val = e.target.value;
+                                                const newPrices = { ...(editAirportForm.data.unit_prices || {}) };
+                                                newPrices[unit.id] = val;
+                                                const isLux = unit.category.toLowerCase().includes('luxury');
+                                                editAirportForm.setData((prev) => ({
+                                                    ...prev,
+                                                    unit_prices: newPrices,
+                                                    price_regular: !isLux ? val || prev.price_regular : prev.price_regular,
+                                                    price_luxury: isLux ? val : prev.price_luxury,
+                                                }));
+                                            }}
+                                            className={`${inputBaseClass} pl-8 font-semibold text-xs`}
+                                        />
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     </div>
+
                 </form>
             </Modal>
 
@@ -3999,37 +4143,47 @@ export default function MasterData({
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                                Tarif Regular (Rp) <span className="text-red-500">*</span>
+                    {/* Dynamic Pricing per Vehicle Unit */}
+                    <div className="space-y-2 pt-1 border-t border-slate-100">
+                        <div className="flex items-center justify-between">
+                            <label className="block text-xs font-semibold text-slate-700">
+                                Tarif per Kategori Unit Kendaraan <span className="text-red-500">*</span>
                             </label>
-                            <input
-                                type="number"
-                                required
-                                min="0"
-                                step="10000"
-                                placeholder="450000"
-                                value={addHotelPriceForm.data.regular_price}
-                                onChange={(e) => addHotelPriceForm.setData('regular_price', e.target.value)}
-                                className={inputBaseClass}
-                            />
+                            <span className="text-[11px] text-slate-400">
+                                Otomatis menyesuaikan unit di master data
+                            </span>
                         </div>
-
-                        <div>
-                            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                                Tarif Luxury (Rp) <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                                type="number"
-                                required
-                                min="0"
-                                step="10000"
-                                placeholder="900000"
-                                value={addHotelPriceForm.data.luxury_price}
-                                onChange={(e) => addHotelPriceForm.setData('luxury_price', e.target.value)}
-                                className={inputBaseClass}
-                            />
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-50 p-3.5 rounded-xl border border-slate-200/80">
+                            {vehicle_units && vehicle_units.map((unit) => (
+                                <div key={unit.id}>
+                                    <label className="block text-[11px] font-semibold text-slate-700 mb-1 truncate">
+                                        {unit.category} (Max {unit.passenger_capacity} pax)
+                                    </label>
+                                    <div className="relative">
+                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-semibold text-xs">Rp</span>
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            step="5000"
+                                            placeholder="450000"
+                                            value={addHotelPriceForm.data.unit_prices?.[unit.id] ?? ''}
+                                            onChange={(e) => {
+                                                const val = e.target.value;
+                                                const newPrices = { ...(addHotelPriceForm.data.unit_prices || {}) };
+                                                newPrices[unit.id] = val;
+                                                const isLux = unit.category.toLowerCase().includes('luxury');
+                                                addHotelPriceForm.setData((prev) => ({
+                                                    ...prev,
+                                                    unit_prices: newPrices,
+                                                    regular_price: !isLux ? val || prev.regular_price : prev.regular_price,
+                                                    luxury_price: isLux ? val : prev.luxury_price,
+                                                }));
+                                            }}
+                                            className={`${inputBaseClass} pl-8 font-semibold text-xs`}
+                                        />
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     </div>
                 </form>
@@ -4100,35 +4254,47 @@ export default function MasterData({
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                                Tarif Regular (Rp) <span className="text-red-500">*</span>
+                    {/* Dynamic Pricing per Vehicle Unit */}
+                    <div className="space-y-2 pt-1 border-t border-slate-100">
+                        <div className="flex items-center justify-between">
+                            <label className="block text-xs font-semibold text-slate-700">
+                                Tarif per Kategori Unit Kendaraan <span className="text-red-500">*</span>
                             </label>
-                            <input
-                                type="number"
-                                required
-                                min="0"
-                                step="10000"
-                                value={editHotelPriceForm.data.regular_price}
-                                onChange={(e) => editHotelPriceForm.setData('regular_price', e.target.value)}
-                                className={inputBaseClass}
-                            />
+                            <span className="text-[11px] text-slate-400">
+                                Otomatis menyesuaikan unit di master data
+                            </span>
                         </div>
-
-                        <div>
-                            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                                Tarif Luxury (Rp) <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                                type="number"
-                                required
-                                min="0"
-                                step="10000"
-                                value={editHotelPriceForm.data.luxury_price}
-                                onChange={(e) => editHotelPriceForm.setData('luxury_price', e.target.value)}
-                                className={inputBaseClass}
-                            />
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-50 p-3.5 rounded-xl border border-slate-200/80">
+                            {vehicle_units && vehicle_units.map((unit) => (
+                                <div key={unit.id}>
+                                    <label className="block text-[11px] font-semibold text-slate-700 mb-1 truncate">
+                                        {unit.category} (Max {unit.passenger_capacity} pax)
+                                    </label>
+                                    <div className="relative">
+                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-semibold text-xs">Rp</span>
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            step="5000"
+                                            placeholder="450000"
+                                            value={editHotelPriceForm.data.unit_prices?.[unit.id] ?? ''}
+                                            onChange={(e) => {
+                                                const val = e.target.value;
+                                                const newPrices = { ...(editHotelPriceForm.data.unit_prices || {}) };
+                                                newPrices[unit.id] = val;
+                                                const isLux = unit.category.toLowerCase().includes('luxury');
+                                                editHotelPriceForm.setData((prev) => ({
+                                                    ...prev,
+                                                    unit_prices: newPrices,
+                                                    regular_price: !isLux ? val || prev.regular_price : prev.regular_price,
+                                                    luxury_price: isLux ? val : prev.luxury_price,
+                                                }));
+                                            }}
+                                            className={`${inputBaseClass} pl-8 font-semibold text-xs`}
+                                        />
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     </div>
                 </form>

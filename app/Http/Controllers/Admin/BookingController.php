@@ -183,6 +183,7 @@ class BookingController extends Controller
                 'regular_price' => $p->regular_price ? (float) $p->regular_price : (float) $p->price,
                 'luxury_price' => $p->luxury_price ? (float) $p->luxury_price : (float) $p->price,
                 'big_van_price' => $p->big_van_price ? (float) $p->big_van_price : (float) $p->price,
+                'unit_prices' => is_array($p->unit_prices) ? $p->unit_prices : null,
             ];
         });
 
@@ -206,6 +207,7 @@ class BookingController extends Controller
                 'type' => $a->type instanceof \BackedEnum ? $a->type->value : (string) $a->type,
                 'price_regular' => (float) $a->price_regular,
                 'price_luxury' => (float) $a->price_luxury,
+                'unit_prices' => is_array($a->unit_prices) ? $a->unit_prices : null,
             ];
         });
 
@@ -216,6 +218,7 @@ class BookingController extends Controller
                 'hotel_id_dropoff' => $hp->hotel_id_dropoff,
                 'regular_price' => (float) $hp->regular_price,
                 'luxury_price' => (float) $hp->luxury_price,
+                'unit_prices' => is_array($hp->unit_prices) ? $hp->unit_prices : null,
             ];
         });
 
@@ -333,24 +336,46 @@ class BookingController extends Controller
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request)
     {
+        // 1. Normalize ALL empty strings to null before anything
+        foreach ($request->all() as $key => $value) {
+            if (is_string($value) && $value === '') {
+                $request->merge([$key => null]);
+            }
+        }
+
+        // 2. Normalize total_fee: ensure it's a valid number
+        $totalFee = $request->input('total_fee');
+        if (is_null($totalFee) || $totalFee === '' || !is_numeric($totalFee)) {
+            $request->merge(['total_fee' => 0]);
+        }
+
+        // 3. Map UI fields to database columns
         if ($request->has('booking_type_ui')) {
             $typeUi = $request->input('booking_type_ui');
             if ($typeUi === 'Airport Pick-Up') {
+                $hotelId = $request->input('selected_hotel_id');
                 $request->merge([
                     'booking_type' => BookingType::AirportTransfer->value,
                     'transfer_direction' => TransferDirection::PickUp->value,
+                    'dropoff_hotel_id' => $hotelId ?: null,
+                    'pickup_hotel_id' => null,
                 ]);
             } elseif ($typeUi === 'Airport Drop-Off') {
+                $hotelId = $request->input('selected_hotel_id');
                 $request->merge([
                     'booking_type' => BookingType::AirportTransfer->value,
                     'transfer_direction' => TransferDirection::DropOff->value,
+                    'pickup_hotel_id' => $hotelId ?: null,
+                    'dropoff_hotel_id' => null,
                 ]);
             } elseif ($typeUi === 'Hotel Transfer') {
                 $request->merge([
                     'booking_type' => BookingType::HotelTransfer->value,
                     'transfer_direction' => null,
+                    'pickup_hotel_id' => $request->input('hotel_id_pickup') ?: null,
+                    'dropoff_hotel_id' => $request->input('hotel_id_dropoff') ?: null,
                 ]);
             } elseif ($typeUi === 'Day Tour') {
                 $request->merge([
@@ -361,29 +386,37 @@ class BookingController extends Controller
         }
 
         $validated = $request->validate([
-            'status' => ['required', new \Illuminate\Validation\Rules\Enum(BookingStatus::class)],
-            'booking_type' => ['required', new \Illuminate\Validation\Rules\Enum(BookingType::class)],
-            'transfer_direction' => ['nullable', new \Illuminate\Validation\Rules\Enum(TransferDirection::class)],
-            'package_id' => [$request->input('booking_type') === BookingType::DayTour->value ? 'required' : 'nullable', 'exists:packages,id'],
+            'status' => ['required', 'string'],
+            'booking_type' => ['required', 'string'],
+            'transfer_direction' => ['nullable', 'string'],
+            'package_id' => ['nullable', 'integer', 'exists:packages,id'],
             'guest_name' => ['required', 'string', 'max:255'],
             'whatsapp_number' => ['required', 'string', 'max:30'],
-            'email' => ['nullable', 'email', 'max:255'],
+            'email' => ['nullable', 'string', 'max:255'],
             'flight_number' => ['nullable', 'string', 'max:50'],
-            'vehicle_id' => ['required', 'exists:vehicles,id'],
+            'vehicle_unit_id' => ['required', 'integer', 'exists:vehicle_units,id'],
             'booking_date' => ['required', 'date'],
-            'pickup_time' => ['required'],
-            'pickup_location' => ['nullable', 'string', 'max:255'],
-            'dropoff_location' => ['nullable', 'string', 'max:255'],
-            'pickup_hotel_id' => ['nullable', 'exists:hotels,id'],
-            'dropoff_hotel_id' => ['nullable', 'exists:hotels,id'],
-            'airport_id' => ['nullable', 'exists:airports,id'],
-            'hotel_transfer_price_list_id' => ['nullable', 'exists:hotel_transfer_price_lists,id'],
+            'pickup_time' => ['required', 'string'],
+            'pickup_hotel_id' => ['nullable', 'integer', 'exists:hotels,id'],
+            'dropoff_hotel_id' => ['nullable', 'integer', 'exists:hotels,id'],
             'adults' => ['required', 'integer', 'min:1', 'max:100'],
             'children' => ['nullable', 'integer', 'min:0', 'max:100'],
-            'total_fee' => ['required', 'numeric', 'min:0', 'max:9999999999.99'],
+            'total_fee' => ['required', 'numeric', 'min:0'],
             'notes' => ['nullable', 'string', 'max:1000'],
         ]);
 
+        // Auto-assign vehicle_id based on vehicle_unit category for display, guarantee non-null fallback
+        $vehicleUnit = VehicleUnit::find($validated['vehicle_unit_id']);
+        $vehicle = null;
+        if ($vehicleUnit) {
+            $vehicle = Vehicle::where('category', $vehicleUnit->category)->first();
+        }
+        if (!$vehicle) {
+            $vehicle = Vehicle::first();
+        }
+        $validated['vehicle_id'] = $vehicle ? $vehicle->id : 1;
+
+        // Auto-create hotel from location if needed
         if (!empty($validated['pickup_location']) && empty($validated['pickup_hotel_id'])) {
             $hotel = \App\Models\Hotel::firstOrCreate(['nama_hotel' => $validated['pickup_location']]);
             $validated['pickup_hotel_id'] = $hotel->id;
@@ -392,47 +425,85 @@ class BookingController extends Controller
             $hotel = \App\Models\Hotel::firstOrCreate(['nama_hotel' => $validated['dropoff_location']]);
             $validated['dropoff_hotel_id'] = $hotel->id;
         }
-        unset($validated['pickup_location'], $validated['dropoff_location']);
 
+        // Remove non-DB fields
+        $nonDbFields = ['status', 'booking_type_ui', 'selected_destinasi', 'selected_hotel_id',
+            'hotel_id_pickup', 'hotel_id_dropoff', 'vehicle_tier',
+            'pickup_location', 'dropoff_location', 'child_seats',
+            'auto_parse_text'];
+        foreach ($nonDbFields as $f) {
+            unset($validated[$f]);
+        }
+
+        // Generate booking code
         do {
             $bookingCode = 'BFS-' . strtoupper(\Illuminate\Support\Str::random(5));
         } while (Booking::where('booking_code', $bookingCode)->exists());
 
         $validated['booking_code'] = $bookingCode;
+        $validated['status'] = 'Pending';
         $validated['created_by_admin_id'] = \Illuminate\Support\Facades\Auth::guard('admin')->id();
         $validated['children'] = $validated['children'] ?? 0;
 
-        if ($validated['booking_type'] !== BookingType::DayTour->value) {
-            $validated['package_id'] = null;
-        }
+        // Ensure numeric fields are correct type
+        $validated['adults'] = (int) $validated['adults'];
+        $validated['children'] = (int) ($validated['children'] ?? 0);
+        $validated['total_fee'] = (float) $validated['total_fee'];
+        $validated['vehicle_unit_id'] = (int) $validated['vehicle_unit_id'];
 
-        if ($validated['booking_type'] !== BookingType::AirportTransfer->value) {
-            $validated['flight_number'] = null;
-        }
+        $booking = Booking::create($validated);
 
-        Booking::create($validated);
+        if ($request->has('child_seats') && is_array($request->input('child_seats'))) {
+            foreach ($request->input('child_seats') as $seat) {
+                if (!empty($seat['id']) && !empty($seat['quantity'])) {
+                    \App\Models\BookingChildSeat::create([
+                        'booking_id' => $booking->id,
+                        'child_seat_type_id' => $seat['id'],
+                        'quantity' => (int) $seat['quantity'],
+                    ]);
+                }
+            }
+        }
 
         return redirect()->route('admin.bookings.index')->with('success', 'Booking baru berhasil dibuat.');
     }
 
     public function update(Request $request, Booking $booking): RedirectResponse
     {
+        // 1. Normalize empty strings to null for optional foreign keys and dates
+        $emptyToNull = ['package_id', 'flight_number', 'pickup_hotel_id', 'dropoff_hotel_id', 'airport_id', 'hotel_transfer_price_list_id', 'hotel_id_pickup', 'hotel_id_dropoff', 'selected_hotel_id', 'notes', 'email'];
+        foreach ($emptyToNull as $field) {
+            if ($request->has($field) && $request->input($field) === '') {
+                $request->merge([$field => null]);
+            }
+        }
+
         if ($request->has('booking_type_ui')) {
             $typeUi = $request->input('booking_type_ui');
             if ($typeUi === 'Airport Pick-Up') {
+                $hotelId = $request->input('selected_hotel_id') ?: $request->input('dropoff_hotel_id');
                 $request->merge([
                     'booking_type' => BookingType::AirportTransfer->value,
                     'transfer_direction' => TransferDirection::PickUp->value,
+                    'dropoff_hotel_id' => $hotelId,
+                    'pickup_hotel_id' => null,
+                    'pickup_location' => 'I Gusti Ngurah Rai Airport (DPS)',
                 ]);
             } elseif ($typeUi === 'Airport Drop-Off') {
+                $hotelId = $request->input('selected_hotel_id') ?: $request->input('pickup_hotel_id');
                 $request->merge([
                     'booking_type' => BookingType::AirportTransfer->value,
                     'transfer_direction' => TransferDirection::DropOff->value,
+                    'pickup_hotel_id' => $hotelId,
+                    'dropoff_hotel_id' => null,
+                    'dropoff_location' => 'I Gusti Ngurah Rai Airport (DPS)',
                 ]);
             } elseif ($typeUi === 'Hotel Transfer') {
                 $request->merge([
                     'booking_type' => BookingType::HotelTransfer->value,
                     'transfer_direction' => null,
+                    'pickup_hotel_id' => $request->input('hotel_id_pickup') ?: $request->input('pickup_hotel_id'),
+                    'dropoff_hotel_id' => $request->input('hotel_id_dropoff') ?: $request->input('dropoff_hotel_id'),
                 ]);
             } elseif ($typeUi === 'Day Tour') {
                 $request->merge([
@@ -451,7 +522,7 @@ class BookingController extends Controller
             'whatsapp_number' => ['required', 'string', 'max:30'],
             'email' => ['nullable', 'email', 'max:255'],
             'flight_number' => ['nullable', 'string', 'max:50'],
-            'vehicle_id' => ['required', 'exists:vehicles,id'],
+            'vehicle_unit_id' => ['required', 'exists:vehicle_units,id'],
             'booking_date' => ['required', 'date'],
             'pickup_time' => ['required'],
             'pickup_location' => ['nullable', 'string', 'max:255'],
@@ -465,6 +536,17 @@ class BookingController extends Controller
             'total_fee' => ['required', 'numeric', 'min:0', 'max:9999999999.99'],
             'notes' => ['nullable', 'string', 'max:1000'],
         ]);
+
+        // Auto-assign vehicle_id based on vehicle_unit category for display, guarantee non-null fallback
+        $vehicleUnit = VehicleUnit::find($validated['vehicle_unit_id']);
+        $vehicle = null;
+        if ($vehicleUnit) {
+            $vehicle = Vehicle::where('category', $vehicleUnit->category)->first();
+        }
+        if (!$vehicle) {
+            $vehicle = Vehicle::first();
+        }
+        $validated['vehicle_id'] = $vehicle ? $vehicle->id : ($booking->vehicle_id ?? 1);
 
         if (!empty($validated['pickup_location']) && empty($validated['pickup_hotel_id'])) {
             $hotel = \App\Models\Hotel::firstOrCreate(['nama_hotel' => $validated['pickup_location']]);

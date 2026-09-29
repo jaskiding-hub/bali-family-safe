@@ -3,6 +3,8 @@ import { useForm, usePage } from '@inertiajs/react';
 import axios from 'axios';
 import {
     BookingFooter,
+    BookingSuccessModal,
+    CapacityWarningModal,
     ChildSeatsSelector,
     FieldWithIcon,
     inputStyle,
@@ -25,6 +27,8 @@ export default function DayTourForm({ packages = [], vehicles = [], childSeatTyp
     const [selectedSeats, setSelectedSeats] = useState({});
     const [estimatedFee, setEstimatedFee] = useState(null);
     const [loadingEstimate, setLoadingEstimate] = useState(false);
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [showCapacityModal, setShowCapacityModal] = useState(false);
 
     const defaultVehicle = vehicles[0];
     const defaultPackage = packages[0];
@@ -35,7 +39,7 @@ export default function DayTourForm({ packages = [], vehicles = [], childSeatTyp
         email: '',
         booking_type: 'Day Tour',
         package_id: defaultPackage?.id || '',
-        vehicle_id: defaultVehicle?.id || '',
+        vehicle_unit_id: defaultVehicle?.id || '',
         pickup_hotel_id: null,
         dropoff_hotel_id: null,
         booking_date: '',
@@ -46,13 +50,13 @@ export default function DayTourForm({ packages = [], vehicles = [], childSeatTyp
         child_seats: [],
     });
 
-    const selectedVehicle = vehicles.find((v) => String(v.id) === String(data.vehicle_id));
+    const selectedVehicle = vehicles.find((v) => String(v.id) === String(data.vehicle_unit_id));
     const totalPax = (parseInt(data.adults, 10) || 0) + (parseInt(data.children, 10) || 0);
     const isOverCapacity = Boolean(selectedVehicle?.passenger_capacity && totalPax > selectedVehicle.passenger_capacity);
 
     useEffect(() => {
-        if (!data.vehicle_id && defaultVehicle?.id) {
-            setData('vehicle_id', defaultVehicle.id);
+        if (!data.vehicle_unit_id && defaultVehicle?.id) {
+            setData('vehicle_unit_id', defaultVehicle.id);
         }
     }, [vehicles]);
 
@@ -78,7 +82,7 @@ export default function DayTourForm({ packages = [], vehicles = [], childSeatTyp
 
     // Live price calculation on package and vehicle
     useEffect(() => {
-        if (!data.package_id || !data.vehicle_id) {
+        if (!data.package_id || !data.vehicle_unit_id) {
             setEstimatedFee(null);
             return;
         }
@@ -88,7 +92,7 @@ export default function DayTourForm({ packages = [], vehicles = [], childSeatTyp
             axios.post('/api/pricing/estimate', {
                 booking_type: 'Day Tour',
                 package_id: data.package_id,
-                vehicle_id: data.vehicle_id,
+                vehicle_unit_id: data.vehicle_unit_id,
             })
                 .then((res) => {
                     setEstimatedFee(res.data.total_fee);
@@ -104,23 +108,28 @@ export default function DayTourForm({ packages = [], vehicles = [], childSeatTyp
         }, 300);
 
         return () => clearTimeout(timer);
-    }, [data.package_id, data.vehicle_id]);
+    }, [data.package_id, data.vehicle_unit_id]);
 
     const handleFormSubmit = (e) => {
         if (e) e.preventDefault();
+        if (isOverCapacity) {
+            setShowCapacityModal(true);
+            return;
+        }
         post('/booking', {
             preserveScroll: true,
             onSuccess: () => {
                 reset();
                 setSelectedSeats({});
                 setEstimatedFee(null);
+                setShowSuccessModal(true);
             },
         });
     };
 
     const handleWA = () => {
         const pObj = packages.find((p) => String(p.id) === String(data.package_id));
-        const vehObj = vehicles.find((v) => String(v.id) === String(data.vehicle_id));
+        const vehObj = vehicles.find((v) => String(v.id) === String(data.vehicle_unit_id));
 
         const seatsText = Object.entries(selectedSeats)
             .filter(([_, q]) => q > 0)
@@ -359,6 +368,19 @@ export default function DayTourForm({ packages = [], vehicles = [], childSeatTyp
                 estimatedFee={estimatedFee}
                 loadingEstimate={loadingEstimate}
                 isSubmitting={processing}
+            />
+
+            <BookingSuccessModal
+                show={showSuccessModal}
+                onClose={() => setShowSuccessModal(false)}
+            />
+
+            <CapacityWarningModal
+                show={showCapacityModal}
+                onClose={() => setShowCapacityModal(false)}
+                totalPax={totalPax}
+                maxPax={selectedVehicle?.passenger_capacity || 6}
+                vehicleName={selectedVehicle?.name || 'kendaraan yang dipilih'}
             />
         </form>
     );

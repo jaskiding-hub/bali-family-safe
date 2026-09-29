@@ -42,6 +42,9 @@ class BookingController extends Controller
         $validated['status'] = BookingStatus::Pending->value;
         $validated['adults'] = $validated['adults'] ?? 1;
         $validated['children'] = $validated['children'] ?? 0;
+        if ($request->filled('vehicle_unit_id')) {
+            $validated['vehicle_unit_id'] = $request->input('vehicle_unit_id');
+        }
 
         $childSeatsData = $validated['child_seats'] ?? [];
         unset($validated['child_seats']);

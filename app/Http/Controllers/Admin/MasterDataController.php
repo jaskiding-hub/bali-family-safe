@@ -62,6 +62,9 @@ class MasterDataController extends Controller
                 'luggage_capacity' => (int) $v->luggage_capacity,
                 'photo_url' => $v->photo_url,
                 'is_popular' => (bool) $v->is_popular,
+                'description' => $v->description,
+                'key_features' => is_array($v->key_features) ? array_values(array_filter($v->key_features)) : null,
+                'ac_info' => $v->ac_info,
                 'units_count' => (int) ($v->units_count ?? 0),
                 'created_at_formatted' => $v->created_at ? $v->created_at->format('d M Y') : '-',
             ];
@@ -116,6 +119,7 @@ class MasterDataController extends Controller
                 'luxury_price_formatted' => 'Rp ' . number_format($luxPrice, 0, ',', '.'),
                 'big_van_price' => $bigPrice,
                 'big_van_price_formatted' => 'Rp ' . number_format($bigPrice, 0, ',', '.'),
+                'unit_prices' => is_array($p->unit_prices) ? $p->unit_prices : null,
                 'display_order' => $p->display_order,
                 'highlights' => $p->highlights->map(fn ($h) => [
                     'id' => $h->id,
@@ -251,6 +255,7 @@ class MasterDataController extends Controller
                 'price_regular_formatted' => 'Rp ' . number_format($regularPrice, 0, ',', '.'),
                 'price_luxury' => $luxuryPrice,
                 'price_luxury_formatted' => 'Rp ' . number_format($luxuryPrice, 0, ',', '.'),
+                'unit_prices' => is_array($a->unit_prices) ? $a->unit_prices : null,
                 'hotels_count' => $a->hotels_count,
                 'created_at_formatted' => $a->created_at ? $a->created_at->format('d M Y') : '-',
             ];
@@ -285,6 +290,7 @@ class MasterDataController extends Controller
                 'regular_price_formatted' => 'Rp ' . number_format($regPrice, 0, ',', '.'),
                 'luxury_price' => $luxPrice,
                 'luxury_price_formatted' => 'Rp ' . number_format($luxPrice, 0, ',', '.'),
+                'unit_prices' => is_array($hp->unit_prices) ? $hp->unit_prices : null,
                 'created_at_formatted' => $hp->created_at ? $hp->created_at->format('d M Y') : '-',
             ];
         });

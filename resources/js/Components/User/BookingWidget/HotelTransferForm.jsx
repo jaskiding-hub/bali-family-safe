@@ -3,6 +3,8 @@ import { useForm, usePage } from '@inertiajs/react';
 import axios from 'axios';
 import {
     BookingFooter,
+    BookingSuccessModal,
+    CapacityWarningModal,
     ChildSeatsSelector,
     FieldWithIcon,
     inputStyle,
@@ -26,6 +28,8 @@ export default function HotelTransferForm({ vehicles = [], childSeatTypes = [] }
     const [estimatedFee, setEstimatedFee] = useState(null);
     const [loadingEstimate, setLoadingEstimate] = useState(false);
     const [validationWarning, setValidationWarning] = useState('');
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [showCapacityModal, setShowCapacityModal] = useState(false);
 
     const defaultVehicle = vehicles.find((v) => !v.category?.includes('Minibus')) || vehicles[0];
 
@@ -34,7 +38,7 @@ export default function HotelTransferForm({ vehicles = [], childSeatTypes = [] }
         whatsapp_number: '',
         email: '',
         booking_type: 'Hotel Transfer',
-        vehicle_id: defaultVehicle?.id || '',
+        vehicle_unit_id: defaultVehicle?.id || '',
         pickup_hotel_id: '',
         dropoff_hotel_id: '',
         booking_date: '',
@@ -45,7 +49,7 @@ export default function HotelTransferForm({ vehicles = [], childSeatTypes = [] }
         child_seats: [],
     });
 
-    const selectedVehicle = vehicles.find((v) => String(v.id) === String(data.vehicle_id));
+    const selectedVehicle = vehicles.find((v) => String(v.id) === String(data.vehicle_unit_id));
     const totalPax = (parseInt(data.adults, 10) || 0) + (parseInt(data.children, 10) || 0);
     const isOverCapacity = Boolean(selectedVehicle?.passenger_capacity && totalPax > selectedVehicle.passenger_capacity);
 
@@ -60,8 +64,8 @@ export default function HotelTransferForm({ vehicles = [], childSeatTypes = [] }
     }, []);
 
     useEffect(() => {
-        if (!data.vehicle_id && defaultVehicle?.id) {
-            setData('vehicle_id', defaultVehicle.id);
+        if (!data.vehicle_unit_id && defaultVehicle?.id) {
+            setData('vehicle_unit_id', defaultVehicle.id);
         }
     }, [vehicles]);
 
@@ -97,7 +101,7 @@ export default function HotelTransferForm({ vehicles = [], childSeatTypes = [] }
 
     // Live price calculation on pickup, dropoff, and vehicle
     useEffect(() => {
-        if (!data.vehicle_id || !data.pickup_hotel_id || !data.dropoff_hotel_id) {
+        if (!data.vehicle_unit_id || !data.pickup_hotel_id || !data.dropoff_hotel_id) {
             setEstimatedFee(null);
             return;
         }
@@ -111,7 +115,7 @@ export default function HotelTransferForm({ vehicles = [], childSeatTypes = [] }
             setLoadingEstimate(true);
             axios.post('/api/pricing/estimate', {
                 booking_type: 'Hotel Transfer',
-                vehicle_id: data.vehicle_id,
+                vehicle_unit_id: data.vehicle_unit_id,
                 pickup_hotel_id: data.pickup_hotel_id,
                 dropoff_hotel_id: data.dropoff_hotel_id,
             })
@@ -127,10 +131,14 @@ export default function HotelTransferForm({ vehicles = [], childSeatTypes = [] }
         }, 300);
 
         return () => clearTimeout(timer);
-    }, [data.vehicle_id, data.pickup_hotel_id, data.dropoff_hotel_id]);
+    }, [data.vehicle_unit_id, data.pickup_hotel_id, data.dropoff_hotel_id]);
 
     const handleFormSubmit = (e) => {
         if (e) e.preventDefault();
+        if (isOverCapacity) {
+            setShowCapacityModal(true);
+            return;
+        }
         if (!data.pickup_hotel_id) {
             setValidationWarning('Please select your Pick-Up Hotel (Origin) first.');
             return;
@@ -151,6 +159,7 @@ export default function HotelTransferForm({ vehicles = [], childSeatTypes = [] }
                 setSelectedSeats({});
                 setEstimatedFee(null);
                 setValidationWarning('');
+                setShowSuccessModal(true);
             },
         });
     };
@@ -172,7 +181,7 @@ export default function HotelTransferForm({ vehicles = [], childSeatTypes = [] }
 
         const pObj = hotels.find((h) => String(h.id) === String(data.pickup_hotel_id));
         const dObj = hotels.find((h) => String(h.id) === String(data.dropoff_hotel_id));
-        const vehObj = vehicles.find((v) => String(v.id) === String(data.vehicle_id));
+        const vehObj = vehicles.find((v) => String(v.id) === String(data.vehicle_unit_id));
 
         const seatsText = Object.entries(selectedSeats)
             .filter(([_, q]) => q > 0)
@@ -363,11 +372,11 @@ export default function HotelTransferForm({ vehicles = [], childSeatTypes = [] }
                 <div>
                     <VehicleSelect
                         vehicles={vehicles}
-                        value={data.vehicle_id}
-                        onChange={(e) => setData('vehicle_id', parseInt(e.target.value, 10))}
+                        value={data.vehicle_unit_id}
+                        onChange={(e) => setData('vehicle_unit_id', parseInt(e.target.value, 10))}
                     />
-                    {errors.vehicle_id && (
-                        <span style={{ fontSize: '11px', color: '#F43F5E' }}>{errors.vehicle_id}</span>
+                    {errors.vehicle_unit_id && (
+                        <span style={{ fontSize: '11px', color: '#F43F5E' }}>{errors.vehicle_unit_id}</span>
                     )}
                 </div>
             </div>
@@ -490,6 +499,19 @@ export default function HotelTransferForm({ vehicles = [], childSeatTypes = [] }
                 estimatedFee={estimatedFee}
                 loadingEstimate={loadingEstimate}
                 isSubmitting={processing}
+            />
+
+            <BookingSuccessModal
+                show={showSuccessModal}
+                onClose={() => setShowSuccessModal(false)}
+            />
+
+            <CapacityWarningModal
+                show={showCapacityModal}
+                onClose={() => setShowCapacityModal(false)}
+                totalPax={totalPax}
+                maxPax={selectedVehicle?.passenger_capacity || 6}
+                vehicleName={selectedVehicle?.name || 'kendaraan yang dipilih'}
             />
         </form>
     );

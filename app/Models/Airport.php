@@ -16,12 +16,14 @@ class Airport extends Model
         'type',
         'price_regular',
         'price_luxury',
+        'unit_prices',
     ];
 
     protected $casts = [
         'type' => TransferDirection::class,
         'price_regular' => 'decimal:2',
         'price_luxury' => 'decimal:2',
+        'unit_prices' => 'array',
     ];
 
     public function hotels(): BelongsToMany

@@ -19,6 +19,7 @@ class FinancialReportController extends Controller
     {
         $period = $request->input('period', 'this_month');
         $customMonth = $request->input('month'); // YYYY-MM if provided
+        $customYear = $request->input('year'); // YYYY if provided
         $now = Carbon::now();
 
         $startDate = null;
@@ -42,6 +43,21 @@ class FinancialReportController extends Controller
             } catch (\Exception $e) {
                 $startDate = (clone $now)->startOfMonth();
                 $endDate = (clone $now)->endOfMonth();
+                $dateRangeLabel = $startDate->format('d M Y') . ' – ' . $endDate->format('d M Y');
+            }
+        } elseif ($customYear) {
+            try {
+                $yearCarbon = Carbon::createFromFormat('Y', $customYear);
+                $startDate = (clone $yearCarbon)->startOfYear();
+                $endDate = (clone $yearCarbon)->endOfYear();
+                $prevStartDate = (clone $yearCarbon)->subYear()->startOfYear();
+                $prevEndDate = (clone $yearCarbon)->subYear()->endOfYear();
+                $periodLabel = $yearCarbon->format('Y');
+                $trendLabel = 'from previous year';
+                $dateRangeLabel = $startDate->format('d M Y') . ' – ' . $endDate->format('d M Y');
+            } catch (\Exception $e) {
+                $startDate = (clone $now)->startOfYear();
+                $endDate = (clone $now)->endOfYear();
                 $dateRangeLabel = $startDate->format('d M Y') . ' – ' . $endDate->format('d M Y');
             }
         } else {

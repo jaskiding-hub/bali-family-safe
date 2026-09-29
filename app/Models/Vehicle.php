@@ -19,6 +19,9 @@ class Vehicle extends Model
         'passenger_capacity',
         'luggage_capacity',
         'photo_url',
+        'description',
+        'key_features',
+        'ac_info',
         'is_popular',
     ];
 
@@ -26,6 +29,7 @@ class Vehicle extends Model
         'is_popular' => 'boolean',
         'daily_rate' => 'decimal:2',
         'category' => VehicleCategory::class,
+        'key_features' => 'array',
     ];
 
     public function features(): HasMany

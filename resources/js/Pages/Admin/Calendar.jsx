@@ -586,12 +586,7 @@ export default function Calendar({
                                                 onClick={() => openTripDetails(booking)}
                                                 className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#00AEEF] hover:text-[#0084B4] hover:bg-sky-50 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
                                             >
-                                                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                                    <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
-                                                    <circle cx="12" cy="12" r="3" />
-                                                </svg>
                                                 <span>View Details</span>
-                                                <span>&rarr;</span>
                                             </button>
                                         </div>
                                     </div>

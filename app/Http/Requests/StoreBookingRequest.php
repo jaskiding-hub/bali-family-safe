@@ -20,13 +20,32 @@ class StoreBookingRequest extends FormRequest
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('vehicle_unit_id') && !$this->has('vehicle_id')) {
+            $unit = \App\Models\VehicleUnit::find($this->input('vehicle_unit_id'));
+            if ($unit) {
+                $veh = \App\Models\Vehicle::where('category', $unit->category)->first() ?? \App\Models\Vehicle::first();
+                if ($veh) {
+                    $this->merge(['vehicle_id' => $veh->id]);
+                }
+            }
+        }
+    }
+
+    /**
+     * Get the validation rules that apply to the request.
+     *
+     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     */
     public function rules(): array
     {
         return [
             'guest_name' => ['required', 'string', 'max:255'],
             'whatsapp_number' => ['required', 'string', 'max:30'],
             'booking_type' => ['required', 'in:Airport Transfer,Hotel Transfer,Day Tour'],
-            'vehicle_id' => ['required', 'integer', 'exists:vehicles,id'],
+            'vehicle_id' => ['nullable', 'integer', 'exists:vehicles,id'],
+            'vehicle_unit_id' => ['nullable', 'integer', 'exists:vehicle_units,id'],
             'booking_date' => ['required', 'date'],
             'pickup_time' => ['required'],
             'adults' => ['nullable', 'integer', 'min:0'],
@@ -52,19 +71,26 @@ class StoreBookingRequest extends FormRequest
     public function withValidator($validator): void
     {
         $validator->after(function ($validator) {
+            $vehicleUnitId = $this->input('vehicle_unit_id');
             $vehicleId = $this->input('vehicle_id');
-            if (!$vehicleId) {
+
+            if (!$vehicleUnitId && !$vehicleId) {
+                $validator->errors()->add('vehicle_unit_id', 'Pilih jenis kendaraan terlebih dahulu.');
                 return;
             }
 
-            $vehicle = Vehicle::find($vehicleId);
-            if (!$vehicle) {
-                return;
+            $capacity = 6;
+            if ($vehicleUnitId) {
+                $unit = \App\Models\VehicleUnit::find($vehicleUnitId);
+                if ($unit) $capacity = $unit->passenger_capacity;
+            } elseif ($vehicleId) {
+                $veh = \App\Models\Vehicle::find($vehicleId);
+                if ($veh) $capacity = $veh->passenger_capacity;
             }
 
             $totalPax = (int) $this->input('adults', 0) + (int) $this->input('children', 0);
-            if ($totalPax > $vehicle->passenger_capacity) {
-                $validator->errors()->add('adults', "Jumlah penumpang ({$totalPax}) melebihi kapasitas kendaraan yang dipilih ({$vehicle->passenger_capacity} orang). Pilih kendaraan lain atau kurangi jumlah penumpang.");
+            if ($totalPax > $capacity) {
+                $validator->errors()->add('adults', "Jumlah penumpang ({$totalPax}) melebihi kapasitas kendaraan yang dipilih ({$capacity} orang). Pilih kendaraan lain atau kurangi jumlah penumpang.");
             }
         });
     }

@@ -22,6 +22,7 @@ class Package extends Model
         'regular_price',
         'luxury_price',
         'big_van_price',
+        'unit_prices',
         'display_order',
     ];
 
@@ -30,6 +31,7 @@ class Package extends Model
         'regular_price' => 'decimal:2',
         'luxury_price' => 'decimal:2',
         'big_van_price' => 'decimal:2',
+        'unit_prices' => 'array',
     ];
 
     public function highlights(): HasMany

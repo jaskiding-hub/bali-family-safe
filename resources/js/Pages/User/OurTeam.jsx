@@ -183,7 +183,7 @@ function SupportCard({ member }) {
                     {member.name}
                 </h3>
                 <InfoRow
-                    icon={<Envelope size={10} weight="bold" color="#6E7881" />}
+                    icon={<Envelope size={10} weight="bold" color="#FFFFFF" />}
                     text={member.info}
                 />
             </div>
@@ -232,7 +232,7 @@ function DriverCard({ member }) {
                     {member.name}
                 </h3>
                 <InfoRow
-                    icon={<MapPin size={10} weight="bold" color="#6E7881" />}
+                    icon={<MapPin size={10} weight="bold" color="#FFFFFF" />}
                     text={member.info}
                 />
             </div>

@@ -28,6 +28,16 @@ export default function BookingManagement({
     const [showEditBookingModal, setShowEditBookingModal] = useState(false);
     const [showDeleteBookingModal, setShowDeleteBookingModal] = useState(false);
     const [selectedBooking, setSelectedBooking] = useState(null);
+    const [selectedSeats, setSelectedSeats] = useState({});
+    const [showSuccessAlert, setShowSuccessAlert] = useState(false);
+    const [successMessage, setSuccessMessage] = useState('');
+
+    // Child seat types
+    const childSeatTypes = [
+        { id: 1, name: 'Infant Capsule', age_range: '0–1 yr', weight_range: '0–13 kg' },
+        { id: 2, name: 'Toddler Seat', age_range: '1–4 yr', weight_range: '9–18 kg' },
+        { id: 3, name: 'Booster Seat', age_range: '4–8 yr', weight_range: '15–36 kg' },
+    ];
 
     // Forms for actions
     const assignDriverForm = useForm({
@@ -43,13 +53,12 @@ export default function BookingManagement({
         selected_hotel_id: '',
         hotel_id_pickup: '',
         hotel_id_dropoff: '',
-        vehicle_tier: 'Regular',
+        vehicle_unit_id: available_vehicle_units[0]?.id || '',
         package_id: '',
         guest_name: '',
         whatsapp_number: '',
         email: '',
         flight_number: '',
-        vehicle_id: '',
         booking_date: '',
         pickup_time: '09:00',
         pickup_location: '',
@@ -58,6 +67,7 @@ export default function BookingManagement({
         children: 0,
         total_fee: '',
         notes: '',
+        child_seats: [],
     });
 
     const editBookingForm = useForm({
@@ -69,13 +79,12 @@ export default function BookingManagement({
         selected_hotel_id: '',
         hotel_id_pickup: '',
         hotel_id_dropoff: '',
-        vehicle_tier: 'Regular',
+        vehicle_unit_id: available_vehicle_units[0]?.id || '',
         package_id: '',
         guest_name: '',
         whatsapp_number: '',
         email: '',
         flight_number: '',
-        vehicle_id: '',
         booking_date: '',
         pickup_time: '09:00',
         pickup_location: '',
@@ -109,16 +118,23 @@ export default function BookingManagement({
         return vehicles.filter((v) => v.category === targetCat);
     };
 
-    const calcAirportPrice = (destinasi, direction, tier) => {
+    const calcAirportPrice = (destinasi, direction, categoryOrTier, unitId = null) => {
         if (!destinasi) return null;
         const row = airports.find((a) => a.destinasi === destinasi && a.type === direction);
         if (!row) return null;
-        if (tier === 'Luxury') return row.price_luxury;
-        if (tier === 'Big Van') return row.price_luxury;
-        return row.price_regular;
+
+        // Check dynamic unit_prices first
+        if (unitId && row.unit_prices && row.unit_prices[unitId] !== undefined && row.unit_prices[unitId] !== '') {
+            return Number(row.unit_prices[unitId]);
+        }
+
+        // Check if category contains 'luxury' (case insensitive)
+        const isLuxury = categoryOrTier && String(categoryOrTier).toLowerCase().includes('luxury');
+
+        return isLuxury ? row.price_luxury : row.price_regular;
     };
 
-    const calcHotelTransferPrice = (pickupId, dropoffId, tier) => {
+    const calcHotelTransferPrice = (pickupId, dropoffId, categoryOrTier, unitId = null) => {
         if (!pickupId || !dropoffId) return { price: null, warning: null };
         let row = hotel_price_lists.find(
             (hp) => String(hp.hotel_id_pickup) === String(pickupId) && String(hp.hotel_id_dropoff) === String(dropoffId)
@@ -129,14 +145,24 @@ export default function BookingManagement({
             );
         }
         if (row) {
+            // Check dynamic unit_prices first
+            if (unitId && row.unit_prices && row.unit_prices[unitId] !== undefined && row.unit_prices[unitId] !== '') {
+                return {
+                    price: Number(row.unit_prices[unitId]),
+                    warning: null,
+                };
+            }
+
+            const isLuxury = categoryOrTier && String(categoryOrTier).toLowerCase().includes('luxury');
+
             return {
-                price: (tier === 'Luxury' || tier === 'Big Van') ? row.luxury_price : row.regular_price,
+                price: isLuxury ? row.luxury_price : row.regular_price,
                 warning: null,
             };
         }
         return {
             price: null,
-            warning: 'Harga belum diatur untuk rute ini, isi manual',
+            warning: 'Harga belum diatur untuk rute ini, silakan isi manual pada Total Fee',
         };
     };
 
@@ -155,10 +181,12 @@ export default function BookingManagement({
         const initialDirection = 'Pick-Up';
         const defaultDestinations = getDestinations(initialDirection);
         const firstDest = defaultDestinations[0] || '';
+        const defaultUnit = available_vehicle_units[0];
+        const defaultUnitId = defaultUnit?.id ? String(defaultUnit.id) : '';
         const regVehicles = vehicles.filter((v) => v.tier === 'Regular' || v.category === 'Regular Family SUV');
         const defaultVehicle = regVehicles[0] || vehicles[0];
         const initialTier = defaultVehicle?.tier || 'Regular';
-        const autoPrice = calcAirportPrice(firstDest, initialDirection, initialTier);
+        const autoPrice = calcAirportPrice(firstDest, initialDirection, defaultUnit?.category || initialTier, defaultUnitId);
 
         addBookingForm.setData({
             auto_parse_text: '',
@@ -168,6 +196,7 @@ export default function BookingManagement({
             selected_hotel_id: '',
             hotel_id_pickup: '',
             hotel_id_dropoff: '',
+            vehicle_unit_id: defaultUnitId,
             vehicle_tier: initialTier,
             package_id: '',
             guest_name: '',
@@ -183,7 +212,9 @@ export default function BookingManagement({
             children: 0,
             total_fee: autoPrice !== null ? String(autoPrice) : '',
             notes: '',
+            child_seats: [],
         });
+        setSelectedSeats({});
         setShowAddBookingModal(true);
     };
 
@@ -219,55 +250,57 @@ export default function BookingManagement({
         else if (bookingType.includes('HOTEL TRANSFER')) booking_type_ui = 'Hotel Transfer';
         else if (bookingType.includes('DAY TOUR')) booking_type_ui = 'Day Tour';
 
-        // Vehicle tier mapping
-        const vehicleRaw = (data['VEHICLE'] || '').toLowerCase();
-        let vehicle_tier = 'Regular';
-        if (vehicleRaw.includes('luxury')) vehicle_tier = 'Luxury';
-        else if (vehicleRaw.includes('big van')) vehicle_tier = 'Big Van';
-
-        const chosenVehicle = vehicles.find((v) => v.tier === vehicle_tier) || vehicles[0];
+        // Vehicle: map nama kendaraan ke unit kendaraan yang tersedia
+        const vehicleRaw = (data['VEHICLE / KENDARAAN'] || data['VEHICLE'] || '').toLowerCase();
+        let matchedUnit = available_vehicle_units.find(u => vehicleRaw.includes(u.category.toLowerCase()));
+        if (!matchedUnit && available_vehicle_units.length > 0) {
+            matchedUnit = available_vehicle_units[0];
+        }
 
         // Parse adults & children
-        const adults = parseInt(data['ADULTS']) || 1;
-        const children = parseInt(data['CHILDREN']) || 0;
+        const adults = parseInt(data['ADULTS / DEWASA']) || parseInt(data['ADULTS']) || 1;
+        const children = parseInt(data['CHILDREN / ANAK']) || parseInt(data['CHILDREN']) || 0;
 
         // Build updated form data
         const updates = {
             booking_type_ui,
-            guest_name: data['GUEST NAME'] || '',
-            whatsapp_number: data['PHONE/WHATSAPP'] || data['WHATSAPP'] || '',
+            guest_name: data['NAMA LENGKAP / GUEST NAME'] || data['GUEST NAME'] || '',
+            whatsapp_number: data['NO. WHATSAPP / PHONE'] || data['PHONE/WHATSAPP'] || data['WHATSAPP'] || '',
             email: data['EMAIL'] || '',
-            booking_date: data['DATE'] || '',
-            pickup_time: data['PICK-UP TIME'] || '09:00',
-            flight_number: data['FLIGHT NUMBER'] || '',
+            booking_date: data['TANGGAL / DATE'] || data['DATE'] || '',
+            pickup_time: data['WAKTU JEMPUT / PICK-UP TIME'] || data['PICK-UP TIME'] || '09:00',
+            flight_number: data['NOMOR PENERBANGAN / FLIGHT'] || data['FLIGHT NUMBER'] || '',
             adults,
             children,
-            vehicle_tier,
-            vehicle_id: chosenVehicle?.id ? String(chosenVehicle.id) : '',
-            notes: data['NOTES'] || '',
-            total_fee: data['TOTAL FEE'] ? data['TOTAL FEE'].replace(/[^\d]/g, '') : '',
+            vehicle_unit_id: matchedUnit?.id ? String(matchedUnit.id) : addBookingForm.data.vehicle_unit_id,
+            notes: data['CATATAN / NOTES'] || data['NOTES'] || '',
+            total_fee: data['TOTAL HARGA / TOTAL FEE'] || data['TOTAL FEE'] ? String(parseInt((data['TOTAL HARGA / TOTAL FEE'] || data['TOTAL FEE'] || '0').replace(/[^\d]/g, '')) || 0) : '',
         };
 
         // Booking type specific fields
         if (booking_type_ui === 'Airport Pick-Up' || booking_type_ui === 'Airport Drop-Off') {
             const direction = booking_type_ui === 'Airport Pick-Up' ? 'Pick-Up' : 'Drop-Off';
-            updates.selected_destinasi = data['DESTINASI/WILAYAH'] || data['DESTINASI'] || '';
+            updates.selected_destinasi = data['DESTINASI / WILAYAH'] || data['DESTINASI/WILAYAH'] || data['DESTINASI'] || '';
 
             const hotelField = direction === 'Pick-Up' ? 'HOTEL TUJUAN' : 'HOTEL PENJEMPUTAN';
-            const hotelName = data[hotelField] || '';
+            const hotelName = data[hotelField] || data['HOTEL'] || '';
 
-            if (direction === 'Pick-Up') {
-                updates.pickup_location = 'Bali Airport';
-                updates.dropoff_location = hotelName;
-            } else {
-                updates.pickup_location = hotelName;
-                updates.dropoff_location = 'Bali Airport';
+            // Cari hotel dari database berdasarkan nama
+            const matchedHotel = hotels.find(h => h.nama_hotel?.toLowerCase() === hotelName.toLowerCase());
+            if (matchedHotel) {
+                updates.selected_hotel_id = String(matchedHotel.id);
             }
         } else if (booking_type_ui === 'Hotel Transfer') {
-            updates.pickup_location = data['HOTEL ASAL (PENJEMPUTAN)'] || data['HOTEL ASAL'] || '';
-            updates.dropoff_location = data['HOTEL TUJUAN (PENGANTARAN)'] || data['HOTEL TUJUAN'] || '';
+            const pickupName = data['HOTEL ASAL / ORIGIN'] || data['HOTEL ASAL (PENJEMPUTAN)'] || data['HOTEL ASAL'] || '';
+            const dropoffName = data['HOTEL TUJUAN / DESTINATION'] || data['HOTEL TUJUAN (PENGANTARAN)'] || data['HOTEL TUJUAN'] || '';
+
+            const pickupHotel = hotels.find(h => h.nama_hotel?.toLowerCase() === pickupName.toLowerCase());
+            const dropoffHotel = hotels.find(h => h.nama_hotel?.toLowerCase() === dropoffName.toLowerCase());
+
+            if (pickupHotel) updates.hotel_id_pickup = String(pickupHotel.id);
+            if (dropoffHotel) updates.hotel_id_dropoff = String(dropoffHotel.id);
         } else if (booking_type_ui === 'Day Tour') {
-            const pickupLoc = data['PICK-UP LOCATION'] || data['PICKUP LOCATION'] || '';
+            const pickupLoc = data['LOKASI JEMPUT / PICK-UP LOCATION'] || data['PICK-UP LOCATION'] || data['PICKUP LOCATION'] || '';
             updates.pickup_location = pickupLoc;
             updates.dropoff_location = pickupLoc;
             updates.package_id = ''; // Admin pilih manual dari dropdown
@@ -282,12 +315,167 @@ export default function BookingManagement({
         alert('Form berhasil diisi otomatis! Periksa dan sesuaikan jika perlu.');
     };
 
+    // Template auto-parse untuk WA
+    const bookingTemplates = {
+        airport_pickup: `BOOKING TYPE: AIRPORT PICK-UP
+TANGGAL / DATE:
+NAMA LENGKAP / GUEST NAME:
+NO. WHATSAPP / PHONE:
+EMAIL:
+WAKTU JEMPUT / PICK-UP TIME:
+NOMOR PENERBANGAN / FLIGHT:
+DESTINASI / WILAYAH:
+HOTEL TUJUAN:
+VEHICLE / KENDARAAN:
+ADULTS / DEWASA:
+CHILDREN / ANAK:
+CHILD CAR SEATS:
+TOTAL HARGA / TOTAL FEE:
+CATATAN / NOTES:`,
+
+        airport_dropoff: `BOOKING TYPE: AIRPORT DROP-OFF
+TANGGAL / DATE:
+NAMA LENGKAP / GUEST NAME:
+NO. WHATSAPP / PHONE:
+EMAIL:
+WAKTU JEMPUT / PICK-UP TIME:
+NOMOR PENERBANGAN / FLIGHT:
+DESTINASI / WILAYAH:
+HOTEL PENJEMPUTAN:
+VEHICLE / KENDARAAN:
+ADULTS / DEWASA:
+CHILDREN / ANAK:
+CHILD CAR SEATS:
+TOTAL HARGA / TOTAL FEE:
+CATATAN / NOTES:`,
+
+        hotel_transfer: `BOOKING TYPE: HOTEL TRANSFER
+TANGGAL / DATE:
+NAMA LENGKAP / GUEST NAME:
+NO. WHATSAPP / PHONE:
+EMAIL:
+WAKTU JEMPUT / PICK-UP TIME:
+HOTEL ASAL / ORIGIN:
+HOTEL TUJUAN / DESTINATION:
+VEHICLE / KENDARAAN:
+ADULTS / DEWASA:
+CHILDREN / ANAK:
+CHILD CAR SEATS:
+TOTAL HARGA / TOTAL FEE:
+CATATAN / NOTES:`,
+
+        day_tour: `BOOKING TYPE: DAY TOUR
+TANGGAL / DATE:
+NAMA LENGKAP / GUEST NAME:
+NO. WHATSAPP / PHONE:
+EMAIL:
+WAKTU JEMPUT / PICK-UP TIME:
+LOKASI JEMPUT / PICK-UP LOCATION:
+TOUR PACKAGE:
+VEHICLE / KENDARAAN:
+ADULTS / DEWASA:
+CHILDREN / ANAK:
+CHILD CAR SEATS:
+TOTAL HARGA / TOTAL FEE:
+CATATAN / NOTES:`,
+    };
+
+    const [selectedTemplate, setSelectedTemplate] = useState('');
+    const [showTemplateDropdown, setShowTemplateDropdown] = useState(false);
+
     const handleAddBookingSubmit = (e) => {
-        e.preventDefault();
+        if (e && e.preventDefault) e.preventDefault();
+
+        const typeUi = addBookingForm.data.booking_type_ui;
+        const isPickup = typeUi === 'Airport Pick-Up';
+        const isDropoff = typeUi === 'Airport Drop-Off';
+        const isHotel = typeUi === 'Hotel Transfer';
+        const isDayTour = typeUi === 'Day Tour';
+
+        if (!addBookingForm.data.guest_name?.trim()) {
+            alert('Mohon isi nama tamu terlebih dahulu.');
+            return;
+        }
+        if (!addBookingForm.data.whatsapp_number?.trim()) {
+            alert('Mohon isi nomor WhatsApp tamu.');
+            return;
+        }
+        if (!addBookingForm.data.booking_date) {
+            alert('Mohon pilih tanggal booking.');
+            return;
+        }
+        if (!addBookingForm.data.vehicle_unit_id) {
+            alert('Mohon pilih kategori unit kendaraan.');
+            return;
+        }
+        if (addBookingForm.data.total_fee === '' || isNaN(Number(addBookingForm.data.total_fee))) {
+            alert('Mohon isi Total Fee dengan nominal yang valid.');
+            return;
+        }
+        if (isDayTour && !addBookingForm.data.package_id) {
+            alert('Mohon pilih paket tour terlebih dahulu.');
+            return;
+        }
+        if (isPickup && !addBookingForm.data.selected_hotel_id) {
+            alert('Mohon pilih hotel tujuan terlebih dahulu.');
+            return;
+        }
+        if (isDropoff && !addBookingForm.data.selected_hotel_id) {
+            alert('Mohon pilih hotel penjemputan terlebih dahulu.');
+            return;
+        }
+        if (isHotel && (!addBookingForm.data.hotel_id_pickup || !addBookingForm.data.hotel_id_dropoff)) {
+            alert('Mohon pilih hotel asal dan hotel tujuan terlebih dahulu.');
+            return;
+        }
+
+        // Convert selectedSeats to child_seats array
+        const childSeatsArray = Object.entries(selectedSeats)
+            .filter(([_, qty]) => qty > 0)
+            .map(([seatId, qty]) => {
+                const seat = childSeatTypes.find(s => s.id === parseInt(seatId));
+                return { id: parseInt(seatId), name: seat?.name, quantity: qty };
+            });
+
+        // STEP 1: Set transform DULU (terpisah, bukan di-chain)
+        addBookingForm.transform((data) => ({
+            status: data.status || 'Pending',
+            booking_type_ui: data.booking_type_ui,
+            guest_name: data.guest_name,
+            whatsapp_number: data.whatsapp_number,
+            email: data.email || null,
+            vehicle_unit_id: data.vehicle_unit_id,
+            booking_date: data.booking_date,
+            pickup_time: data.pickup_time,
+            adults: parseInt(data.adults) || 1,
+            children: parseInt(data.children) || 0,
+            total_fee: parseFloat(data.total_fee) || 0,
+            notes: data.notes || null,
+            flight_number: data.flight_number || null,
+            package_id: isDayTour ? (data.package_id || null) : null,
+            selected_hotel_id: data.selected_hotel_id || null,
+            hotel_id_pickup: data.hotel_id_pickup || null,
+            hotel_id_dropoff: data.hotel_id_dropoff || null,
+            selected_destinasi: data.selected_destinasi || null,
+            vehicle_tier: data.vehicle_tier || null,
+            auto_parse_text: data.auto_parse_text || null,
+            child_seats: childSeatsArray,
+        }));
+
+        // STEP 2: Kirim POST (dipanggil setelah transform, bukan di-chain)
         addBookingForm.post('/admin/bookings', {
             onSuccess: () => {
                 setShowAddBookingModal(false);
                 addBookingForm.reset();
+                setSelectedSeats({});
+                setSuccessMessage('✓ Booking berhasil dibuat!');
+                setShowSuccessAlert(true);
+                setTimeout(() => setShowSuccessAlert(false), 3000);
+            },
+            onError: (errors) => {
+                console.error('Validasi gagal:', errors);
+                const msg = Object.entries(errors).map(([k, v]) => `${k}: ${v}`).join('\n');
+                alert('Gagal menyimpan booking:\n' + msg);
             },
         });
     };
@@ -636,13 +824,17 @@ export default function BookingManagement({
                         value={form.data.booking_type_ui}
                         onChange={(e) => {
                             const val = e.target.value;
+                            const defaultUnitId = available_vehicle_units[0]?.id ? String(available_vehicle_units[0].id) : '';
+                            const currentUnitId = form.data.vehicle_unit_id || defaultUnitId;
+                            const currentUnit = available_vehicle_units.find((u) => String(u.id) === String(currentUnitId)) || available_vehicle_units[0];
+
                             if (val === 'Airport Pick-Up') {
                                 const dests = getDestinations('Pick-Up');
                                 const firstDest = dests[0] || '';
                                 const regVehicles = vehicles.filter((v) => v.tier === 'Regular' || v.category === 'Regular Family SUV');
                                 const chosenV = regVehicles[0] || vehicles[0];
                                 const tier = chosenV?.tier || 'Regular';
-                                const price = calcAirportPrice(firstDest, 'Pick-Up', tier);
+                                const price = calcAirportPrice(firstDest, 'Pick-Up', currentUnit?.category || tier, currentUnitId);
                                 form.setData((prev) => ({
                                     ...prev,
                                     booking_type_ui: 'Airport Pick-Up',
@@ -650,12 +842,13 @@ export default function BookingManagement({
                                     selected_hotel_id: '',
                                     hotel_id_pickup: '',
                                     hotel_id_dropoff: '',
+                                    vehicle_unit_id: currentUnitId,
                                     vehicle_tier: tier,
-                                    vehicle_id: chosenV?.id ? String(chosenV.id) : '',
+                                    vehicle_id: chosenV?.id ? String(chosenV.id) : prev.vehicle_id,
                                     package_id: '',
                                     pickup_location: 'I Gusti Ngurah Rai Airport (DPS)',
                                     dropoff_location: '',
-                                    total_fee: price !== null ? String(price) : '',
+                                    total_fee: price !== null ? String(price) : prev.total_fee,
                                 }));
                             } else if (val === 'Airport Drop-Off') {
                                 const dests = getDestinations('Drop-Off');
@@ -663,7 +856,7 @@ export default function BookingManagement({
                                 const regVehicles = vehicles.filter((v) => v.tier === 'Regular' || v.category === 'Regular Family SUV');
                                 const chosenV = regVehicles[0] || vehicles[0];
                                 const tier = chosenV?.tier || 'Regular';
-                                const price = calcAirportPrice(firstDest, 'Drop-Off', tier);
+                                const price = calcAirportPrice(firstDest, 'Drop-Off', currentUnit?.category || tier, currentUnitId);
                                 form.setData((prev) => ({
                                     ...prev,
                                     booking_type_ui: 'Airport Drop-Off',
@@ -671,12 +864,13 @@ export default function BookingManagement({
                                     selected_hotel_id: '',
                                     hotel_id_pickup: '',
                                     hotel_id_dropoff: '',
+                                    vehicle_unit_id: currentUnitId,
                                     vehicle_tier: tier,
-                                    vehicle_id: chosenV?.id ? String(chosenV.id) : '',
+                                    vehicle_id: chosenV?.id ? String(chosenV.id) : prev.vehicle_id,
                                     package_id: '',
                                     pickup_location: '',
                                     dropoff_location: 'I Gusti Ngurah Rai Airport (DPS)',
-                                    total_fee: price !== null ? String(price) : '',
+                                    total_fee: price !== null ? String(price) : prev.total_fee,
                                 }));
                             } else if (val === 'Hotel Transfer') {
                                 const regVehicles = vehicles.filter((v) => v.tier === 'Regular' || v.category === 'Regular Family SUV');
@@ -689,8 +883,9 @@ export default function BookingManagement({
                                     selected_hotel_id: '',
                                     hotel_id_pickup: '',
                                     hotel_id_dropoff: '',
+                                    vehicle_unit_id: currentUnitId,
                                     vehicle_tier: tier,
-                                    vehicle_id: chosenV?.id ? String(chosenV.id) : '',
+                                    vehicle_id: chosenV?.id ? String(chosenV.id) : prev.vehicle_id,
                                     package_id: '',
                                     flight_number: '',
                                     pickup_location: '',
@@ -701,14 +896,25 @@ export default function BookingManagement({
                                 const firstPkg = packages[0];
                                 const pkgId = firstPkg?.id ? String(firstPkg.id) : '';
                                 const isFull = firstPkg?.duration_type === 'Full Day';
-                                const targetList = isFull
-                                    ? vehicles.filter((v) => v.tier === 'Big Van' || v.category === 'Family Minibus')
-                                    : vehicles.filter((v) => v.tier === 'Regular' || v.category === 'Regular Family SUV');
-                                const chosenV = targetList[0] || vehicles[0];
+                                const bigVanUnit = available_vehicle_units.find((u) => u.category.toLowerCase().includes('minibus') || u.category.toLowerCase().includes('big van'));
+                                const selectedUnitId = isFull && bigVanUnit?.id ? String(bigVanUnit.id) : currentUnitId;
+                                const unit = available_vehicle_units.find((u) => String(u.id) === String(selectedUnitId));
+                                let price = null;
+                                if (unit && firstPkg) {
+                                    const isBigVan = unit.category.toLowerCase().includes('minibus') || unit.category.toLowerCase().includes('big van');
+                                    const isLuxury = unit.category.toLowerCase().includes('luxury');
+                                    if (isBigVan) {
+                                        price = firstPkg.big_van_price || firstPkg.price;
+                                    } else if (isLuxury) {
+                                        price = firstPkg.luxury_price || firstPkg.price;
+                                    } else {
+                                        price = firstPkg.regular_price || firstPkg.price;
+                                    }
+                                }
+
+                                const regVehicles = vehicles.filter((v) => v.tier === 'Regular' || v.category === 'Regular Family SUV');
+                                const chosenV = regVehicles[0] || vehicles[0];
                                 const tier = isFull ? 'Big Van' : (chosenV?.tier || 'Regular');
-                                const price = isFull
-                                    ? (firstPkg?.big_van_price || firstPkg?.price)
-                                    : (firstPkg?.regular_price || firstPkg?.price);
                                 form.setData((prev) => ({
                                     ...prev,
                                     booking_type_ui: 'Day Tour',
@@ -716,8 +922,9 @@ export default function BookingManagement({
                                     selected_hotel_id: '',
                                     hotel_id_pickup: '',
                                     hotel_id_dropoff: '',
+                                    vehicle_unit_id: selectedUnitId,
                                     vehicle_tier: tier,
-                                    vehicle_id: chosenV?.id ? String(chosenV.id) : '',
+                                    vehicle_id: chosenV?.id ? String(chosenV.id) : prev.vehicle_id,
                                     package_id: pkgId,
                                     flight_number: '',
                                     pickup_location: '',
@@ -782,31 +989,23 @@ export default function BookingManagement({
                                 value={form.data.selected_hotel_id}
                                 onChange={(e) => {
                                     const hotelId = e.target.value;
-                                    if (hotelId === '__custom__') {
-                                        form.setData((prev) => ({
-                                            ...prev,
-                                            selected_hotel_id: '__custom__',
-                                            ...(direction === 'Pick-Up' ? { dropoff_location: '' } : { pickup_location: '' }),
-                                        }));
-                                    } else {
-                                        const selectedH = hotels.find((h) => String(h.id) === String(hotelId));
-                                        const hotelName = selectedH?.nama_hotel || '';
-                                        form.setData((prev) => ({
-                                            ...prev,
-                                            selected_hotel_id: hotelId,
-                                            ...(direction === 'Pick-Up'
-                                                ? { dropoff_location: hotelName }
-                                                : { pickup_location: hotelName }),
-                                        }));
-                                    }
+                                    const selectedH = hotels.find((h) => String(h.id) === String(hotelId));
+                                    const hotelName = selectedH?.nama_hotel || '';
+                                    form.setData((prev) => ({
+                                        ...prev,
+                                        selected_hotel_id: hotelId,
+                                        ...(direction === 'Pick-Up'
+                                            ? { dropoff_location: hotelName }
+                                            : { pickup_location: hotelName }),
+                                    }));
                                 }}
                                 disabled={!form.data.selected_destinasi}
-                                required={form.data.selected_hotel_id !== '__custom__'}
+                                required
                                 className={selectClass}
                             >
                                 <option value="">
                                     {form.data.selected_destinasi
-                                        ? (hotelsForSelectedDest.length > 0 ? '-- Pilih Hotel Terdaftar --' : '-- Belum ada hotel terdaftar, ketik manual --')
+                                        ? (hotelsForSelectedDest.length > 0 ? '-- Pilih Hotel --' : '-- Belum ada hotel terdaftar di wilayah ini --')
                                         : '-- Pilih Destinasi Dahulu --'}
                                 </option>
                                 {hotelsForSelectedDest.map((h) => (
@@ -814,63 +1013,39 @@ export default function BookingManagement({
                                         {h.nama_hotel}
                                     </option>
                                 ))}
-                                {form.data.selected_destinasi && (
-                                    <option value="__custom__">+ Ketik Nama Hotel / Villa Manual</option>
-                                )}
                             </select>
                         </div>
-
-                        {/* Custom Hotel Input if chosen or no hotels in dest */}
-                        {(form.data.selected_hotel_id === '__custom__' || (form.data.selected_destinasi && hotelsForSelectedDest.length === 0)) && (
-                            <div className="sm:col-span-2">
-                                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                                    Nama Hotel / Villa / Lokasi {direction === 'Pick-Up' ? 'Tujuan' : 'Penjemputan'} <span className="text-red-500">*</span>
-                                </label>
-                                <input
-                                    type="text"
-                                    required
-                                    value={direction === 'Pick-Up' ? form.data.dropoff_location : form.data.pickup_location}
-                                    onChange={(e) => {
-                                        const locVal = e.target.value;
-                                        form.setData((prev) => ({
-                                            ...prev,
-                                            selected_hotel_id: '__custom__',
-                                            ...(direction === 'Pick-Up' ? { dropoff_location: locVal } : { pickup_location: locVal }),
-                                        }));
-                                    }}
-                                    placeholder="e.g. Maya Sanur Resort & Spa / Villa Ombak Sunset"
-                                    className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-base sm:text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
-                                />
-                            </div>
-                        )}
 
                         {/* 3. Pilih Kendaraan */}
                         <div>
                             <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                                Pilih Kendaraan <span className="text-red-500">*</span>
+                                Pilih Kategori Kendaraan <span className="text-red-500">*</span>
                             </label>
                             <select
-                                value={form.data.vehicle_tier}
+                                value={form.data.vehicle_unit_id}
                                 onChange={(e) => {
-                                    const newTier = e.target.value;
-                                    const chosenV = vehicles.find((v) => v.tier === newTier) || vehicles[0];
-                                    const price = calcAirportPrice(form.data.selected_destinasi, direction, newTier);
+                                    const unitId = e.target.value;
+                                    const unit = available_vehicle_units.find((u) => String(u.id) === String(unitId));
+                                    const direction = form.data.booking_type_ui.includes('Pick-Up') ? 'Pick-Up' : 'Drop-Off';
+                                    const price = unit ? calcAirportPrice(form.data.selected_destinasi, direction, unit.category, unitId) : null;
                                     form.setData((prev) => ({
                                         ...prev,
-                                        vehicle_tier: newTier,
-                                        vehicle_id: chosenV?.id ? String(chosenV.id) : prev.vehicle_id,
+                                        vehicle_unit_id: unitId,
                                         total_fee: price !== null ? String(price) : prev.total_fee,
                                     }));
                                 }}
                                 required
                                 className={selectClass}
                             >
-                                <option value="Regular">Regular</option>
-                                <option value="Luxury">Luxury</option>
-                                <option value="Big Van">Big Van</option>
+                                <option value="">-- Pilih Kategori --</option>
+                                {available_vehicle_units.map((unit) => (
+                                    <option key={unit.id} value={unit.id}>
+                                        {unit.category} (Max {unit.passenger_capacity} pax)
+                                    </option>
+                                ))}
                             </select>
-                            {form.errors.vehicle_id && (
-                                <p className="text-xs text-red-600 mt-1 font-medium">{form.errors.vehicle_id}</p>
+                            {form.errors.vehicle_unit_id && (
+                                <p className="text-xs text-red-600 mt-1 font-medium">{form.errors.vehicle_unit_id}</p>
                             )}
                         </div>
 
@@ -899,9 +1074,6 @@ export default function BookingManagement({
                                 <span className="text-slate-400">➔</span>
                                 <span className="font-semibold text-slate-800">{form.data.dropoff_location || '(Hotel Tujuan)'}</span>
                             </div>
-                            <span className="text-[11px] font-medium text-slate-500">
-                                Kendaraan: <strong className="text-slate-700">{vehicleTier}</strong>
-                            </span>
                         </div>
                     </>
                 )}
@@ -985,30 +1157,32 @@ export default function BookingManagement({
                         {/* 3. Pilih Kendaraan */}
                         <div className="sm:col-span-2">
                             <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                                Pilih Kendaraan <span className="text-red-500">*</span>
+                                Pilih Kategori Kendaraan <span className="text-red-500">*</span>
                             </label>
                             <select
-                                value={form.data.vehicle_tier}
+                                value={form.data.vehicle_unit_id}
                                 onChange={(e) => {
-                                    const newTier = e.target.value;
-                                    const chosenV = vehicles.find((v) => v.tier === newTier) || vehicles[0];
-                                    const pricing = calcHotelTransferPrice(form.data.hotel_id_pickup, form.data.hotel_id_dropoff, newTier);
+                                    const unitId = e.target.value;
+                                    const unit = available_vehicle_units.find((u) => String(u.id) === String(unitId));
+                                    const pricing = unit ? calcHotelTransferPrice(form.data.hotel_id_pickup, form.data.hotel_id_dropoff, unit.category, unitId) : { price: null, warning: '' };
                                     form.setData((prev) => ({
                                         ...prev,
-                                        vehicle_tier: newTier,
-                                        vehicle_id: chosenV?.id ? String(chosenV.id) : prev.vehicle_id,
+                                        vehicle_unit_id: unitId,
                                         total_fee: pricing.price !== null ? String(pricing.price) : prev.total_fee,
                                     }));
                                 }}
                                 required
                                 className={selectClass}
                             >
-                                <option value="Regular">Regular</option>
-                                <option value="Luxury">Luxury</option>
-                                <option value="Big Van">Big Van</option>
+                                <option value="">-- Pilih Kategori --</option>
+                                {available_vehicle_units.map((unit) => (
+                                    <option key={unit.id} value={unit.id}>
+                                        {unit.category} (Max {unit.passenger_capacity} pax)
+                                    </option>
+                                ))}
                             </select>
-                            {form.errors.vehicle_id && (
-                                <p className="text-xs text-red-600 mt-1 font-medium">{form.errors.vehicle_id}</p>
+                            {form.errors.vehicle_unit_id && (
+                                <p className="text-xs text-red-600 mt-1 font-medium">{form.errors.vehicle_unit_id}</p>
                             )}
                         </div>
 
@@ -1032,9 +1206,6 @@ export default function BookingManagement({
                                 <span className="text-slate-400">➔</span>
                                 <span className="font-semibold text-slate-800">{form.data.dropoff_location || '(Hotel Tujuan)'}</span>
                             </div>
-                            <span className="text-[11px] font-medium text-slate-500">
-                                Kendaraan: <strong className="text-slate-700">{vehicleTier}</strong>
-                            </span>
                         </div>
                     </>
                 )}
@@ -1088,49 +1259,93 @@ export default function BookingManagement({
                             <div className="sm:col-span-2">
                                 <div className="flex items-center justify-between mb-1.5">
                                     <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700">
-                                        Pilih Kendaraan <span className="text-red-500">*</span>
+                                        Pilih Kategori Kendaraan <span className="text-red-500">*</span>
                                     </label>
                                     <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
-                                        Full Day: Big Van
+                                        Rekomendasi Full Day: Big Van / Minibus
                                     </span>
                                 </div>
                                 <select
-                                    value="Big Van"
-                                    disabled
-                                    className={`${selectClass} bg-slate-100 opacity-90 cursor-not-allowed`}
-                                >
-                                    <option value="Big Van">Big Van</option>
-                                </select>
-                            </div>
-                        ) : (
-                            <div className="sm:col-span-2">
-                                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                                    Pilih Kendaraan <span className="text-red-500">*</span>
-                                </label>
-                                <select
-                                    value={form.data.vehicle_tier}
+                                    value={form.data.vehicle_unit_id}
                                     onChange={(e) => {
-                                        const newTier = e.target.value;
-                                        const chosenV = vehicles.find((v) => v.tier === newTier) || vehicles[0];
-                                        const p = newTier === 'Big Van'
-                                            ? (selectedPkg?.big_van_price || selectedPkg?.price)
-                                            : (newTier === 'Luxury' ? (selectedPkg?.luxury_price || selectedPkg?.price) : (selectedPkg?.regular_price || selectedPkg?.price));
+                                        const unitId = e.target.value;
+                                        const unit = available_vehicle_units.find((u) => String(u.id) === String(unitId));
+                                        let price = null;
+                                        if (unit && selectedPkg) {
+                                            if (selectedPkg.unit_prices && selectedPkg.unit_prices[unitId] !== undefined && selectedPkg.unit_prices[unitId] !== '') {
+                                                price = Number(selectedPkg.unit_prices[unitId]);
+                                            } else {
+                                                const isBigVan = unit.category.toLowerCase().includes('minibus') || unit.category.toLowerCase().includes('big van');
+                                                const isLuxury = unit.category.toLowerCase().includes('luxury');
+                                                if (isBigVan) price = selectedPkg.big_van_price || selectedPkg.price;
+                                                else if (isLuxury) price = selectedPkg.luxury_price || selectedPkg.price;
+                                                else price = selectedPkg.regular_price || selectedPkg.price;
+                                            }
+                                        }
                                         form.setData((prev) => ({
                                             ...prev,
-                                            vehicle_id: chosenV?.id ? String(chosenV.id) : prev.vehicle_id,
-                                            vehicle_tier: newTier,
-                                            total_fee: p ? String(p) : prev.total_fee,
+                                            vehicle_unit_id: unitId,
+                                            total_fee: price ? String(price) : prev.total_fee,
                                         }));
                                     }}
                                     required
                                     className={selectClass}
                                 >
-                                    <option value="Regular">Regular</option>
-                                    <option value="Luxury">Luxury</option>
-                                    <option value="Big Van">Big Van</option>
+                                    <option value="">-- Pilih Kategori Kendaraan --</option>
+                                    {available_vehicle_units.map((unit) => (
+                                        <option key={unit.id} value={unit.id}>
+                                            {unit.category} (Max {unit.passenger_capacity} pax)
+                                        </option>
+                                    ))}
                                 </select>
-                                {form.errors.vehicle_id && (
-                                    <p className="text-xs text-red-600 mt-1 font-medium">{form.errors.vehicle_id}</p>
+                            </div>
+                        ) : (
+                            <div className="sm:col-span-2">
+                                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                                    Pilih Kategori Kendaraan <span className="text-red-500">*</span>
+                                </label>
+                                <select
+                                    value={form.data.vehicle_unit_id}
+                                    onChange={(e) => {
+                                        const unitId = e.target.value;
+                                        const unit = available_vehicle_units.find((u) => String(u.id) === String(unitId));
+
+                                        let price = null;
+                                        if (unit && selectedPkg) {
+                                            if (selectedPkg.unit_prices && selectedPkg.unit_prices[unitId] !== undefined && selectedPkg.unit_prices[unitId] !== '') {
+                                                price = Number(selectedPkg.unit_prices[unitId]);
+                                            } else {
+                                                const isBigVan = unit.category.toLowerCase().includes('minibus') || unit.category.toLowerCase().includes('big van');
+                                                const isLuxury = unit.category.toLowerCase().includes('luxury');
+
+                                                if (isBigVan) {
+                                                    price = selectedPkg.big_van_price || selectedPkg.price;
+                                                } else if (isLuxury) {
+                                                    price = selectedPkg.luxury_price || selectedPkg.price;
+                                                } else {
+                                                    price = selectedPkg.regular_price || selectedPkg.price;
+                                                }
+                                            }
+                                        }
+
+                                        form.setData((prev) => ({
+                                            ...prev,
+                                            vehicle_unit_id: unitId,
+                                            total_fee: price ? String(price) : prev.total_fee,
+                                        }));
+                                    }}
+                                    required
+                                    className={selectClass}
+                                >
+                                    <option value="">-- Pilih Kategori --</option>
+                                    {available_vehicle_units.map((unit) => (
+                                        <option key={unit.id} value={unit.id}>
+                                            {unit.category} (Max {unit.passenger_capacity} pax)
+                                        </option>
+                                    ))}
+                                </select>
+                                {form.errors.vehicle_unit_id && (
+                                    <p className="text-xs text-red-600 mt-1 font-medium">{form.errors.vehicle_unit_id}</p>
                                 )}
                             </div>
                         )}
@@ -1353,6 +1568,56 @@ export default function BookingManagement({
                 {/* Notes */}
                 <div className="sm:col-span-2">
                     <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                        Child Car Seats (Optional)
+                    </label>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        {childSeatTypes.map((seat) => {
+                            const qty = selectedSeats[seat.id] || 0;
+                            return (
+                                <div
+                                    key={seat.id}
+                                    className="border rounded-lg p-3 flex items-center justify-between"
+                                    style={{
+                                        borderColor: qty > 0 ? '#94A3B8' : '#E2E8F0',
+                                        background: qty > 0 ? '#F8FAFC' : '#FFFFFF',
+                                    }}
+                                >
+                                    <div className="flex-1 min-w-0 pr-3">
+                                        <div className="text-sm font-medium text-slate-900">{seat.name}</div>
+                                        <div className="text-xs text-slate-500">{seat.age_range} · {seat.weight_range}</div>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                const newQty = Math.max(0, qty - 1);
+                                                setSelectedSeats(prev => ({ ...prev, [seat.id]: newQty }));
+                                            }}
+                                            className="w-7 h-7 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold"
+                                        >
+                                            −
+                                        </button>
+                                        <span className="w-6 text-center text-sm font-semibold">{qty}</span>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                const newQty = Math.min(3, qty + 1);
+                                                setSelectedSeats(prev => ({ ...prev, [seat.id]: newQty }));
+                                            }}
+                                            className="w-7 h-7 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold"
+                                        >
+                                            +
+                                        </button>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+
+                {/* Notes */}
+                <div className="sm:col-span-2">
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
                         Notes / Special Requests
                     </label>
                     <textarea
@@ -1373,8 +1638,20 @@ export default function BookingManagement({
     return (
         <AdminLayout title="Booking Management">
             <div className="space-y-6 max-w-[1240px]">
+                {/* Success Alert */}
+                {showSuccessAlert && (
+                    <div className="bg-emerald-50 border border-emerald-200 p-4 rounded-xl shadow-xs flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                        </div>
+                        <span className="text-sm font-semibold text-emerald-800">{successMessage}</span>
+                    </div>
+                )}
+
                 {/* Flash Success Alert */}
-                {flash?.success && (
+                {flash?.success && !showSuccessAlert && (
                     <div className="bg-emerald-50 border border-emerald-200 p-4 rounded-xl shadow-xs flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
@@ -2024,18 +2301,9 @@ export default function BookingManagement({
                             Cancel
                         </button>
                         <button
-                            type="submit"
-                            form="add-booking-form"
-                            disabled={(() => {
-                                if (addBookingForm.processing) return true;
-                                const adults = parseInt(addBookingForm.data.adults) || 0;
-                                const children = parseInt(addBookingForm.data.children) || 0;
-                                const totalPassengers = adults + children;
-                                const capacityMap = { 'Regular': 6, 'Luxury': 8, 'Big Van': 12 };
-                                const vehicleTier = addBookingForm.data.vehicle_tier || 'Regular';
-                                const currentCapacity = capacityMap[vehicleTier] || 6;
-                                return totalPassengers > currentCapacity;
-                            })()}
+                            type="button"
+                            onClick={handleAddBookingSubmit}
+                            disabled={addBookingForm.processing}
                             className="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-[#00AEEF] hover:bg-[#009cd7] text-white rounded-xl text-sm font-semibold transition shadow-xs disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer min-h-[44px]"
                         >
                             {addBookingForm.processing && (
@@ -2049,6 +2317,25 @@ export default function BookingManagement({
                     </>
                 }
             >
+                {/* Validation Error Banner */}
+                {Object.keys(addBookingForm.errors).length > 0 && (
+                    <div className="p-4 bg-rose-50 border border-rose-200 rounded-xl mb-4 flex items-start gap-3">
+                        <svg className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <circle cx="12" cy="12" r="10" />
+                            <line x1="12" y1="8" x2="12" y2="12" />
+                            <line x1="12" y1="16" x2="12.01" y2="16" />
+                        </svg>
+                        <div className="text-xs text-rose-800">
+                            <p className="font-bold mb-1">Gagal menyimpan booking. Mohon lengkapi isian berikut:</p>
+                            <ul className="list-disc list-inside space-y-0.5 font-medium">
+                                {Object.entries(addBookingForm.errors).map(([fld, err]) => (
+                                    <li key={fld}>{err}</li>
+                                ))}
+                            </ul>
+                        </div>
+                    </div>
+                )}
+
                 <form id="add-booking-form" onSubmit={handleAddBookingSubmit} className="space-y-5">
                     {/* Auto-Parse Section */}
                     <div className="bg-gradient-to-r from-sky-50 to-indigo-50/50 border border-sky-100 rounded-2xl p-4">
@@ -2069,10 +2356,64 @@ export default function BookingManagement({
                             rows="8"
                             value={addBookingForm.data.auto_parse_text}
                             onChange={(e) => addBookingForm.setData('auto_parse_text', e.target.value)}
-                            placeholder="Contoh: BOOKING TYPE: AIRPORT PICK-UP&#10;DATE: 2026-12-25&#10;GUEST NAME: John Doe&#10;..."
+                            placeholder={`Tempel format booking di sini, contoh:\n\nBOOKING TYPE: AIRPORT PICK-UP\nTANGGAL / DATE: 2026-12-25\nNAMA LENGKAP / GUEST NAME: John Doe\nNO. WHATSAPP / PHONE: +62 812-3456-7890\nEMAIL: john@email.com\nWAKTU JEMPUT / PICK-UP TIME: 14:00\nNOMOR PENERBANGAN / FLIGHT: GA-401\nDESTINASI / WILAYAH: Seminyak\nHOTEL TUJUAN: The Legian Bali\nVEHICLE / KENDARAAN: Regular Family SUV\nADULTS / DEWASA: 2\nCHILDREN / ANAK: 1\nCHILD CAR SEATS: 1x Infant Capsule\nTOTAL HARGA / TOTAL FEE: 350000\nCATATAN / NOTES: Flight delay 30 menit`}
                             className="w-full bg-white border border-slate-200 rounded-xl p-3 text-base sm:text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 resize-none font-sans shadow-2xs"
                         />
-                        <div className="flex justify-end mt-2">
+                        <div className="flex items-center justify-between mt-2">
+                            {/* Dropdown Pilih Template */}
+                            <div className="relative">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowTemplateDropdown(!showTemplateDropdown)}
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
+                                >
+                                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                        <polyline points="14 2 14 8 20 8"/>
+                                    </svg>
+                                    <span>Template</span>
+                                </button>
+                                {showTemplateDropdown && (
+                                    <div className="absolute top-full left-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg z-50 py-1 min-w-[200px]">
+                                        {[
+                                            { key: 'airport_pickup', label: 'Airport Pick-Up' },
+                                            { key: 'airport_dropoff', label: 'Airport Drop-Off' },
+                                            { key: 'hotel_transfer', label: 'Hotel Transfer' },
+                                            { key: 'day_tour', label: 'Day Tour' },
+                                        ].map((tpl) => (
+                                            <button
+                                                key={tpl.key}
+                                                type="button"
+                                                onClick={() => {
+                                                    addBookingForm.setData('auto_parse_text', bookingTemplates[tpl.key]);
+                                                    setSelectedTemplate(tpl.key);
+                                                    setShowTemplateDropdown(false);
+                                                }}
+                                                className="w-full text-left px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+                                            >
+                                                {tpl.label}
+                                            </button>
+                                        ))}
+                                        <div className="border-t border-slate-100 mt-1 pt-1">
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    const allTemplates = Object.values(bookingTemplates).join('\n\n---\n\n');
+                                                    navigator.clipboard.writeText(allTemplates).then(() => {
+                                                        alert('Semua template berhasil disalin ke clipboard!');
+                                                    }).catch(() => {
+                                                        alert('Gagal menyalin. Silakan copy manual.');
+                                                    });
+                                                    setShowTemplateDropdown(false);
+                                                }}
+                                                className="w-full text-left px-3 py-2 text-xs font-medium text-sky-600 hover:bg-sky-50 transition-colors"
+                                            >
+                                                Salin Semua Template (untuk dibagikan)
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
                             <button
                                 type="button"
                                 onClick={handleGenerateClick}

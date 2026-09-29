@@ -3,6 +3,8 @@ import { useForm, usePage } from '@inertiajs/react';
 import axios from 'axios';
 import {
     BookingFooter,
+    BookingSuccessModal,
+    CapacityWarningModal,
     ChildSeatsSelector,
     FieldWithIcon,
     inputStyle,
@@ -33,6 +35,8 @@ export default function AirportBookingForm({ vehicles = [], childSeatTypes = [] 
     const [estimatedFee, setEstimatedFee] = useState(null);
     const [loadingEstimate, setLoadingEstimate] = useState(false);
     const [validationWarning, setValidationWarning] = useState('');
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [showCapacityModal, setShowCapacityModal] = useState(false);
 
     // Initial vehicle selection
     const defaultVehicle = vehicles.find((v) => !v.category?.includes('Minibus')) || vehicles[0];
@@ -44,7 +48,7 @@ export default function AirportBookingForm({ vehicles = [], childSeatTypes = [] 
         flight_number: '',
         booking_type: 'Airport Transfer',
         transfer_direction: 'Pick-Up',
-        vehicle_id: defaultVehicle?.id || '',
+        vehicle_unit_id: defaultVehicle?.id || '',
         pickup_hotel_id: '',
         dropoff_hotel_id: '',
         booking_date: '',
@@ -55,7 +59,7 @@ export default function AirportBookingForm({ vehicles = [], childSeatTypes = [] 
         child_seats: [],
     });
 
-    const selectedVehicle = vehicles.find((v) => String(v.id) === String(data.vehicle_id));
+    const selectedVehicle = vehicles.find((v) => String(v.id) === String(data.vehicle_unit_id));
     const totalPax = (parseInt(data.adults, 10) || 0) + (parseInt(data.children, 10) || 0);
     const isOverCapacity = Boolean(selectedVehicle?.passenger_capacity && totalPax > selectedVehicle.passenger_capacity);
 
@@ -78,10 +82,10 @@ export default function AirportBookingForm({ vehicles = [], childSeatTypes = [] 
             .catch(() => {});
     }, []);
 
-    // Keep vehicle_id updated if vehicles change
+    // Keep vehicle_unit_id updated if vehicles change
     useEffect(() => {
-        if (!data.vehicle_id && defaultVehicle?.id) {
-            setData('vehicle_id', defaultVehicle.id);
+        if (!data.vehicle_unit_id && defaultVehicle?.id) {
+            setData('vehicle_unit_id', defaultVehicle.id);
         }
     }, [vehicles]);
 
@@ -169,7 +173,7 @@ export default function AirportBookingForm({ vehicles = [], childSeatTypes = [] 
 
     // Auto-calculate live price estimate on change
     useEffect(() => {
-        if (!data.vehicle_id || !selectedHotelId) {
+        if (!data.vehicle_unit_id || !selectedHotelId) {
             setEstimatedFee(null);
             return;
         }
@@ -179,7 +183,7 @@ export default function AirportBookingForm({ vehicles = [], childSeatTypes = [] 
             axios.post('/api/pricing/estimate', {
                 booking_type: 'Airport Transfer',
                 transfer_direction: direction,
-                vehicle_id: data.vehicle_id,
+                vehicle_unit_id: data.vehicle_unit_id,
                 dropoff_hotel_id: direction === 'Pick-Up' ? selectedHotelId : undefined,
                 pickup_hotel_id: direction === 'Drop-Off' ? selectedHotelId : undefined,
             })
@@ -195,11 +199,15 @@ export default function AirportBookingForm({ vehicles = [], childSeatTypes = [] 
         }, 300);
 
         return () => clearTimeout(timer);
-    }, [data.vehicle_id, selectedHotelId, direction]);
+    }, [data.vehicle_unit_id, selectedHotelId, direction]);
 
     // Handle standard submission via Inertia with validation guards
     const handleFormSubmit = (e) => {
         if (e) e.preventDefault();
+        if (isOverCapacity) {
+            setShowCapacityModal(true);
+            return;
+        }
         if (!selectedArea) {
             setValidationWarning(
                 direction === 'Pick-Up'
@@ -226,6 +234,7 @@ export default function AirportBookingForm({ vehicles = [], childSeatTypes = [] 
                 setSelectedArea('');
                 setEstimatedFee(null);
                 setValidationWarning('');
+                setShowSuccessModal(true);
             },
         });
     };
@@ -252,7 +261,7 @@ export default function AirportBookingForm({ vehicles = [], childSeatTypes = [] 
 
         const hotelObj = hotels.find((h) => String(h.id) === String(selectedHotelId));
         const hotelName = hotelObj?.nama_hotel || 'Selected Hotel';
-        const vehObj = vehicles.find((v) => String(v.id) === String(data.vehicle_id));
+        const vehObj = vehicles.find((v) => String(v.id) === String(data.vehicle_unit_id));
         const vehName = vehObj?.name || 'Selected Vehicle';
 
         const seatsText = Object.entries(selectedSeats)
@@ -602,11 +611,11 @@ export default function AirportBookingForm({ vehicles = [], childSeatTypes = [] 
                 <div>
                     <VehicleSelect
                         vehicles={vehicles}
-                        value={data.vehicle_id}
-                        onChange={(e) => setData('vehicle_id', parseInt(e.target.value, 10))}
+                        value={data.vehicle_unit_id}
+                        onChange={(e) => setData('vehicle_unit_id', parseInt(e.target.value, 10))}
                     />
-                    {errors.vehicle_id && (
-                        <span style={{ fontSize: '11px', color: '#F43F5E' }}>{errors.vehicle_id}</span>
+                    {errors.vehicle_unit_id && (
+                        <span style={{ fontSize: '11px', color: '#F43F5E' }}>{errors.vehicle_unit_id}</span>
                     )}
                 </div>
             </div>
@@ -729,6 +738,19 @@ export default function AirportBookingForm({ vehicles = [], childSeatTypes = [] 
                 estimatedFee={estimatedFee}
                 loadingEstimate={loadingEstimate}
                 isSubmitting={processing}
+            />
+
+            <BookingSuccessModal
+                show={showSuccessModal}
+                onClose={() => setShowSuccessModal(false)}
+            />
+
+            <CapacityWarningModal
+                show={showCapacityModal}
+                onClose={() => setShowCapacityModal(false)}
+                totalPax={totalPax}
+                maxPax={selectedVehicle?.passenger_capacity || 6}
+                vehicleName={selectedVehicle?.name || 'kendaraan yang dipilih'}
             />
         </form>
     );

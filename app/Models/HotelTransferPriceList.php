@@ -17,11 +17,13 @@ class HotelTransferPriceList extends Model
         'dropoff_hotel_id',
         'regular_price',
         'luxury_price',
+        'unit_prices',
     ];
 
     protected $casts = [
         'regular_price' => 'decimal:2',
         'luxury_price' => 'decimal:2',
+        'unit_prices' => 'array',
     ];
 
     public function pickupHotel(): BelongsTo

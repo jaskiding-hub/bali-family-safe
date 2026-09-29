@@ -33,13 +33,14 @@ export default function Navbar() {
             (entries) => {
                 entries.forEach((entry) => {
                     if (entry.isIntersecting) {
-                        setActiveSection(`#${entry.target.id}`);
+                        const sectionId = `#${entry.target.id}`;
+                        setActiveSection(sectionId);
                     }
                 });
             },
             {
-                rootMargin: '-100px 0px -66% 0px',
-                threshold: 0,
+                rootMargin: '-20% 0px -60% 0px',
+                threshold: [0, 0.1, 0.5],
             }
         );
 

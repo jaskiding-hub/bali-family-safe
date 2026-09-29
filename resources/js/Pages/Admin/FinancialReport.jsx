@@ -26,6 +26,8 @@ export default function FinancialReport({
     const [selectedBooking, setSelectedBooking] = useState(null);
     const [showBreakdownModal, setShowBreakdownModal] = useState(false);
     const [searchQuery, setSearchQuery] = useState(filters.search || '');
+    const [selectedMonth, setSelectedMonth] = useState(filters.month || '');
+    const [selectedYear, setSelectedYear] = useState(filters.year || '');
 
     const periodDropdownRef = useRef(null);
 
@@ -55,6 +57,28 @@ export default function FinancialReport({
             preserveState: true,
             replace: true,
         });
+    };
+
+    const handleMonthChange = (e) => {
+        const month = e.target.value;
+        setSelectedMonth(month);
+        if (month) {
+            router.get('/admin/financial-report', { month, search: searchQuery || undefined }, { preserveState: true, replace: true });
+        }
+    };
+
+    const handleYearChange = (e) => {
+        const year = e.target.value;
+        setSelectedYear(year);
+        if (year && year.length === 4) {
+            router.get('/admin/financial-report', { year, search: searchQuery || undefined }, { preserveState: true, replace: true });
+        }
+    };
+
+    const handleAllTime = () => {
+        setSelectedMonth('');
+        setSelectedYear('');
+        router.get('/admin/financial-report', { period: 'all_time', search: searchQuery || undefined }, { preserveState: true, replace: true });
     };
 
     // Search submit
@@ -391,84 +415,75 @@ export default function FinancialReport({
                             </div>
                         </div>
 
-                        {/* Right: Quick-Period Switcher Tabs (Desktop) */}
-                        <div className="hidden md:flex items-center gap-1.5 bg-slate-100/80 p-1.5 rounded-xl border border-slate-200/60">
-                            {[
-                                { key: 'this_month', label: 'This Month' },
-                                { key: 'last_month', label: 'Last Month' },
-                                { key: 'this_year', label: 'This Year' },
-                                { key: 'all_time', label: 'All Time' },
-                            ].map((tab) => {
-                                const isActive = filters.period === tab.key && !filters.month;
-                                return (
-                                    <button
-                                        key={tab.key}
-                                        type="button"
-                                        onClick={() => handleSelectPeriod(tab.key)}
-                                        className={`px-4 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
-                                            isActive
-                                                ? 'bg-white text-[#0A2540] shadow-xs border border-slate-200/80 font-bold'
-                                                : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
-                                        }`}
-                                    >
-                                        {tab.label}
-                                    </button>
-                                );
-                            })}
+                        {/* Right: Month/Year Filter */}
+                        <div className="hidden md:flex items-center gap-2">
+                            <div className="flex items-center gap-2 bg-slate-100/80 p-1.5 rounded-xl border border-slate-200/60">
+                                <input
+                                    type="month"
+                                    value={selectedMonth}
+                                    onChange={handleMonthChange}
+                                    className="px-3 py-1.5 text-xs font-semibold rounded-lg border-0 bg-white text-slate-700 focus:ring-2 focus:ring-[#00AEEF]"
+                                    placeholder="Pilih Bulan"
+                                />
+                                <input
+                                    type="number"
+                                    value={selectedYear}
+                                    onChange={handleYearChange}
+                                    min="2020"
+                                    max={new Date().getFullYear()}
+                                    placeholder="Tahun"
+                                    className="px-3 py-1.5 text-xs font-semibold rounded-lg border-0 bg-white text-slate-700 focus:ring-2 focus:ring-[#00AEEF] w-24"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={handleAllTime}
+                                    className={`px-4 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                                        filters.period === 'all_time' && !filters.month && !filters.year
+                                            ? 'bg-white text-[#0A2540] shadow-xs border border-slate-200/80 font-bold'
+                                            : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                                    }`}
+                                >
+                                    All Time
+                                </button>
+                            </div>
                         </div>
                     </div>
 
                     {/* Mobile Dropdown Menu (< md) */}
                     {periodDropdownOpen && (
-                        <div className="md:hidden absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-xl border border-slate-100 py-1.5 z-40 animate-in fade-in slide-in-from-top-2 duration-150">
-                            <div className="p-1.5 space-y-0.5">
+                        <div className="md:hidden absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-xl border border-slate-100 py-3 px-3 z-40 animate-in fade-in slide-in-from-top-2 duration-150">
+                            <div className="space-y-2">
+                                <div>
+                                    <label className="block text-xs font-semibold text-slate-700 mb-1">Pilih Bulan</label>
+                                    <input
+                                        type="month"
+                                        value={selectedMonth}
+                                        onChange={handleMonthChange}
+                                        className="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 focus:ring-2 focus:ring-[#00AEEF]"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-semibold text-slate-700 mb-1">Pilih Tahun</label>
+                                    <input
+                                        type="number"
+                                        value={selectedYear}
+                                        onChange={handleYearChange}
+                                        min="2020"
+                                        max={new Date().getFullYear()}
+                                        placeholder="Contoh: 2024"
+                                        className="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 focus:ring-2 focus:ring-[#00AEEF]"
+                                    />
+                                </div>
                                 <button
                                     type="button"
-                                    onClick={() => handleSelectPeriod('this_month')}
-                                    className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-colors flex items-center justify-between ${
-                                        filters.period === 'this_month' && !filters.month ? 'bg-[#EFF4FA] text-[#00658D]' : 'text-slate-700 hover:bg-slate-50'
+                                    onClick={handleAllTime}
+                                    className={`w-full px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-colors ${
+                                        filters.period === 'all_time' && !filters.month && !filters.year
+                                            ? 'bg-[#EFF4FA] text-[#00658D]'
+                                            : 'text-slate-700 hover:bg-slate-50 border border-slate-200'
                                     }`}
                                 >
-                                    <span>This Month</span>
-                                    {filters.period === 'this_month' && !filters.month && (
-                                        <span className="w-2 h-2 rounded-full bg-[#00AEEF]"></span>
-                                    )}
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => handleSelectPeriod('last_month')}
-                                    className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-colors flex items-center justify-between ${
-                                        filters.period === 'last_month' ? 'bg-[#EFF4FA] text-[#00658D]' : 'text-slate-700 hover:bg-slate-50'
-                                    }`}
-                                >
-                                    <span>Last Month</span>
-                                    {filters.period === 'last_month' && (
-                                        <span className="w-2 h-2 rounded-full bg-[#00AEEF]"></span>
-                                    )}
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => handleSelectPeriod('this_year')}
-                                    className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-colors flex items-center justify-between ${
-                                        filters.period === 'this_year' ? 'bg-[#EFF4FA] text-[#00658D]' : 'text-slate-700 hover:bg-slate-50'
-                                    }`}
-                                >
-                                    <span>This Year ({new Date().getFullYear()})</span>
-                                    {filters.period === 'this_year' && (
-                                        <span className="w-2 h-2 rounded-full bg-[#00AEEF]"></span>
-                                    )}
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => handleSelectPeriod('all_time')}
-                                    className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-colors flex items-center justify-between ${
-                                        filters.period === 'all_time' ? 'bg-[#EFF4FA] text-[#00658D]' : 'text-slate-700 hover:bg-slate-50'
-                                    }`}
-                                >
-                                    <span>All Time Records</span>
-                                    {filters.period === 'all_time' && (
-                                        <span className="w-2 h-2 rounded-full bg-[#00AEEF]"></span>
-                                    )}
+                                    All Time Records
                                 </button>
                             </div>
                         </div>
@@ -689,10 +704,6 @@ export default function FinancialReport({
                                                     className="inline-flex items-center gap-1.5 text-xs font-semibold text-sky-600 hover:text-sky-700 hover:bg-sky-50 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
                                                 >
                                                     <span>View Details</span>
-                                                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                                        <path d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                                                        <path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7Z" />
-                                                    </svg>
                                                 </button>
                                             </td>
                                         </tr>

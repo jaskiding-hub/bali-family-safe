@@ -1320,7 +1320,7 @@ export default function WebsiteContent({
             >
                 <form onSubmit={handleAddServiceSubmit} className="space-y-4">
                     <div>
-                        <label className="block text-xs font-bold text-slate-700 mb-1">Nama Layanan *</label>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">Nama Layanan <span className="text-red-500">*</span></label>
                         <input
                             type="text"
                             required
@@ -1352,6 +1352,7 @@ export default function WebsiteContent({
                                 placeholder="e.g. Car, Airplane"
                                 className={inputBaseClass}
                             />
+                            <p className="text-[11px] text-slate-500 mt-1">Nama icon dari Phosphor Icons (cari di phosphoricons.com)</p>
                         </div>
                     </div>
 
@@ -1456,7 +1457,7 @@ export default function WebsiteContent({
             >
                 <form onSubmit={handleEditServiceSubmit} className="space-y-4">
                     <div>
-                        <label className="block text-xs font-bold text-slate-700 mb-1">Nama Layanan *</label>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">Nama Layanan <span className="text-red-500">*</span></label>
                         <input
                             type="text"
                             required
@@ -1485,6 +1486,7 @@ export default function WebsiteContent({
                                 onChange={(e) => editServiceForm.setData('icon', e.target.value)}
                                 className={inputBaseClass}
                             />
+                            <p className="text-[11px] text-slate-500 mt-1">Nama icon dari Phosphor Icons (cari di phosphoricons.com)</p>
                         </div>
                     </div>
 
@@ -1621,7 +1623,7 @@ export default function WebsiteContent({
                 <form onSubmit={handleAddTeamSubmit} className="space-y-4">
                     <div className="grid grid-cols-2 gap-3">
                         <div>
-                            <label className="block text-xs font-bold text-slate-700 mb-1">Nama Lengkap *</label>
+                            <label className="block text-xs font-bold text-slate-700 mb-1">Nama Lengkap <span className="text-red-500">*</span></label>
                             <input
                                 type="text"
                                 required
@@ -1633,7 +1635,7 @@ export default function WebsiteContent({
                             {addTeamForm.errors.name && <p className="text-xs text-rose-500 mt-1">{addTeamForm.errors.name}</p>}
                         </div>
                         <div>
-                            <label className="block text-xs font-bold text-slate-700 mb-1">Jabatan / Role *</label>
+                            <label className="block text-xs font-bold text-slate-700 mb-1">Jabatan / Role <span className="text-red-500">*</span></label>
                             <input
                                 type="text"
                                 required
@@ -1645,64 +1647,24 @@ export default function WebsiteContent({
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3">
-                        <div>
-                            <label className="block text-xs font-bold text-slate-700 mb-1">Tautkan ke Akun Driver (Opsional)</label>
-                            <select
-                                value={addTeamForm.data.driver_id}
-                                onChange={(e) => addTeamForm.setData('driver_id', e.target.value)}
-                                className={selectBaseClass}
-                            >
-                                <option value="">-- Bukan Driver / Staf Umum --</option>
-                                {drivers.map((drv) => (
-                                    <option key={drv.id} value={drv.id}>
-                                        {drv.full_name || drv.name} {drv.whatsapp_number || drv.phone ? `(${drv.whatsapp_number || drv.phone})` : ''}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                        <div>
-                            <label className="block text-xs font-bold text-slate-700 mb-1">Pengalaman</label>
-                            <input
-                                type="text"
-                                value={addTeamForm.data.years_experience}
-                                onChange={(e) => addTeamForm.setData('years_experience', e.target.value)}
-                                placeholder="e.g. 7+ Years"
-                                className={inputBaseClass}
-                            />
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                        <div>
-                            <label className="block text-xs font-bold text-slate-700 mb-1">Bahasa</label>
-                            <input
-                                type="text"
-                                value={addTeamForm.data.languages}
-                                onChange={(e) => addTeamForm.setData('languages', e.target.value)}
-                                placeholder="English, Indonesian"
-                                className={inputBaseClass}
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-xs font-bold text-slate-700 mb-1">Spesialisasi Rute</label>
-                            <input
-                                type="text"
-                                value={addTeamForm.data.specialty_route}
-                                onChange={(e) => addTeamForm.setData('specialty_route', e.target.value)}
-                                placeholder="e.g. Ubud & North Bali"
-                                className={inputBaseClass}
-                            />
-                        </div>
+                    <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">Pengalaman</label>
+                        <input
+                            type="text"
+                            value={addTeamForm.data.years_experience}
+                            onChange={(e) => addTeamForm.setData('years_experience', e.target.value)}
+                            placeholder="e.g. 7+ Years"
+                            className={inputBaseClass}
+                        />
                     </div>
 
                     <div>
-                        <label className="block text-xs font-bold text-slate-700 mb-1">Bio Singkat</label>
-                        <textarea
-                            rows="2"
-                            value={addTeamForm.data.bio}
-                            onChange={(e) => addTeamForm.setData('bio', e.target.value)}
-                            placeholder="Profil ramah keluarga dan latar belakang pengalaman"
+                        <label className="block text-xs font-bold text-slate-700 mb-1">Bahasa</label>
+                        <input
+                            type="text"
+                            value={addTeamForm.data.languages}
+                            onChange={(e) => addTeamForm.setData('languages', e.target.value)}
+                            placeholder="English, Indonesian"
                             className={inputBaseClass}
                         />
                     </div>
@@ -1768,7 +1730,7 @@ export default function WebsiteContent({
                 <form onSubmit={handleEditTeamSubmit} className="space-y-4">
                     <div className="grid grid-cols-2 gap-3">
                         <div>
-                            <label className="block text-xs font-bold text-slate-700 mb-1">Nama Lengkap *</label>
+                            <label className="block text-xs font-bold text-slate-700 mb-1">Nama Lengkap <span className="text-red-500">*</span></label>
                             <input
                                 type="text"
                                 required
@@ -1778,7 +1740,7 @@ export default function WebsiteContent({
                             />
                         </div>
                         <div>
-                            <label className="block text-xs font-bold text-slate-700 mb-1">Jabatan / Role *</label>
+                            <label className="block text-xs font-bold text-slate-700 mb-1">Jabatan / Role <span className="text-red-500">*</span></label>
                             <input
                                 type="text"
                                 required
@@ -1826,25 +1788,6 @@ export default function WebsiteContent({
                                 className={inputBaseClass}
                             />
                         </div>
-                        <div>
-                            <label className="block text-xs font-bold text-slate-700 mb-1">Spesialisasi Rute</label>
-                            <input
-                                type="text"
-                                value={editTeamForm.data.specialty_route}
-                                onChange={(e) => editTeamForm.setData('specialty_route', e.target.value)}
-                                className={inputBaseClass}
-                            />
-                        </div>
-                    </div>
-
-                    <div>
-                        <label className="block text-xs font-bold text-slate-700 mb-1">Bio Singkat</label>
-                        <textarea
-                            rows="2"
-                            value={editTeamForm.data.bio}
-                            onChange={(e) => editTeamForm.setData('bio', e.target.value)}
-                            className={inputBaseClass}
-                        />
                     </div>
 
                     <div>
@@ -1940,7 +1883,7 @@ export default function WebsiteContent({
             >
                 <form onSubmit={handleAddTestimonialSubmit} className="space-y-4">
                     <div>
-                        <label className="block text-xs font-bold text-slate-700 mb-1">Nama Tamu / Pelanggan *</label>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">Nama Tamu / Pelanggan <span className="text-red-500">*</span></label>
                         <input
                             type="text"
                             required
@@ -1977,7 +1920,7 @@ export default function WebsiteContent({
                     </div>
 
                     <div>
-                        <label className="block text-xs font-bold text-slate-700 mb-1">Ulasan / Testimoni *</label>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">Ulasan / Testimoni <span className="text-red-500">*</span></label>
                         <textarea
                             rows="3"
                             required
@@ -2029,7 +1972,7 @@ export default function WebsiteContent({
             >
                 <form onSubmit={handleEditTestimonialSubmit} className="space-y-4">
                     <div>
-                        <label className="block text-xs font-bold text-slate-700 mb-1">Nama Tamu *</label>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">Nama Tamu <span className="text-red-500">*</span></label>
                         <input
                             type="text"
                             required
@@ -2064,7 +2007,7 @@ export default function WebsiteContent({
                     </div>
 
                     <div>
-                        <label className="block text-xs font-bold text-slate-700 mb-1">Ulasan *</label>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">Ulasan <span className="text-red-500">*</span></label>
                         <textarea
                             rows="3"
                             required
@@ -2323,7 +2266,7 @@ export default function WebsiteContent({
             >
                 <form onSubmit={handleAddFaqSubmit} className="space-y-4">
                     <div>
-                        <label className="block text-xs font-bold text-slate-700 mb-1">Pertanyaan *</label>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">Pertanyaan <span className="text-red-500">*</span></label>
                         <input
                             type="text"
                             required
@@ -2335,7 +2278,7 @@ export default function WebsiteContent({
                     </div>
 
                     <div>
-                        <label className="block text-xs font-bold text-slate-700 mb-1">Jawaban *</label>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">Jawaban <span className="text-red-500">*</span></label>
                         <textarea
                             rows="4"
                             required
@@ -2384,7 +2327,7 @@ export default function WebsiteContent({
             >
                 <form onSubmit={handleEditFaqSubmit} className="space-y-4">
                     <div>
-                        <label className="block text-xs font-bold text-slate-700 mb-1">Pertanyaan *</label>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">Pertanyaan <span className="text-red-500">*</span></label>
                         <input
                             type="text"
                             required
@@ -2395,7 +2338,7 @@ export default function WebsiteContent({
                     </div>
 
                     <div>
-                        <label className="block text-xs font-bold text-slate-700 mb-1">Jawaban *</label>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">Jawaban <span className="text-red-500">*</span></label>
                         <textarea
                             rows="4"
                             required
@@ -2508,6 +2451,7 @@ export default function WebsiteContent({
                                 placeholder="e.g. ShieldCheck, Heart"
                                 className={inputBaseClass}
                             />
+                            <p className="text-[11px] text-slate-500 mt-1">Nama icon dari Phosphor Icons (cari di phosphoricons.com)</p>
                         </div>
                         <div>
                             <label className="block text-xs font-bold text-slate-700 mb-1">Urutan Tampil</label>

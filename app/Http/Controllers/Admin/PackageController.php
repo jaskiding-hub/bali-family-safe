@@ -24,14 +24,38 @@ class PackageController extends Controller
             'description' => ['nullable', 'string'],
             'package_type' => ['required', 'string', 'max:100'],
             'duration_type' => ['required', 'string', 'max:50'],
-            'regular_price' => ['required', 'numeric', 'min:0'],
-            'luxury_price' => ['required', 'numeric', 'min:0'],
-            'big_van_price' => ['required', 'numeric', 'min:0'],
+            'regular_price' => ['nullable', 'numeric', 'min:0'],
+            'luxury_price' => ['nullable', 'numeric', 'min:0'],
+            'big_van_price' => ['nullable', 'numeric', 'min:0'],
+            'unit_prices' => ['nullable', 'array'],
             'hero_image' => ['nullable', 'file', 'mimes:svg,png,jpg,jpeg,webp,gif', 'max:3072'],
             'highlights' => ['nullable', 'array'],
             'highlights.*.title' => ['required_with:highlights', 'string', 'max:255'],
             'highlights.*.description' => ['nullable', 'string'],
+            'highlights.*.photo' => ['nullable', 'image', 'max:2048'],
         ]);
+
+        if (isset($validated['unit_prices']) && is_array($validated['unit_prices'])) {
+            $filtered = [];
+            foreach ($validated['unit_prices'] as $k => $v) {
+                if (is_numeric($v)) {
+                    $filtered[(string)$k] = (float)$v;
+                }
+            }
+            $validated['unit_prices'] = $filtered;
+            if (empty($validated['regular_price']) && !empty($filtered)) {
+                $validated['regular_price'] = reset($filtered);
+            }
+            if (empty($validated['luxury_price']) && !empty($filtered)) {
+                $validated['luxury_price'] = end($filtered);
+            }
+            if (empty($validated['big_van_price']) && !empty($filtered)) {
+                $validated['big_van_price'] = end($filtered);
+            }
+        }
+        $validated['regular_price'] = $validated['regular_price'] ?? 0;
+        $validated['luxury_price'] = $validated['luxury_price'] ?? 0;
+        $validated['big_van_price'] = $validated['big_van_price'] ?? 0;
 
         DB::transaction(function () use ($request, $validated) {
             $slugBase = Str::slug($validated['name']);
@@ -52,6 +76,7 @@ class PackageController extends Controller
                 'regular_price' => $validated['regular_price'],
                 'luxury_price' => $validated['luxury_price'],
                 'big_van_price' => $validated['big_van_price'],
+                'unit_prices' => $validated['unit_prices'] ?? null,
                 'display_order' => Package::max('display_order') + 1,
             ];
 
@@ -65,10 +90,16 @@ class PackageController extends Controller
             if (!empty($validated['highlights'])) {
                 foreach ($validated['highlights'] as $order => $hl) {
                     if (!empty($hl['title'])) {
+                        $photoUrl = null;
+                        if (!empty($request->file("highlights.$order.photo"))) {
+                            $photoUrl = $request->file("highlights.$order.photo")->store('highlights', 'public');
+                        }
+
                         PackageHighlight::create([
                             'package_id' => $package->id,
                             'title' => $hl['title'],
                             'description' => $hl['description'] ?? null,
+                            'photo_url' => $photoUrl,
                             'display_order' => $order + 1,
                         ]);
                     }
@@ -88,14 +119,38 @@ class PackageController extends Controller
             'description' => ['nullable', 'string'],
             'package_type' => ['required', 'string', 'max:100'],
             'duration_type' => ['required', 'string', 'max:50'],
-            'regular_price' => ['required', 'numeric', 'min:0'],
-            'luxury_price' => ['required', 'numeric', 'min:0'],
-            'big_van_price' => ['required', 'numeric', 'min:0'],
+            'regular_price' => ['nullable', 'numeric', 'min:0'],
+            'luxury_price' => ['nullable', 'numeric', 'min:0'],
+            'big_van_price' => ['nullable', 'numeric', 'min:0'],
+            'unit_prices' => ['nullable', 'array'],
             'hero_image' => ['nullable', 'file', 'mimes:svg,png,jpg,jpeg,webp,gif', 'max:3072'],
             'highlights' => ['nullable', 'array'],
             'highlights.*.title' => ['required_with:highlights', 'string', 'max:255'],
             'highlights.*.description' => ['nullable', 'string'],
+            'highlights.*.photo' => ['nullable', 'image', 'max:2048'],
         ]);
+
+        if (isset($validated['unit_prices']) && is_array($validated['unit_prices'])) {
+            $filtered = [];
+            foreach ($validated['unit_prices'] as $k => $v) {
+                if (is_numeric($v)) {
+                    $filtered[(string)$k] = (float)$v;
+                }
+            }
+            $validated['unit_prices'] = $filtered;
+            if (empty($validated['regular_price']) && !empty($filtered)) {
+                $validated['regular_price'] = reset($filtered);
+            }
+            if (empty($validated['luxury_price']) && !empty($filtered)) {
+                $validated['luxury_price'] = end($filtered);
+            }
+            if (empty($validated['big_van_price']) && !empty($filtered)) {
+                $validated['big_van_price'] = end($filtered);
+            }
+        }
+        $validated['regular_price'] = $validated['regular_price'] ?? $package->regular_price;
+        $validated['luxury_price'] = $validated['luxury_price'] ?? $package->luxury_price;
+        $validated['big_van_price'] = $validated['big_van_price'] ?? $package->big_van_price;
 
         DB::transaction(function () use ($request, $package, $validated) {
             $packageData = [
@@ -107,6 +162,7 @@ class PackageController extends Controller
                 'regular_price' => $validated['regular_price'],
                 'luxury_price' => $validated['luxury_price'],
                 'big_van_price' => $validated['big_van_price'],
+                'unit_prices' => $validated['unit_prices'] ?? $package->unit_prices,
             ];
 
             if ($request->hasFile('hero_image')) {
@@ -121,10 +177,16 @@ class PackageController extends Controller
                 $package->highlights()->delete();
                 foreach ($validated['highlights'] as $order => $hl) {
                     if (!empty($hl['title'])) {
+                        $photoUrl = null;
+                        if (!empty($request->file("highlights.$order.photo"))) {
+                            $photoUrl = $request->file("highlights.$order.photo")->store('highlights', 'public');
+                        }
+
                         PackageHighlight::create([
                             'package_id' => $package->id,
                             'title' => $hl['title'],
                             'description' => $hl['description'] ?? null,
+                            'photo_url' => $photoUrl,
                             'display_order' => $order + 1,
                         ]);
                     }

@@ -11,6 +11,7 @@ use App\Models\Hotel;
 use App\Models\HotelTransferPriceList;
 use App\Models\Package;
 use App\Models\Vehicle;
+use App\Models\VehicleUnit;
 use Illuminate\Validation\ValidationException;
 
 class PricingService
@@ -50,22 +51,18 @@ class PricingService
      */
     public function estimateAirportTransfer(array $p): array
     {
-        $vehicle = Vehicle::find($p['vehicle_id'] ?? null);
-        if (! $vehicle) {
+        // Support both vehicle_id (old) and vehicle_unit_id (new)
+        $vehicleUnitId = $p['vehicle_unit_id'] ?? $p['vehicle_id'] ?? null;
+        $vehicleUnit = VehicleUnit::find($vehicleUnitId);
+
+        if (! $vehicleUnit) {
             throw ValidationException::withMessages([
-                'vehicle_id' => ['Kendaraan tidak ditemukan.'],
+                'vehicle_unit_id' => ['Kategori kendaraan tidak ditemukan.'],
             ]);
         }
 
-        $isFamilyMinibus = $vehicle->category === VehicleCategory::FamilyMinibus
-            || ($vehicle->category instanceof VehicleCategory && $vehicle->category->value === VehicleCategory::FamilyMinibus->value)
-            || $vehicle->category === VehicleCategory::FamilyMinibus->value;
-
-        if ($isFamilyMinibus) {
-            throw ValidationException::withMessages([
-                'vehicle_id' => ['Kendaraan Family Minibus tidak diizinkan untuk transfer bandara.'],
-            ]);
-        }
+        $category = $vehicleUnit->category;
+        $isBigVan = stripos($category, 'minibus') !== false || stripos($category, 'big van') !== false;
 
         $direction = $p['transfer_direction'] ?? null;
         if ($direction instanceof TransferDirection) {
@@ -101,15 +98,23 @@ class PricingService
             ]);
         }
 
-        $isLuxury = $vehicle->category === VehicleCategory::LuxuryTouringVan
-            || ($vehicle->category instanceof VehicleCategory && $vehicle->category->value === VehicleCategory::LuxuryTouringVan->value)
-            || $vehicle->category === VehicleCategory::LuxuryTouringVan->value;
-
-        $price = $isLuxury ? (float) $airport->price_luxury : (float) $airport->price_regular;
+        // Determine price: check dynamic unit_prices first, then fallback to luxury/regular tier
+        if (!empty($airport->unit_prices) && isset($airport->unit_prices[$vehicleUnitId]) && is_numeric($airport->unit_prices[$vehicleUnitId])) {
+            $price = (float) $airport->unit_prices[$vehicleUnitId];
+        } else {
+            if ($isBigVan) {
+                throw ValidationException::withMessages([
+                    'vehicle_unit_id' => ['Kendaraan Big Van belum memiliki tarif khusus untuk transfer bandara ini.'],
+                ]);
+            }
+            $isLuxury = stripos($category, 'luxury') !== false;
+            $price = $isLuxury ? (float) $airport->price_luxury : (float) $airport->price_regular;
+        }
 
         return [
             'total_fee' => $price,
             'airport_id' => $airport->id,
+            'vehicle_unit_id' => $vehicleUnit->id,
         ];
     }
 
@@ -123,22 +128,17 @@ class PricingService
      */
     public function estimateHotelTransfer(array $p): array
     {
-        $vehicle = Vehicle::find($p['vehicle_id'] ?? null);
-        if (! $vehicle) {
+        $vehicleUnitId = $p['vehicle_unit_id'] ?? $p['vehicle_id'] ?? null;
+        $vehicleUnit = VehicleUnit::find($vehicleUnitId);
+
+        if (! $vehicleUnit) {
             throw ValidationException::withMessages([
-                'vehicle_id' => ['Kendaraan tidak ditemukan.'],
+                'vehicle_unit_id' => ['Kategori kendaraan tidak ditemukan.'],
             ]);
         }
 
-        $isFamilyMinibus = $vehicle->category === VehicleCategory::FamilyMinibus
-            || ($vehicle->category instanceof VehicleCategory && $vehicle->category->value === VehicleCategory::FamilyMinibus->value)
-            || $vehicle->category === VehicleCategory::FamilyMinibus->value;
-
-        if ($isFamilyMinibus) {
-            throw ValidationException::withMessages([
-                'vehicle_id' => ['Kendaraan Family Minibus tidak diizinkan untuk transfer antar hotel.'],
-            ]);
-        }
+        $category = $vehicleUnit->category;
+        $isBigVan = stripos($category, 'minibus') !== false || stripos($category, 'big van') !== false;
 
         $pickupId = $p['hotel_id_pickup'] ?? $p['pickup_hotel_id'] ?? null;
         $dropoffId = $p['hotel_id_dropoff'] ?? $p['dropoff_hotel_id'] ?? null;
@@ -169,15 +169,22 @@ class PricingService
             ]);
         }
 
-        $isLuxury = $vehicle->category === VehicleCategory::LuxuryTouringVan
-            || ($vehicle->category instanceof VehicleCategory && $vehicle->category->value === VehicleCategory::LuxuryTouringVan->value)
-            || $vehicle->category === VehicleCategory::LuxuryTouringVan->value;
-
-        $price = $isLuxury ? (float) $priceList->luxury_price : (float) $priceList->regular_price;
+        if (!empty($priceList->unit_prices) && isset($priceList->unit_prices[$vehicleUnitId]) && is_numeric($priceList->unit_prices[$vehicleUnitId])) {
+            $price = (float) $priceList->unit_prices[$vehicleUnitId];
+        } else {
+            if ($isBigVan) {
+                throw ValidationException::withMessages([
+                    'vehicle_unit_id' => ['Kendaraan Big Van belum memiliki tarif khusus untuk transfer antar hotel ini.'],
+                ]);
+            }
+            $isLuxury = stripos($category, 'luxury') !== false;
+            $price = $isLuxury ? (float) $priceList->luxury_price : (float) $priceList->regular_price;
+        }
 
         return [
             'total_fee' => $price,
             'hotel_transfer_price_list_id' => $priceList->id,
+            'vehicle_unit_id' => $vehicleUnit->id,
         ];
     }
 
@@ -198,45 +205,33 @@ class PricingService
             ]);
         }
 
-        $vehicle = Vehicle::find($p['vehicle_id'] ?? null);
-        if (! $vehicle) {
+        $vehicleUnitId = $p['vehicle_unit_id'] ?? $p['vehicle_id'] ?? null;
+        $vehicleUnit = VehicleUnit::find($vehicleUnitId);
+
+        if (! $vehicleUnit) {
             throw ValidationException::withMessages([
-                'vehicle_id' => ['Kendaraan tidak ditemukan.'],
+                'vehicle_unit_id' => ['Kategori kendaraan tidak ditemukan.'],
             ]);
         }
 
-        $durationType = $package->duration_type instanceof PackageDurationType
-            ? $package->duration_type->value
-            : (string) $package->duration_type;
+        $category = $vehicleUnit->category;
+        $isBigVan = stripos($category, 'minibus') !== false || stripos($category, 'big van') !== false;
+        $isLuxury = stripos($category, 'luxury') !== false;
 
-        $isFamilyMinibus = $vehicle->category === VehicleCategory::FamilyMinibus
-            || ($vehicle->category instanceof VehicleCategory && $vehicle->category->value === VehicleCategory::FamilyMinibus->value)
-            || $vehicle->category === VehicleCategory::FamilyMinibus->value;
-
-        if ($durationType === PackageDurationType::FullDay->value || $durationType === 'Full Day') {
-            if (! $isFamilyMinibus) {
-                throw ValidationException::withMessages([
-                    'vehicle_id' => ['Paket Full Day hanya diperbolehkan menggunakan kendaraan Family Minibus.'],
-                ]);
-            }
-
-            $price = (float) $package->big_van_price;
+        // Determine price: check dynamic unit_prices first, then fallback to category
+        if (!empty($package->unit_prices) && isset($package->unit_prices[$vehicleUnitId]) && is_numeric($package->unit_prices[$vehicleUnitId])) {
+            $price = (float) $package->unit_prices[$vehicleUnitId];
+        } elseif ($isBigVan) {
+            $price = (float) ($package->big_van_price ?: $package->price);
+        } elseif ($isLuxury) {
+            $price = (float) ($package->luxury_price ?: $package->price);
         } else {
-            if ($isFamilyMinibus) {
-                throw ValidationException::withMessages([
-                    'vehicle_id' => ['Kendaraan Family Minibus hanya untuk paket Full Day.'],
-                ]);
-            }
-
-            $isLuxury = $vehicle->category === VehicleCategory::LuxuryTouringVan
-                || ($vehicle->category instanceof VehicleCategory && $vehicle->category->value === VehicleCategory::LuxuryTouringVan->value)
-                || $vehicle->category === VehicleCategory::LuxuryTouringVan->value;
-
-            $price = $isLuxury ? (float) $package->luxury_price : (float) $package->regular_price;
+            $price = (float) ($package->regular_price ?: $package->price);
         }
 
         return [
             'total_fee' => $price,
+            'vehicle_unit_id' => $vehicleUnit->id,
         ];
     }
 }

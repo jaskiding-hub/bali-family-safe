@@ -23,7 +23,14 @@ class VehicleController extends Controller
             'luggage_capacity' => ['required', 'integer', 'min:0', 'max:50'],
             'is_popular' => ['boolean'],
             'photo' => ['nullable', 'file', 'mimes:svg,png,jpg,jpeg,webp,gif', 'max:2048'],
+            'description' => ['nullable', 'string'],
+            'key_features' => ['nullable', 'array'],
+            'ac_info' => ['nullable', 'string', 'max:255'],
         ]);
+
+        if (isset($validated['key_features']) && is_array($validated['key_features'])) {
+            $validated['key_features'] = array_values(array_filter($validated['key_features'], fn($f) => !empty(trim((string)$f))));
+        }
 
         $validated['daily_rate'] = $validated['daily_rate'] ?? 0;
 
@@ -37,7 +44,7 @@ class VehicleController extends Controller
 
         Vehicle::create($validated);
 
-        return redirect()->route('admin.master-data.index')->with('success', 'Armada mobil berhasil ditambahkan.');
+        return redirect()->route('admin.master-data.index', ['tab' => 'vehicles'])->with('success', 'Armada mobil berhasil ditambahkan.');
     }
 
     public function update(Request $request, Vehicle $vehicle): RedirectResponse
@@ -51,7 +58,14 @@ class VehicleController extends Controller
             'luggage_capacity' => ['required', 'integer', 'min:0', 'max:50'],
             'is_popular' => ['boolean'],
             'photo' => ['nullable', 'file', 'mimes:svg,png,jpg,jpeg,webp,gif', 'max:2048'],
+            'description' => ['nullable', 'string'],
+            'key_features' => ['nullable', 'array'],
+            'ac_info' => ['nullable', 'string', 'max:255'],
         ]);
+
+        if (isset($validated['key_features']) && is_array($validated['key_features'])) {
+            $validated['key_features'] = array_values(array_filter($validated['key_features'], fn($f) => !empty(trim((string)$f))));
+        }
 
         if (array_key_exists('daily_rate', $validated)) {
             $validated['daily_rate'] = $validated['daily_rate'] ?? 0;
@@ -67,7 +81,7 @@ class VehicleController extends Controller
 
         $vehicle->update($validated);
 
-        return redirect()->route('admin.master-data.index')->with('success', 'Armada mobil berhasil diperbarui.');
+        return redirect()->route('admin.master-data.index', ['tab' => 'vehicles'])->with('success', 'Armada mobil berhasil diperbarui.');
     }
 
     public function destroy(Vehicle $vehicle): RedirectResponse

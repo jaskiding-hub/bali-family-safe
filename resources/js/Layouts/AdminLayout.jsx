@@ -266,13 +266,13 @@ export default function AdminLayout({ children, title = 'Dashboard' }) {
                                     {/* Notification Badge */}
                                     {item.badge !== undefined && item.badge > 0 && (
                                         <span
-                                            className={`inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[11px] font-bold rounded-full transition-all ${
+                                            className={`inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[11px] font-bold leading-none rounded-full text-center tracking-tight transition-all shrink-0 ${
                                                 active
-                                                    ? 'bg-white text-sky-700 shadow-xs ring-2 ring-white/20'
-                                                    : 'bg-amber-500/20 text-amber-300 border border-amber-400/40 shadow-xs'
+                                                    ? 'bg-white text-[#00658D] shadow-sm font-extrabold ring-2 ring-white/20'
+                                                    : 'bg-rose-500 text-white shadow-xs'
                                             }`}
                                         >
-                                            {item.badge}
+                                            <span className="flex items-center justify-center leading-none">{item.badge}</span>
                                         </span>
                                     )}
                                 </Link>

@@ -15,6 +15,7 @@ use App\Models\SiteSetting;
 use App\Models\TeamMember;
 use App\Models\Testimonial;
 use App\Models\Vehicle;
+use App\Models\VehicleUnit;
 use Illuminate\Support\Facades\Schema;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -126,6 +127,9 @@ class HomeController extends Controller
                 'img' => $v->photo_url ?: 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=600&q=80',
                 'is_popular' => (bool) $v->is_popular,
                 'badge' => $v->is_popular ? 'MOST POPULAR' : null,
+                'description' => $v->description,
+                'key_features' => is_array($v->key_features) ? array_values(array_filter($v->key_features)) : null,
+                'ac_info' => $v->ac_info,
                 'features' => $v->features->pluck('feature_text')->all(),
             ];
         });
@@ -211,11 +215,20 @@ class HomeController extends Controller
             ->orderBy('display_order', 'asc')
             ->get();
 
+        $vehicleUnits = VehicleUnit::orderBy('passenger_capacity', 'asc')->get()->map(function ($unit) {
+            return [
+                'id' => $unit->id,
+                'name' => $unit->category,
+                'category' => $unit->category,
+                'passenger_capacity' => $unit->passenger_capacity,
+            ];
+        });
+
         return Inertia::render('User/Home', [
             'packages' => $packages,
             'services' => $services,
             'vehicles' => $vehicles, // Showcase fleet (semua mobil)
-            'vehicles_for_booking' => $vehiclesForBooking, // Dropdown booking (3 kategori)
+            'vehicles_for_booking' => $vehicleUnits, // Dropdown booking (kategori dari vehicle_units)
             'testimonials' => $testimonials,
             'faqs' => $faqs,
             'gallery' => $gallery,

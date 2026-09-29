@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 // Minimal design tokens - grayscale + subtle accent
 export const LABEL_COLOR = '#475569'; // slate-600
@@ -367,4 +368,341 @@ export function BookingFooter({ onWhatsApp, onBook, estimatedFee, loadingEstimat
             </div>
         </div>
     );
+}
+
+export function BookingSuccessModal({ show, onClose }) {
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    useEffect(() => {
+        if (show) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+        return () => {
+            document.body.style.overflow = '';
+        };
+    }, [show]);
+
+    if (!show || !mounted) return null;
+
+    const modalContent = (
+        <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            zIndex: 999999,
+            backgroundColor: 'rgba(15, 23, 42, 0.55)',
+            backdropFilter: 'blur(6px)',
+            WebkitBackdropFilter: 'blur(6px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '20px',
+            boxSizing: 'border-box',
+        }}>
+            <div style={{
+                position: 'relative',
+                background: '#FFFFFF',
+                borderRadius: '20px',
+                maxWidth: '420px',
+                width: '100%',
+                padding: '36px 28px 28px',
+                textAlign: 'center',
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+                border: '1px solid #F1F5F9',
+                margin: 'auto',
+            }}>
+                {/* Close 'X' Button */}
+                <button
+                    type="button"
+                    onClick={onClose}
+                    style={{
+                        position: 'absolute',
+                        top: '16px',
+                        right: '16px',
+                        width: '32px',
+                        height: '32px',
+                        borderRadius: '50%',
+                        border: 'none',
+                        background: '#F8FAFC',
+                        color: '#94A3B8',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        transition: 'all 0.2s',
+                    }}
+                    onMouseEnter={(e) => {
+                        e.currentTarget.style.background = '#F1F5F9';
+                        e.currentTarget.style.color = '#475569';
+                    }}
+                    onMouseLeave={(e) => {
+                        e.currentTarget.style.background = '#F8FAFC';
+                        e.currentTarget.style.color = '#94A3B8';
+                    }}
+                >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                </button>
+
+                {/* Success Icon */}
+                <div style={{
+                    width: '68px',
+                    height: '68px',
+                    borderRadius: '50%',
+                    backgroundColor: '#ECFDF5',
+                    border: '1px solid #D1FAE5',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    margin: '0 auto 16px',
+                }}>
+                    <div style={{
+                        width: '46px',
+                        height: '46px',
+                        borderRadius: '50%',
+                        backgroundColor: '#10B981',
+                        color: '#FFFFFF',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        boxShadow: '0 6px 14px -3px rgba(16, 185, 129, 0.35)',
+                    }}>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                    </div>
+                </div>
+
+                {/* Status Pill */}
+                <div style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '3px 12px',
+                    borderRadius: '9999px',
+                    backgroundColor: '#F0FDF4',
+                    border: '1px solid #BBF7D0',
+                    color: '#15803D',
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    marginBottom: '10px',
+                }}>
+                    <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#16A34A' }}></span>
+                    Pesanan Berhasil Disimpan
+                </div>
+
+                <h3 style={{
+                    fontFamily: 'Inter, sans-serif',
+                    fontSize: '19px',
+                    fontWeight: 700,
+                    color: '#0F172A',
+                    margin: '0 0 8px',
+                    letterSpacing: '-0.02em',
+                }}>
+                    Booking Berhasil Dibuat!
+                </h3>
+
+                <p style={{
+                    fontFamily: 'Inter, sans-serif',
+                    fontSize: '13.5px',
+                    color: '#64748B',
+                    lineHeight: '21px',
+                    margin: '0 0 24px',
+                }}>
+                    Terima kasih telah memesan bersama <strong>Bali Family Safe</strong>. Pesanan Anda telah tersimpan dan tim kami akan segera menghubungi Anda via WhatsApp untuk konfirmasi detail penjemputan.
+                </p>
+
+                <button
+                    type="button"
+                    onClick={onClose}
+                    style={{
+                        width: '100%',
+                        height: '44px',
+                        backgroundColor: '#00AEEF',
+                        color: '#FFFFFF',
+                        border: 'none',
+                        borderRadius: '12px',
+                        fontFamily: 'Inter, sans-serif',
+                        fontSize: '14px',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        boxShadow: '0 4px 12px rgba(0, 174, 239, 0.25)',
+                        transition: 'all 0.2s',
+                    }}
+                    onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = '#0097d1';
+                        e.currentTarget.style.transform = 'translateY(-1px)';
+                    }}
+                    onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = '#00AEEF';
+                        e.currentTarget.style.transform = 'translateY(0)';
+                    }}
+                >
+                    Selesai
+                </button>
+            </div>
+        </div>
+    );
+
+    return createPortal(modalContent, document.body);
+}
+
+export function CapacityWarningModal({ show, onClose, totalPax = 0, maxPax = 6, vehicleName = '' }) {
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    useEffect(() => {
+        if (show) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+        return () => {
+            document.body.style.overflow = '';
+        };
+    }, [show]);
+
+    if (!show || !mounted) return null;
+
+    const modalContent = (
+        <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            zIndex: 999999,
+            backgroundColor: 'rgba(15, 23, 42, 0.55)',
+            backdropFilter: 'blur(6px)',
+            WebkitBackdropFilter: 'blur(6px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '20px',
+            boxSizing: 'border-box',
+        }}>
+            <div style={{
+                position: 'relative',
+                background: '#FFFFFF',
+                borderRadius: '20px',
+                maxWidth: '420px',
+                width: '100%',
+                padding: '32px 24px 24px',
+                textAlign: 'center',
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+                border: '1px solid #FEE2E2',
+                margin: 'auto',
+            }}>
+                {/* Warning Icon */}
+                <div style={{
+                    width: '64px',
+                    height: '64px',
+                    borderRadius: '50%',
+                    backgroundColor: '#FEF2F2',
+                    border: '1px solid #FEE2E2',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    margin: '0 auto 16px',
+                }}>
+                    <div style={{
+                        width: '44px',
+                        height: '44px',
+                        borderRadius: '50%',
+                        backgroundColor: '#EF4444',
+                        color: '#FFFFFF',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        boxShadow: '0 6px 14px -3px rgba(239, 68, 68, 0.35)',
+                    }}>
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <circle cx="12" cy="12" r="10" />
+                            <line x1="12" y1="8" x2="12" y2="12" />
+                            <line x1="12" y1="16" x2="12.01" y2="16" />
+                        </svg>
+                    </div>
+                </div>
+
+                <div style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '3px 12px',
+                    borderRadius: '9999px',
+                    backgroundColor: '#FEF2F2',
+                    border: '1px solid #FECACA',
+                    color: '#B91C1C',
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    marginBottom: '10px',
+                }}>
+                    Kapasitas Melebihi Batas
+                </div>
+
+                <h3 style={{
+                    fontFamily: 'Inter, sans-serif',
+                    fontSize: '18px',
+                    fontWeight: 700,
+                    color: '#0F172A',
+                    margin: '0 0 8px',
+                    letterSpacing: '-0.02em',
+                }}>
+                    Kapasitas Kendaraan Kurang
+                </h3>
+
+                <p style={{
+                    fontFamily: 'Inter, sans-serif',
+                    fontSize: '13.5px',
+                    color: '#64748B',
+                    lineHeight: '21px',
+                    margin: '0 0 24px',
+                }}>
+                    Jumlah penumpang ({totalPax} orang) melebihi kapasitas {vehicleName || 'kendaraan yang dipilih'} (maksimal {maxPax} orang). Silakan pilih unit kendaraan yang lebih besar atau kurangi jumlah penumpang.
+                </p>
+
+                <button
+                    type="button"
+                    onClick={onClose}
+                    style={{
+                        width: '100%',
+                        height: '44px',
+                        backgroundColor: '#EF4444',
+                        color: '#FFFFFF',
+                        border: 'none',
+                        borderRadius: '12px',
+                        fontFamily: 'Inter, sans-serif',
+                        fontSize: '14px',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        boxShadow: '0 4px 12px rgba(239, 68, 68, 0.25)',
+                        transition: 'all 0.2s',
+                    }}
+                    onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = '#DC2626';
+                    }}
+                    onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = '#EF4444';
+                    }}
+                >
+                    Pilih Kendaraan Lain
+                </button>
+            </div>
+        </div>
+    );
+
+    return createPortal(modalContent, document.body);
 }

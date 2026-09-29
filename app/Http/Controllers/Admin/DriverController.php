@@ -14,7 +14,7 @@ class DriverController extends Controller
 {
     public function index(): RedirectResponse
     {
-        return redirect()->route('admin.dashboard');
+        return redirect()->route('admin.master-data.index', ['tab' => 'drivers']);
     }
 
     public function store(Request $request): RedirectResponse
@@ -41,7 +41,7 @@ class DriverController extends Controller
 
         Driver::create($validated);
 
-        return redirect()->route('admin.dashboard')->with('success', 'Driver berhasil ditambahkan.');
+        return redirect()->route('admin.master-data.index', ['tab' => 'drivers'])->with('success', 'Driver berhasil ditambahkan.');
     }
 
     public function update(Request $request, Driver $driver): RedirectResponse
@@ -70,13 +70,13 @@ class DriverController extends Controller
 
         $driver->update($validated);
 
-        return redirect()->route('admin.dashboard')->with('success', 'Driver berhasil diperbarui.');
+        return redirect()->route('admin.master-data.index', ['tab' => 'drivers'])->with('success', 'Driver berhasil diperbarui.');
     }
 
     public function destroy(Driver $driver): RedirectResponse
     {
         $driver->delete();
 
-        return redirect()->route('admin.dashboard')->with('success', 'Driver berhasil dihapus.');
+        return redirect()->route('admin.master-data.index', ['tab' => 'drivers'])->with('success', 'Driver berhasil dihapus.');
     }
 }

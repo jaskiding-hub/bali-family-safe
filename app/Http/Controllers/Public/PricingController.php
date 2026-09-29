@@ -38,7 +38,8 @@ class PricingController extends Controller
     {
         $request->validate([
             'booking_type' => ['required', 'string'],
-            'vehicle_id' => ['required', 'integer', 'exists:vehicles,id'],
+            'vehicle_id' => ['nullable', 'integer', 'exists:vehicle_units,id'],
+            'vehicle_unit_id' => ['nullable', 'integer', 'exists:vehicle_units,id'],
             'transfer_direction' => ['nullable', 'string'],
             'pickup_hotel_id' => ['nullable', 'integer', 'exists:hotels,id'],
             'dropoff_hotel_id' => ['nullable', 'integer', 'exists:hotels,id'],
