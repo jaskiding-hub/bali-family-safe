@@ -18,12 +18,6 @@ function getBadgeColor(tripType, bookingType) {
     }
 }
 
-function formatCompactDate(dateStr) {
-    if (!dateStr) return '';
-    const d = new Date(dateStr + 'T00:00:00');
-    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-}
-
 export default function Home({ driver, activeTrip, laterTodayTrips = [] }) {
     const { flash } = usePage().props;
     const { openProfile } = useDriverProfile();
@@ -227,20 +221,16 @@ export default function Home({ driver, activeTrip, laterTodayTrips = [] }) {
                                         const timeParts = (laterTrip.trip_time || '').trim().split(' ');
                                         const timeNum = timeParts[0] || laterTrip.trip_time;
                                         const timePeriod = timeParts[1] || '';
-                                        const compactDate = formatCompactDate(laterTrip.trip_date);
                                         const delayClass = `delay-${Math.min(5, idx + 2)}`;
 
                                         return (
-                                            <Link
+                                            <Link 
                                                 key={laterTrip.id || idx}
-                                                href={`/driver/trips/${laterTrip.id}?from=home`}
+                                                href={`/driver/trips/${laterTrip.id}?from=home`} 
                                                 className={`group bg-white border border-slate-100 rounded-2xl p-4 sm:p-5 shadow-sm flex items-center gap-4 anim-ease-up ${delayClass} transition-all duration-200 ease-out active:scale-[0.985] hover:border-[#00AEEF] hover:shadow-md cursor-pointer`}
                                             >
                                                 {/* Left Time Box */}
                                                 <div className="w-16 sm:w-20 flex flex-col items-center justify-center shrink-0 pr-3 sm:pr-4 border-r border-slate-100">
-                                                    {compactDate && (
-                                                        <span className="text-slate-400 text-[9px] sm:text-[10px] font-bold tracking-wide uppercase mb-0.5 text-center">{compactDate}</span>
-                                                    )}
                                                     <span className="text-[#00658D] text-base sm:text-lg font-extrabold text-center leading-none">{timeNum}</span>
                                                     {timePeriod && (
                                                         <span className="text-slate-400 text-[10px] font-bold tracking-wider uppercase mt-1 text-center">{timePeriod}</span>
