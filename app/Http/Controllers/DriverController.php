@@ -213,6 +213,10 @@ class DriverController extends Controller
         $booking = Booking::with(['vehicle', 'vehicleUnit', 'package', 'pickupHotel', 'dropoffHotel', 'airport', 'tripExpenses', 'childSeats.childSeatType'])
             ->findOrFail($id);
 
+        if ($booking->driver_id !== Auth::guard('driver')->id()) {
+            abort(403, 'Anda tidak memiliki akses ke trip ini.');
+        }
+
         $authDriver = Auth::guard('driver')->user() ?? Driver::first();
 
         return Inertia::render('Driver/TripDetail', [
@@ -224,6 +228,34 @@ class DriverController extends Controller
     public function completeTrip($id)
     {
         $booking = Booking::findOrFail($id);
+
+        // Guard 1: Kepemilikan trip
+        if ($booking->driver_id !== Auth::guard('driver')->id()) {
+            abort(403, 'Anda tidak memiliki akses ke trip ini.');
+        }
+
+        // Guard 2: State machine status transition
+        $statusStr = $booking->status instanceof \BackedEnum
+            ? $booking->status->value
+            : (string) $booking->status;
+
+        if (!in_array($statusStr, [BookingStatus::Assigned->value, BookingStatus::OnGoing->value], true)) {
+            $errorMessage = "Trip ini belum bisa diselesaikan (status saat ini: {$statusStr}). Pastikan trip sudah di-assign dan sedang berjalan.";
+
+            if (request()->header('X-Inertia')) {
+                return redirect()->back()->with('error', $errorMessage);
+            }
+
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $errorMessage,
+                ], 422);
+            }
+
+            return redirect()->back()->with('error', $errorMessage);
+        }
+
         $booking->status = BookingStatus::Completed->value;
         $booking->save();
 
@@ -245,6 +277,11 @@ class DriverController extends Controller
     public function expense($id)
     {
         $booking = Booking::with(['tripExpenses', 'package', 'childSeats.childSeatType'])->findOrFail($id);
+
+        if ($booking->driver_id !== Auth::guard('driver')->id()) {
+            abort(403, 'Anda tidak memiliki akses ke trip ini.');
+        }
+
         $authDriver = Auth::guard('driver')->user() ?? Driver::first();
 
         return Inertia::render('Driver/Expense', [

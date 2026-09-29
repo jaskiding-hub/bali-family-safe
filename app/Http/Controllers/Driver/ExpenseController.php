@@ -15,6 +15,10 @@ class ExpenseController extends Controller
     {
         $booking = Booking::findOrFail($id);
 
+        if ($booking->driver_id !== Auth::guard('driver')->id()) {
+            abort(403, 'Anda tidak memiliki akses ke trip ini.');
+        }
+
         $request->validate([
             'type' => ['required', 'string', 'max:255'],
             'amount' => ['required'],
@@ -67,7 +71,12 @@ class ExpenseController extends Controller
             $bookingId = $booking->id;
         } else {
             $expense = TripExpense::findOrFail($id);
-            $bookingId = $expense->booking_id;
+            $booking = Booking::findOrFail($expense->booking_id);
+            $bookingId = $booking->id;
+        }
+
+        if ($booking->driver_id !== Auth::guard('driver')->id()) {
+            abort(403, 'Anda tidak memiliki akses ke trip ini.');
         }
 
         $request->validate([
@@ -121,7 +130,12 @@ class ExpenseController extends Controller
             $bookingId = $booking->id;
         } else {
             $expense = TripExpense::findOrFail($id);
-            $bookingId = $expense->booking_id;
+            $booking = Booking::findOrFail($expense->booking_id);
+            $bookingId = $booking->id;
+        }
+
+        if ($booking->driver_id !== Auth::guard('driver')->id()) {
+            abort(403, 'Anda tidak memiliki akses ke trip ini.');
         }
 
         if ($expense->receipt_path) {
@@ -130,7 +144,7 @@ class ExpenseController extends Controller
 
         $expense->delete();
 
-        if ($request->ajax() || $request->wantsJson()) {
+        if ($request->ajax() || request()->wantsJson()) {
             return response()->json([
                 'success' => true,
                 'message' => 'Expense deleted successfully!',

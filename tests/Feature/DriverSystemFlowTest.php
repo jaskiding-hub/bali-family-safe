@@ -260,4 +260,93 @@ class DriverSystemFlowTest extends TestCase
             ->missing('trip.special_requirements')
         );
     }
+
+    public function test_driver_cannot_view_trip_detail_of_another_driver(): void
+    {
+        $driverB = Driver::create([
+            'full_name' => 'Made Sudira',
+            'username' => 'driver_b',
+            'email' => 'driver_b@transport.com',
+            'whatsapp_number' => '08123456780',
+            'license_number' => 'SIM-54321',
+            'license_expiry_date' => '2028-12-31',
+            'password_hash' => bcrypt('password123'),
+            'status' => 'Active',
+        ]);
+
+        $response = $this->actingAs($driverB, 'driver')->get(route('driver.trip.detail', ['id' => $this->booking->id]));
+        $response->assertForbidden();
+    }
+
+    public function test_driver_cannot_complete_trip_of_another_driver(): void
+    {
+        $driverB = Driver::create([
+            'full_name' => 'Ketut Sujana',
+            'username' => 'driver_ketut',
+            'email' => 'driver_ketut@transport.com',
+            'whatsapp_number' => '08123456781',
+            'license_number' => 'SIM-99999',
+            'license_expiry_date' => '2028-12-31',
+            'password_hash' => bcrypt('password123'),
+            'status' => 'Active',
+        ]);
+
+        $response = $this->actingAs($driverB, 'driver')->post(route('driver.trip.complete', ['id' => $this->booking->id]));
+        $response->assertForbidden();
+
+        $this->booking->refresh();
+        $statusStr = $this->booking->status instanceof \BackedEnum ? $this->booking->status->value : (string) $this->booking->status;
+        $this->assertEquals(BookingStatus::OnGoing->value, $statusStr);
+    }
+
+    public function test_driver_cannot_complete_trip_with_pending_status(): void
+    {
+        $this->booking->update(['status' => BookingStatus::Pending->value]);
+
+        $response = $this->actingAs($this->driver, 'driver')->post(route('driver.trip.complete', ['id' => $this->booking->id]));
+        $response->assertSessionHas('error');
+
+        $this->booking->refresh();
+        $statusStr = $this->booking->status instanceof \BackedEnum ? $this->booking->status->value : (string) $this->booking->status;
+        $this->assertEquals(BookingStatus::Pending->value, $statusStr);
+    }
+
+    public function test_driver_can_complete_trip_with_assigned_status(): void
+    {
+        $this->booking->update(['status' => BookingStatus::Assigned->value]);
+
+        $response = $this->actingAs($this->driver, 'driver')->post(route('driver.trip.complete', ['id' => $this->booking->id]));
+        $response->assertRedirect(route('driver.home'));
+        $response->assertSessionHas('success', 'Trip successfully completed!');
+
+        $this->booking->refresh();
+        $statusStr = $this->booking->status instanceof \BackedEnum ? $this->booking->status->value : (string) $this->booking->status;
+        $this->assertEquals(BookingStatus::Completed->value, $statusStr);
+    }
+
+    public function test_driver_cannot_store_expense_for_another_drivers_trip(): void
+    {
+        $driverB = Driver::create([
+            'full_name' => 'Nyoman Rai',
+            'username' => 'driver_nyoman',
+            'email' => 'driver_nyoman@transport.com',
+            'whatsapp_number' => '08123456782',
+            'license_number' => 'SIM-88888',
+            'license_expiry_date' => '2028-12-31',
+            'password_hash' => bcrypt('password123'),
+            'status' => 'Active',
+        ]);
+
+        $response = $this->actingAs($driverB, 'driver')
+            ->postJson(route('driver.trip.expense.store', ['id' => $this->booking->id]), [
+                'type' => 'Parking',
+                'amount' => 50000,
+            ]);
+
+        $response->assertForbidden();
+        $this->assertDatabaseMissing('trip_expenses', [
+            'booking_id' => $this->booking->id,
+            'amount' => 50000,
+        ]);
+    }
 }
