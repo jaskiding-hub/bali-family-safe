@@ -596,6 +596,7 @@ CATATAN / NOTES:`,
             selected_hotel_id: selectedHotelId,
             hotel_id_pickup: hotelPickupId,
             hotel_id_dropoff: hotelDropoffId,
+            vehicle_unit_id: booking.vehicle_unit_id ? String(booking.vehicle_unit_id) : (available_vehicle_units[0]?.id ? String(available_vehicle_units[0].id) : ''),
             vehicle_tier: tier,
             package_id: booking.package_id ? String(booking.package_id) : '',
             guest_name: booking.guest_name || '',
@@ -616,13 +617,34 @@ CATATAN / NOTES:`,
     };
 
     const handleEditBookingSubmit = (e) => {
-        e.preventDefault();
+        if (e && e.preventDefault) e.preventDefault();
         if (!selectedBooking) return;
-        editBookingForm.post(`/admin/bookings/${selectedBooking.raw_id}`, {
+
+        const typeUi = editBookingForm.data.booking_type_ui;
+        const isPickup = typeUi === 'Airport Pick-Up';
+        const isDropoff = typeUi === 'Airport Drop-Off';
+        const isHotel = typeUi === 'Hotel Transfer';
+        const isDayTour = typeUi === 'Day Tour';
+
+        editBookingForm.transform((data) => ({
+            ...data,
+            pickup_hotel_id: isDropoff ? (data.selected_hotel_id || null) : (isHotel ? (data.hotel_id_pickup || null) : null),
+            dropoff_hotel_id: isPickup ? (data.selected_hotel_id || null) : (isHotel ? (data.hotel_id_dropoff || null) : null),
+            package_id: isDayTour ? (data.package_id || null) : null,
+            flight_number: (isPickup || isDropoff) ? (data.flight_number || null) : null,
+            email: data.email || null,
+            notes: data.notes || null,
+        })).post(`/admin/bookings/${selectedBooking.raw_id}`, {
+            preserveScroll: true,
             onSuccess: () => {
                 setShowEditBookingModal(false);
                 editBookingForm.reset();
                 setSelectedBooking(null);
+            },
+            onError: (errors) => {
+                console.error('Validasi edit gagal:', errors);
+                const msg = Object.entries(errors).map(([k, v]) => `${k}: ${v}`).join('\n');
+                alert('Gagal memperbarui booking:\n' + msg);
             },
         });
     };
@@ -783,6 +805,7 @@ CATATAN / NOTES:`,
         // Dynamic lists
         const availableDestinations = isAirport ? getDestinations(direction) : [];
         const hotelsForSelectedDest = isAirport ? getHotelsForDestinasi(form.data.selected_destinasi) : [];
+        const hotelsToShow = hotelsForSelectedDest.length > 0 ? hotelsForSelectedDest : hotels;
         const selectedVehicle = vehicles.find((v) => String(v.id) === String(form.data.vehicle_id));
         const vehicleTier = selectedVehicle?.tier || form.data.vehicle_tier || 'Regular';
 
@@ -1005,10 +1028,10 @@ CATATAN / NOTES:`,
                             >
                                 <option value="">
                                     {form.data.selected_destinasi
-                                        ? (hotelsForSelectedDest.length > 0 ? '-- Pilih Hotel --' : '-- Belum ada hotel terdaftar di wilayah ini --')
+                                        ? '-- Pilih Hotel --'
                                         : '-- Pilih Destinasi Dahulu --'}
                                 </option>
-                                {hotelsForSelectedDest.map((h) => (
+                                {hotelsToShow.map((h) => (
                                     <option key={h.id} value={h.id}>
                                         {h.nama_hotel}
                                     </option>

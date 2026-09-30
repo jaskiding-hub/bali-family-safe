@@ -239,7 +239,7 @@ export default function FleetSection({ vehicles = [] }) {
                         { label: 'Passenger Capacity', value: `1–${car.passenger_capacity || 6} passengers + driver` },
                         { label: 'Car Seats', value: seatCount.replace('Car Seats', 'certified child seat(s) available') },
                         { label: 'Luggage Space', value: car.luggage_capacity ? `${car.luggage_capacity} suitcase(s) + stroller` : 'Standard luggage space + stroller' },
-                        { label: 'Air Conditioning', value: car.features?.includes('AC') || car.name?.toLowerCase().includes('ac') ? 'Full cabin air conditioning' : 'Climate control available' },
+                        { label: 'Air Conditioning', value: car.ac_info || (car.features?.includes('AC') || car.name?.toLowerCase().includes('ac') ? 'Full cabin air conditioning' : 'Climate control available') },
                     ],
                     features: (car.key_features && Array.isArray(car.key_features) && car.key_features.length > 0)
                         ? car.key_features

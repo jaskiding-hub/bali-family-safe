@@ -83,14 +83,17 @@ export default function DriversSection({ teamMembers = [] }) {
     const regularMembers = teamMembers.filter((m) => !m.is_founder);
 
     const displayTeam = regularMembers.length > 0
-        ? regularMembers.map((m) => ({
-            type: m.driver_id ? 'driver' : 'staff',
-            name: m.name,
-            role: m.role_title,
-            specialty: `${m.years_experience ? `${m.years_experience} • ` : ''}${m.languages || 'English'}`,
-            badge: m.driver_id ? 'POLICE CLEARED' : 'SUPPORT TEAM',
-            img: m.photo_url || 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=400&q=80',
-        }))
+        ? regularMembers.map((m) => {
+            const isDriver = m.category_role === 'Driver' || m.role === 'Driver' || (m.role_title && m.role_title.toLowerCase().includes('driver'));
+            return {
+                type: isDriver ? 'driver' : 'staff',
+                name: m.name,
+                role: m.role_title,
+                specialty: `${m.years_experience ? `${m.years_experience} • ` : ''}${m.languages || 'English'}`,
+                badge: isDriver ? 'POLICE CLEARED' : 'SUPPORT TEAM',
+                img: m.photo_url || 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=400&q=80',
+            };
+        })
         : UNIFIED_TEAM;
 
     return (

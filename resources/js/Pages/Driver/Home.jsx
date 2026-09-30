@@ -279,10 +279,15 @@ export default function Home({ driver, activeTrip, laterTodayTrips = [] }) {
                                                 {/* Center Info */}
                                                 <div className="flex-1 flex flex-col justify-center min-w-0">
                                                     <span className="text-slate-900 text-sm sm:text-base font-bold truncate">{laterTrip.guest_name}</span>
-                                                    <div className="mt-1 flex items-center">
+                                                    <div className="mt-1 flex items-center gap-2 flex-wrap">
                                                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold shrink-0 whitespace-nowrap ${getBadgeColor(laterTrip.trip_type, laterTrip.booking_type)}`}>
                                                             {laterTrip.trip_type}
                                                         </span>
+                                                        {laterTrip.trip_date && (
+                                                            <span className="text-slate-500 text-[11px] font-medium bg-slate-100 px-2 py-0.5 rounded">
+                                                                {formatDisplayDate(laterTrip.trip_date)}
+                                                            </span>
+                                                        )}
                                                     </div>
                                                 </div>
 

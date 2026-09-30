@@ -412,7 +412,7 @@ class BookingController extends Controller
             $vehicle = Vehicle::where('category', $vehicleUnit->category)->first();
         }
         if (!$vehicle) {
-            $vehicle = Vehicle::first();
+            $vehicle = Vehicle::first() ?? Vehicle::withTrashed()->first();
         }
         $validated['vehicle_id'] = $vehicle ? $vehicle->id : 1;
 
@@ -435,6 +435,11 @@ class BookingController extends Controller
             unset($validated[$f]);
         }
 
+        // Format pickup_time as valid TIME (H:i:s)
+        if (!empty($validated['pickup_time']) && strlen($validated['pickup_time']) === 5) {
+            $validated['pickup_time'] = $validated['pickup_time'] . ':00';
+        }
+
         // Generate booking code
         do {
             $bookingCode = 'BFS-' . strtoupper(\Illuminate\Support\Str::random(5));
@@ -451,21 +456,32 @@ class BookingController extends Controller
         $validated['total_fee'] = (float) $validated['total_fee'];
         $validated['vehicle_unit_id'] = (int) $validated['vehicle_unit_id'];
 
-        $booking = Booking::create($validated);
+        try {
+            $booking = Booking::create($validated);
 
-        if ($request->has('child_seats') && is_array($request->input('child_seats'))) {
-            foreach ($request->input('child_seats') as $seat) {
-                if (!empty($seat['id']) && !empty($seat['quantity'])) {
-                    \App\Models\BookingChildSeat::create([
-                        'booking_id' => $booking->id,
-                        'child_seat_type_id' => $seat['id'],
-                        'quantity' => (int) $seat['quantity'],
-                    ]);
+            if ($request->has('child_seats') && is_array($request->input('child_seats'))) {
+                foreach ($request->input('child_seats') as $seat) {
+                    if (!empty($seat['id']) && !empty($seat['quantity'])) {
+                        if (\App\Models\ChildSeatType::where('id', $seat['id'])->exists()) {
+                            \App\Models\BookingChildSeat::create([
+                                'booking_id' => $booking->id,
+                                'child_seat_type_id' => $seat['id'],
+                                'quantity' => (int) $seat['quantity'],
+                            ]);
+                        }
+                    }
                 }
             }
-        }
 
-        return redirect()->route('admin.bookings.index')->with('success', 'Booking baru berhasil dibuat.');
+            return redirect()->route('admin.bookings.index')->with('success', 'Booking baru berhasil dibuat.');
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Admin Booking Store Failed: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'payload' => $validated,
+            ]);
+
+            return back()->withErrors(['error' => 'Gagal menyimpan booking ke database: ' . $e->getMessage()])->withInput();
+        }
     }
 
     public function update(Request $request, Booking $booking): RedirectResponse
@@ -568,9 +584,23 @@ class BookingController extends Controller
             $validated['flight_number'] = null;
         }
 
-        $booking->update($validated);
+        // Format pickup_time as valid TIME (H:i:s)
+        if (!empty($validated['pickup_time']) && strlen($validated['pickup_time']) === 5) {
+            $validated['pickup_time'] = $validated['pickup_time'] . ':00';
+        }
 
-        return redirect()->route('admin.bookings.index')->with('success', 'Booking berhasil diperbarui.');
+        try {
+            $booking->update($validated);
+
+            return redirect()->route('admin.bookings.index')->with('success', 'Booking berhasil diperbarui.');
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Admin Booking Update Failed: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'payload' => $validated,
+            ]);
+
+            return back()->withErrors(['error' => 'Gagal memperbarui booking: ' . $e->getMessage()])->withInput();
+        }
     }
 
     public function assignDriver(Request $request, Booking $booking): RedirectResponse

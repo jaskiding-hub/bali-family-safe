@@ -71,10 +71,15 @@ class TourController extends Controller
             'overviewImage' => $package->photo_url ?: $package->hero_image ?: 'https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&w=800&q=80',
             'overviewTags' => $package->tags->map(fn ($t) => ['label' => $t->tag_name, 'icon' => 'sparkle'])->all(),
             'highlights' => $package->highlights->map(function ($h) {
+                $img = $h->photo_url;
+                if ($img && !str_starts_with($img, 'http') && !str_starts_with($img, '/')) {
+                    $img = \Illuminate\Support\Facades\Storage::url($img);
+                }
+
                 return [
                     'title' => $h->title,
                     'desc' => $h->description,
-                    'image' => $h->photo_url ?: 'https://images.unsplash.com/photo-1540573133985-87b6da6d54a9?auto=format&fit=crop&w=600&q=80',
+                    'image' => $img ?: 'https://images.unsplash.com/photo-1540573133985-87b6da6d54a9?auto=format&fit=crop&w=600&q=80',
                     'badgeIcon' => 'tree',
                 ];
             })->all(),

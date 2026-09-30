@@ -42,7 +42,6 @@ class Booking extends Model
 
     protected $casts = [
         'booking_date' => 'date',
-        'pickup_time' => 'datetime:H:i',
         'total_fee' => 'decimal:2',
         'status' => BookingStatus::class,
         'booking_type' => BookingType::class,

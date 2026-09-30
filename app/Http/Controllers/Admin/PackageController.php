@@ -92,7 +92,8 @@ class PackageController extends Controller
                     if (!empty($hl['title'])) {
                         $photoUrl = null;
                         if (!empty($request->file("highlights.$order.photo"))) {
-                            $photoUrl = $request->file("highlights.$order.photo")->store('highlights', 'public');
+                            $path = $request->file("highlights.$order.photo")->store('highlights', 'public');
+                            $photoUrl = Storage::url($path);
                         }
 
                         PackageHighlight::create([
@@ -179,7 +180,8 @@ class PackageController extends Controller
                     if (!empty($hl['title'])) {
                         $photoUrl = null;
                         if (!empty($request->file("highlights.$order.photo"))) {
-                            $photoUrl = $request->file("highlights.$order.photo")->store('highlights', 'public');
+                            $path = $request->file("highlights.$order.photo")->store('highlights', 'public');
+                            $photoUrl = Storage::url($path);
                         }
 
                         PackageHighlight::create([
