@@ -282,6 +282,7 @@ class FinancialReportController extends Controller
             'filters' => [
                 'period' => $period,
                 'month' => $customMonth ?? '',
+                'year' => $customYear ?? '',
                 'search' => $search ?? '',
             ],
             'available_months' => $availableMonths,

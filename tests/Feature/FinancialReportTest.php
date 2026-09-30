@@ -277,4 +277,185 @@ class FinancialReportTest extends TestCase
                 });
         });
     }
+
+    /**
+     * 7. Month filter date picker returns accurate bookings for specified month (e.g. 2026-05)
+     */
+    public function test_financial_report_month_filter_queries_correct_date_range(): void
+    {
+        Carbon::setTestNow(Carbon::create(2026, 6, 15, 10, 0, 0));
+
+        // May booking (500k)
+        $this->createBooking([
+            'guest_name' => 'May Guest',
+            'total_fee' => 500000,
+            'status' => BookingStatus::Completed->value,
+            'booking_date' => '2026-05-15',
+        ]);
+
+        // June booking (800k)
+        $this->createBooking([
+            'guest_name' => 'June Guest',
+            'total_fee' => 800000,
+            'status' => BookingStatus::Completed->value,
+            'booking_date' => '2026-06-10',
+        ]);
+
+        // Request month=2026-05
+        $response = $this->actingAs($this->admin, 'admin')
+            ->get(route('admin.financial-report', ['month' => '2026-05']));
+
+        $response->assertOk();
+        $response->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/FinancialReport')
+            ->where('stats.total_revenue', 500000)
+            ->where('stats.completed_trips', 1)
+            ->where('filters.month', '2026-05')
+            ->where('bookings.data.0.guest_name', 'May Guest')
+            ->has('bookings.data', 1)
+        );
+    }
+
+    /**
+     * 8. Year filter date picker returns accurate bookings for specified year (e.g. 2025)
+     */
+    public function test_financial_report_year_filter_queries_correct_date_range(): void
+    {
+        Carbon::setTestNow(Carbon::create(2026, 6, 15, 10, 0, 0));
+
+        // 2025 booking (600k)
+        $this->createBooking([
+            'guest_name' => '2025 Guest',
+            'total_fee' => 600000,
+            'status' => BookingStatus::Completed->value,
+            'booking_date' => '2025-11-20',
+        ]);
+
+        // 2026 booking (1.2M)
+        $this->createBooking([
+            'guest_name' => '2026 Guest',
+            'total_fee' => 1200000,
+            'status' => BookingStatus::Completed->value,
+            'booking_date' => '2026-03-10',
+        ]);
+
+        // Request year=2025
+        $response = $this->actingAs($this->admin, 'admin')
+            ->get(route('admin.financial-report', ['year' => '2025']));
+
+        $response->assertOk();
+        $response->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/FinancialReport')
+            ->where('stats.total_revenue', 600000)
+            ->where('stats.completed_trips', 1)
+            ->where('filters.year', '2025')
+            ->where('bookings.data.0.guest_name', '2025 Guest')
+            ->has('bookings.data', 1)
+        );
+    }
+
+    /**
+     * 9. All time filter returns all completed records regardless of date
+     */
+    public function test_financial_report_all_time_filter_returns_all_records(): void
+    {
+        Carbon::setTestNow(Carbon::create(2026, 6, 15, 10, 0, 0));
+
+        $this->createBooking([
+            'guest_name' => 'Old Guest',
+            'total_fee' => 500000,
+            'status' => BookingStatus::Completed->value,
+            'booking_date' => '2024-01-10',
+        ]);
+
+        $this->createBooking([
+            'guest_name' => 'New Guest',
+            'total_fee' => 700000,
+            'status' => BookingStatus::Completed->value,
+            'booking_date' => '2026-06-15',
+        ]);
+
+        $response = $this->actingAs($this->admin, 'admin')
+            ->get(route('admin.financial-report', ['period' => 'all_time']));
+
+        $response->assertOk();
+        $response->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/FinancialReport')
+            ->where('stats.total_revenue', 1200000)
+            ->where('stats.completed_trips', 2)
+            ->where('stats.period_label', 'All time')
+            ->has('bookings.data', 2)
+        );
+    }
+
+    /**
+     * 10. Last month period filter queries previous month accurately
+     */
+    public function test_financial_report_last_month_filter_queries_correct_date_range(): void
+    {
+        Carbon::setTestNow(Carbon::create(2026, 6, 15, 10, 0, 0));
+
+        // May 2026 booking (Last month relative to June 2026)
+        $this->createBooking([
+            'guest_name' => 'May Guest',
+            'total_fee' => 450000,
+            'status' => BookingStatus::Completed->value,
+            'booking_date' => '2026-05-20',
+        ]);
+
+        // June 2026 booking (This month)
+        $this->createBooking([
+            'guest_name' => 'June Guest',
+            'total_fee' => 900000,
+            'status' => BookingStatus::Completed->value,
+            'booking_date' => '2026-06-05',
+        ]);
+
+        $response = $this->actingAs($this->admin, 'admin')
+            ->get(route('admin.financial-report', ['period' => 'last_month']));
+
+        $response->assertOk();
+        $response->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/FinancialReport')
+            ->where('stats.total_revenue', 450000)
+            ->where('stats.completed_trips', 1)
+            ->where('bookings.data.0.guest_name', 'May Guest')
+            ->has('bookings.data', 1)
+        );
+    }
+
+    /**
+     * 11. Search query correctly filters bookings by guest name or code
+     */
+    public function test_financial_report_search_query_filters_bookings_within_period(): void
+    {
+        Carbon::setTestNow(Carbon::create(2026, 6, 15, 10, 0, 0));
+
+        $this->createBooking([
+            'guest_name' => 'Alice Johnson',
+            'booking_code' => 'BFS-ALICE-01',
+            'total_fee' => 500000,
+            'status' => BookingStatus::Completed->value,
+            'booking_date' => '2026-06-10',
+        ]);
+
+        $this->createBooking([
+            'guest_name' => 'Bob Smith',
+            'booking_code' => 'BFS-BOB-02',
+            'total_fee' => 800000,
+            'status' => BookingStatus::Completed->value,
+            'booking_date' => '2026-06-12',
+        ]);
+
+        $response = $this->actingAs($this->admin, 'admin')
+            ->get(route('admin.financial-report', ['period' => 'this_month', 'search' => 'Alice']));
+
+        $response->assertOk();
+        $response->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/FinancialReport')
+            ->where('filters.search', 'Alice')
+            ->where('bookings.data.0.guest_name', 'Alice Johnson')
+            ->has('bookings.data', 1)
+        );
+    }
 }

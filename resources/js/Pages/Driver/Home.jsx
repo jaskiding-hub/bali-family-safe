@@ -18,6 +18,22 @@ function getBadgeColor(tripType, bookingType) {
     }
 }
 
+function formatDisplayDate(dateStr) {
+    if (!dateStr) return '';
+    try {
+        const d = new Date(dateStr + 'T00:00:00');
+        if (isNaN(d.getTime())) return dateStr;
+        return d.toLocaleDateString('en-US', {
+            weekday: 'short',
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric',
+        });
+    } catch (e) {
+        return dateStr;
+    }
+}
+
 export default function Home({ driver, activeTrip, laterTodayTrips = [] }) {
     const { flash } = usePage().props;
     const { openProfile } = useDriverProfile();
@@ -89,7 +105,7 @@ export default function Home({ driver, activeTrip, laterTodayTrips = [] }) {
                                 <div className="flex items-center gap-2">
                                     <span className="w-2.5 h-2.5 rounded-full bg-[#00AEEF] animate-[softBreathing_2.8s_ease-in-out_infinite]"></span>
                                     <span className="text-[#00AEEF] text-xs sm:text-[13px] font-bold tracking-[1.2px] uppercase">
-                                        UP NEXT • {activeTrip.trip_time}
+                                        UP NEXT
                                     </span>
                                 </div>
                                 <div className="flex items-center gap-2">
@@ -107,8 +123,31 @@ export default function Home({ driver, activeTrip, laterTodayTrips = [] }) {
                                 </div>
                             </div>
 
-                            {/* 4 Information Items with Circular Icon Badges */}
+                            {/* Information Items with Circular Icon Badges */}
                             <div className="flex flex-col gap-4">
+                                {/* Item 0: Date & Time */}
+                                {activeTrip.trip_date && (
+                                    <div className="flex items-center gap-3.5">
+                                        <div className="w-10 h-10 min-w-[40px] bg-[#EAEEF4] rounded-full flex items-center justify-center text-[#00658D] transition-transform duration-300 hover:scale-105 shrink-0">
+                                            <svg className="w-5 h-5 text-[#00658D]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                            </svg>
+                                        </div>
+                                        <div className="flex flex-col justify-center min-w-0">
+                                            <span className="text-[11px] font-semibold text-[#6E7881] tracking-[0.8px] uppercase leading-tight mb-1">BOOKING DATE & TIME</span>
+                                            <div className="flex items-center gap-2 flex-wrap">
+                                                <span className="text-base sm:text-lg font-bold text-[#171C20]">
+                                                    {formatDisplayDate(activeTrip.trip_date)}
+                                                </span>
+                                                {activeTrip.trip_time && (
+                                                    <span className="px-2.5 py-0.5 rounded-lg bg-sky-50 text-[#00658D] border border-sky-200/80 text-xs sm:text-sm font-bold shadow-2xs">
+                                                        {activeTrip.trip_time}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
                                 {/* Item 1: Trip Type */}
                                 <div className="flex items-center gap-3.5">
                                     <div className="w-10 h-10 min-w-[40px] bg-[#EAEEF4] rounded-full flex items-center justify-center text-[#00658D] transition-transform duration-300 hover:scale-105 shrink-0">

@@ -31,6 +31,13 @@ export default function FinancialReport({
 
     const periodDropdownRef = useRef(null);
 
+    // Sync state when filters prop changes from server response
+    useEffect(() => {
+        setSelectedMonth(filters.month || '');
+        setSelectedYear(filters.year || '');
+        setSearchQuery(filters.search || '');
+    }, [filters.month, filters.year, filters.search]);
+
     // Close dropdown on click outside
     useEffect(() => {
         function handleClickOutside(event) {
@@ -45,6 +52,8 @@ export default function FinancialReport({
     // Filter period selection
     const handleSelectPeriod = (periodKey, monthVal = null) => {
         setPeriodDropdownOpen(false);
+        setSelectedMonth('');
+        setSelectedYear('');
         const params = {
             period: periodKey,
             search: searchQuery || undefined,
@@ -62,6 +71,7 @@ export default function FinancialReport({
     const handleMonthChange = (e) => {
         const month = e.target.value;
         setSelectedMonth(month);
+        setSelectedYear('');
         if (month) {
             router.get('/admin/financial-report', { month, search: searchQuery || undefined }, { preserveState: true, replace: true });
         }
@@ -70,6 +80,7 @@ export default function FinancialReport({
     const handleYearChange = (e) => {
         const year = e.target.value;
         setSelectedYear(year);
+        setSelectedMonth('');
         if (year && year.length === 4) {
             router.get('/admin/financial-report', { year, search: searchQuery || undefined }, { preserveState: true, replace: true });
         }
@@ -88,7 +99,8 @@ export default function FinancialReport({
             '/admin/financial-report',
             {
                 period: filters.period,
-                month: filters.month,
+                month: filters.month || undefined,
+                year: filters.year || undefined,
                 search: searchQuery || undefined,
             },
             { preserveState: true, replace: true }
