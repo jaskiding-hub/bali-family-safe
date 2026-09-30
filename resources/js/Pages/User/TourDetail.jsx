@@ -186,7 +186,7 @@ export default function TourDetail({ tourId, tour: initialTour = null }) {
                     <div style={{
                         position: 'absolute',
                         inset: 0,
-                        backgroundImage: `url(${tour?.heroImage || 'https://images.unsplash.com/photo-1537996194471-e657df975ab4'})`,
+                        backgroundImage: `url(${tour?.photo_url || tour?.heroImage || 'https://images.unsplash.com/photo-1537996194471-e657df975ab4'})`,
                         backgroundSize: 'cover',
                         backgroundPosition: 'center',
                         zIndex: 0,
@@ -461,7 +461,7 @@ export default function TourDetail({ tourId, tour: initialTour = null }) {
 
                             {/* Main Image */}
                             <img
-                                src={tour?.overviewImage || 'https://images.unsplash.com/photo-1544644181-1484b3fdfc62'}
+                                src={tour?.photo_url || tour?.overviewImage || 'https://images.unsplash.com/photo-1544644181-1484b3fdfc62'}
                                 alt={tour?.overviewTitle || 'Ubud Cultural Tour'}
                                 style={{
                                     position: 'relative',
@@ -501,7 +501,7 @@ export default function TourDetail({ tourId, tour: initialTour = null }) {
                             textAlign: 'center',
                             margin: '0 0 16px 0',
                         }}>
-                            {tour?.highlightsTitle || 'Top Highlights in Ubud'}
+                            {tour?.highlightsTitle || 'Poin Destinasi & Itinerary Tour'}
                         </h3>
 
                         <p style={{

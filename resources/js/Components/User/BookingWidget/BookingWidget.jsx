@@ -33,7 +33,7 @@ const TABS = [
     },
 ];
 
-export default function BookingWidget({ packages = [], childSeatTypes = [], vehicles = [] }) {
+export default function BookingWidget({ packages = [], childSeatTypes = [], vehicles = [], siteSettings = null }) {
     const [activeTab, setActiveTab] = useState(0);
 
     return (
@@ -107,9 +107,9 @@ export default function BookingWidget({ packages = [], childSeatTypes = [], vehi
 
             {/* Form Body */}
             <div style={{ flex: 1 }}>
-                {activeTab === 0 && <AirportBookingForm vehicles={vehicles} childSeatTypes={childSeatTypes} />}
-                {activeTab === 1 && <DayTourForm packages={packages} vehicles={vehicles} childSeatTypes={childSeatTypes} />}
-                {activeTab === 2 && <HotelTransferForm vehicles={vehicles} childSeatTypes={childSeatTypes} />}
+                {activeTab === 0 && <AirportBookingForm vehicles={vehicles} childSeatTypes={childSeatTypes} siteSettings={siteSettings} />}
+                {activeTab === 1 && <DayTourForm packages={packages} vehicles={vehicles} childSeatTypes={childSeatTypes} siteSettings={siteSettings} />}
+                {activeTab === 2 && <HotelTransferForm vehicles={vehicles} childSeatTypes={childSeatTypes} siteSettings={siteSettings} />}
             </div>
         </div>
     );

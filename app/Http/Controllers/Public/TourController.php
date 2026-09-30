@@ -20,11 +20,16 @@ class TourController extends Controller
             ->orWhere('slug', $id)
             ->first();
 
-        // Fallback to first package if not found to prevent blank screen
+        // Fallback to first package if not found
         if (! $package) {
             $package = Package::with(['highlights' => function ($q) {
                 $q->orderBy('display_order', 'asc');
-            }, 'tags'])->orderBy('display_order', 'asc')->firstOrFail();
+            }, 'tags'])->orderBy('display_order', 'asc')->first();
+
+            // If still no packages exist, abort with message
+            if (! $package) {
+                abort(404, 'No tour packages are available yet. Please check back later.');
+            }
         }
 
         $allPackages = Package::orderBy('display_order', 'asc')->get()->map(function ($p) {
@@ -50,6 +55,7 @@ class TourController extends Controller
             'title' => $package->name,
             'subtitle' => $package->subtitle,
             'description' => $package->description,
+            'photo_url' => $package->photo_url,
             'hero_image' => $package->hero_image ?: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=1600&q=80',
             'heroImage' => $package->hero_image ?: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=1600&q=80',
             'heroTitle' => $package->name,
@@ -62,7 +68,7 @@ class TourController extends Controller
             'overviewTitle' => $package->subtitle ?: $package->name,
             'overviewParagraph1' => $package->description ?: 'Explore beautiful Bali with comfortable private transportation and certified child seats.',
             'overviewParagraph2' => 'All our tours include private car with AC, English-speaking driver, free child car seats, fuel, parking, and mineral water.',
-            'overviewImage' => $package->hero_image ?: 'https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&w=800&q=80',
+            'overviewImage' => $package->photo_url ?: $package->hero_image ?: 'https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&w=800&q=80',
             'overviewTags' => $package->tags->map(fn ($t) => ['label' => $t->tag_name, 'icon' => 'sparkle'])->all(),
             'highlights' => $package->highlights->map(function ($h) {
                 return [

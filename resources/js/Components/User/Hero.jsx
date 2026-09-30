@@ -93,6 +93,7 @@ export default function Hero({ siteSettings = null, packages = [], childSeatType
                     packages={packages}
                     childSeatTypes={childSeatTypes}
                     vehicles={vehicles}
+                    siteSettings={siteSettings}
                 />
             </div>
         </section>

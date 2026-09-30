@@ -2,149 +2,25 @@ import React from 'react';
 import { Head, Link } from '@inertiajs/react';
 import Footer from '../../Components/User/Footer';
 import FloatingWhatsApp from '../../Components/User/FloatingWhatsApp';
-import { CaretLeft, Envelope, Phone, MapPin } from '@phosphor-icons/react';
+import { CaretLeft } from '@phosphor-icons/react';
 
-const SUPPORT_TEAM = [
-    {
-        name: 'Putu Dewi',
-        role: 'Support Specialist',
-        img: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=400&q=80',
-        info: 'Customer Relations',
-    },
-    {
-        name: 'Made Yudi',
-        role: 'Booking Coordinator',
-        img: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80',
-        info: 'Tour Scheduling',
-    },
-    {
-        name: 'Ni Luh Sari',
-        role: 'Support Specialist',
-        img: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=400&q=80',
-        info: 'Guest Assistance',
-    },
-];
-
-const DRIVERS_ROW_1 = [
-    {
-        name: 'Wayan Arta',
-        role: 'Private Driver',
-        img: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=400&q=80',
-        info: '10+ yrs experience',
-    },
-    {
-        name: 'Ketut Budi',
-        role: 'Private Driver',
-        img: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=400&q=80',
-        info: '8 yrs experience',
-
-    },
-    {
-        name: 'Made Suardana',
-        role: 'Private Driver',
-        img: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=400&q=80',
-        info: '12 yrs experience',
-
-    },
-    {
-        name: 'Nyoman',
-        role: 'Private Driver',
-        img: 'https://images.unsplash.com/photo-1552058544-f2b08422138a?auto=format&fit=crop&w=400&q=80',
-        info: '6 yrs experience',
-
-    },
-];
-
-const DRIVERS_ROW_2 = [
-    {
-        name: 'Kadek Sumerta',
-        role: 'Private Driver',
-        img: 'https://images.unsplash.com/photo-1463453091185-61582044d556?auto=format&fit=crop&w=400&q=80',
-        info: '9 yrs experience',
-    },
-    {
-        name: 'Komang Adi',
-        role: 'Private Driver',
-        img: 'https://images.unsplash.com/photo-1499996860823-5214fcc65f8f?auto=format&fit=crop&w=400&q=80',
-        info: '7 yrs experience',
-
-    },
-    {
-        name: 'I Made Dana',
-        role: 'Private Driver',
-        img: 'https://images.unsplash.com/photo-1548372290-8d01b6c8e78c?auto=format&fit=crop&w=400&q=80',
-        info: '11 yrs experience',
-
-    },
-    {
-        name: 'Gede Wirawan',
-        role: 'Private Driver',
-        img: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80',
-        info: '5 yrs experience',
-    },
-];
-
-const DRIVERS_ROW_3 = [
-    {
-        name: 'I Wayan Suardana',
-        role: 'Private Driver',
-        img: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=400&q=80',
-        info: '8 yrs experience',
-    },
-    {
-        name: 'Putu Agus',
-        role: 'Private Driver',
-        img: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=400&q=80',
-        info: '10 yrs experience',
-
-    },
-    {
-        name: 'Ketut Artana',
-        role: 'Private Driver',
-        img: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=400&q=80',
-        info: '6 yrs experience',
-
-    },
-    {
-        name: 'Nyoman Suamba',
-        role: 'Private Driver',
-        img: 'https://images.unsplash.com/photo-1552058544-f2b08422138a?auto=format&fit=crop&w=400&q=80',
-        info: '9 yrs experience',
-
-    },
-];
-
-function InfoRow({ icon, text }) {
+function InfoRow({ text }) {
     return (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <div style={{
-                width: '15px',
-                height: '15px',
-                background: '#6E7881',
-                borderRadius: '3px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
-            }}>
-                {icon}
-            </div>
-            <span style={{
-                fontFamily: "'Inter', sans-serif",
-                fontWeight: 400,
-                fontSize: '14px',
-                lineHeight: '21px',
-                color: '#3E4850',
-            }}>
-                {text}
-            </span>
-        </div>
+        <span style={{
+            fontFamily: "'Inter', sans-serif",
+            fontWeight: 400,
+            fontSize: '14px',
+            lineHeight: '21px',
+            color: '#6E7881',
+        }}>
+            {text}
+        </span>
     );
 }
 
 function SupportCard({ member }) {
     return (
-        <div className="w-full bg-white border border-slate-200/60 shadow-sm rounded-xl overflow-hidden flex flex-col">
+        <div className="w-full bg-white border border-slate-200/60 shadow-sm rounded-xl overflow-hidden flex flex-col transition-all duration-300 hover:shadow-lg hover:border-slate-300 hover:-translate-y-1">
             {/* Photo */}
             <div style={{
                 width: '100%',
@@ -155,7 +31,9 @@ function SupportCard({ member }) {
                 <img
                     src={member.img}
                     alt={member.name}
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.3s ease' }}
+                    onMouseEnter={(e) => e.target.style.transform = 'scale(1.05)'}
+                    onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
                 />
             </div>
             {/* Info */}
@@ -167,7 +45,7 @@ function SupportCard({ member }) {
                     lineHeight: '16px',
                     letterSpacing: '0.6px',
                     textTransform: 'uppercase',
-                    color: '#3E5E96',
+                    color: '#00658D',
                     marginBottom: '8px',
                 }}>
                     {member.role}
@@ -178,14 +56,11 @@ function SupportCard({ member }) {
                     fontSize: '24px',
                     lineHeight: '32px',
                     color: '#191C1D',
-                    margin: '0 0 16px 0',
+                    margin: '0 0 12px 0',
                 }}>
                     {member.name}
                 </h3>
-                <InfoRow
-                    icon={<Envelope size={10} weight="bold" color="#FFFFFF" />}
-                    text={member.info}
-                />
+                <InfoRow text={member.info} />
             </div>
         </div>
     );
@@ -193,7 +68,7 @@ function SupportCard({ member }) {
 
 function DriverCard({ member }) {
     return (
-        <div className="w-full bg-white border border-slate-200/60 shadow-sm rounded-xl overflow-hidden relative flex flex-col">
+        <div className="w-full bg-white border border-slate-200/60 shadow-sm rounded-xl overflow-hidden relative flex flex-col transition-all duration-300 hover:shadow-lg hover:border-slate-300 hover:-translate-y-1">
             {/* Photo */}
             <div style={{
                 width: '100%',
@@ -204,7 +79,9 @@ function DriverCard({ member }) {
                 <img
                     src={member.img}
                     alt={member.name}
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.3s ease' }}
+                    onMouseEnter={(e) => e.target.style.transform = 'scale(1.05)'}
+                    onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
                 />
             </div>
             {/* Info */}
@@ -216,7 +93,7 @@ function DriverCard({ member }) {
                     lineHeight: '16px',
                     letterSpacing: '0.6px',
                     textTransform: 'uppercase',
-                    color: '#3E5E96',
+                    color: '#00658D',
                     marginBottom: '4px',
                 }}>
                     {member.role}
@@ -231,10 +108,7 @@ function DriverCard({ member }) {
                 }}>
                     {member.name}
                 </h3>
-                <InfoRow
-                    icon={<MapPin size={10} weight="bold" color="#FFFFFF" />}
-                    text={member.info}
-                />
+                <InfoRow text={member.info} />
             </div>
         </div>
     );
@@ -251,10 +125,6 @@ function DriverGrid({ drivers }) {
 }
 
 export default function OurTeam({ supportTeam = [], driverTeam = [] }) {
-    const finalSupport = supportTeam && supportTeam.length > 0 ? supportTeam : SUPPORT_TEAM;
-    const allFallbackDrivers = [...DRIVERS_ROW_1, ...DRIVERS_ROW_2, ...DRIVERS_ROW_3];
-    const finalDrivers = driverTeam && driverTeam.length > 0 ? driverTeam : allFallbackDrivers;
-
     return (
         <div style={{
             fontFamily: "'Inter', sans-serif",
@@ -386,7 +256,7 @@ export default function OurTeam({ supportTeam = [], driverTeam = [] }) {
 
                         {/* Cards grid */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 relative z-10 max-w-5xl mx-auto w-full">
-                            {finalSupport.map((member, i) => (
+                            {supportTeam.map((member, i) => (
                                 <SupportCard key={i} member={member} />
                             ))}
                         </div>
@@ -442,7 +312,7 @@ export default function OurTeam({ supportTeam = [], driverTeam = [] }) {
                             position: 'relative',
                             zIndex: 1,
                         }}>
-                            <DriverGrid drivers={finalDrivers} />
+                            <DriverGrid drivers={driverTeam} />
                         </div>
                     </div>
                 </section>

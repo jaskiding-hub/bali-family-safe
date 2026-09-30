@@ -10,7 +10,6 @@ export default function WebsiteContent({
     stats = {},
     services = [],
     team_members = [],
-    drivers = [],
     testimonials = [],
     gallery = [],
     faqs = [],
@@ -150,7 +149,7 @@ export default function WebsiteContent({
         languages: 'English, Indonesian',
         specialty_route: '',
         is_founder: false,
-        driver_id: '',
+        role: 'Staff',
     });
 
     const editTeamForm = useForm({
@@ -163,7 +162,7 @@ export default function WebsiteContent({
         languages: '',
         specialty_route: '',
         is_founder: false,
-        driver_id: '',
+        role: 'Staff',
     });
 
     const handleAddTeamSubmit = (e) => {
@@ -190,7 +189,7 @@ export default function WebsiteContent({
             languages: member.languages || '',
             specialty_route: member.specialty_route || '',
             is_founder: Boolean(member.is_founder),
-            driver_id: member.driver_id || '',
+            role: member.role || 'Staff',
         });
         setEditTeamPhotoPreview(member.photo_url || null);
         setShowEditTeamModal(true);
@@ -753,7 +752,7 @@ export default function WebsiteContent({
                                             <th className="px-4 py-3 rounded-l-xl">Anggota</th>
                                             <th className="px-4 py-3">Peran / Jabatan</th>
                                             <th className="px-4 py-3">Pengalaman & Bahasa</th>
-                                            <th className="px-4 py-3">Tautan Driver</th>
+                                            <th className="px-4 py-3">Role / Kategori</th>
                                             <th className="px-4 py-3 text-right rounded-r-xl">Aksi</th>
                                         </tr>
                                     </thead>
@@ -790,16 +789,14 @@ export default function WebsiteContent({
                                                     <div className="text-slate-400 text-[11px]">{member.languages || 'English'}</div>
                                                 </td>
                                                 <td className="px-4 py-3.5">
-                                                    {member.driver ? (
-                                                        <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200">
-                                                            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                                                                <polyline points="20 6 9 17 4 12" />
-                                                            </svg>
-                                                            <span>{member.driver.name}</span>
-                                                        </span>
-                                                    ) : (
-                                                        <span className="text-xs text-slate-400">-</span>
-                                                    )}
+                                                    <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-lg border ${
+                                                        member.role === 'Driver' ? 'text-blue-700 bg-blue-50 border-blue-200' :
+                                                        member.role === 'Admin' ? 'text-purple-700 bg-purple-50 border-purple-200' :
+                                                        member.role === 'Customer Support' ? 'text-emerald-700 bg-emerald-50 border-emerald-200' :
+                                                        'text-slate-700 bg-slate-50 border-slate-200'
+                                                    }`}>
+                                                        {member.role || 'Staff'}
+                                                    </span>
                                                 </td>
                                                 <td className="px-4 py-3.5 text-right whitespace-nowrap">
                                                     <div className="inline-flex items-center gap-2">
@@ -1648,6 +1645,21 @@ export default function WebsiteContent({
                     </div>
 
                     <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">Role / Kategori <span className="text-red-500">*</span></label>
+                        <select
+                            required
+                            value={addTeamForm.data.role}
+                            onChange={(e) => addTeamForm.setData('role', e.target.value)}
+                            className={selectBaseClass}
+                        >
+                            <option value="Driver">Driver</option>
+                            <option value="Admin">Admin</option>
+                            <option value="Customer Support">Customer Support</option>
+                            <option value="Staff">Staff</option>
+                        </select>
+                    </div>
+
+                    <div>
                         <label className="block text-xs font-bold text-slate-700 mb-1">Pengalaman</label>
                         <input
                             type="text"
@@ -1751,22 +1763,22 @@ export default function WebsiteContent({
                         </div>
                     </div>
 
+                    <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">Role / Kategori <span className="text-red-500">*</span></label>
+                        <select
+                            required
+                            value={editTeamForm.data.role}
+                            onChange={(e) => editTeamForm.setData('role', e.target.value)}
+                            className={selectBaseClass}
+                        >
+                            <option value="Driver">Driver</option>
+                            <option value="Admin">Admin</option>
+                            <option value="Customer Support">Customer Support</option>
+                            <option value="Staff">Staff</option>
+                        </select>
+                    </div>
+
                     <div className="grid grid-cols-2 gap-3">
-                        <div>
-                            <label className="block text-xs font-bold text-slate-700 mb-1">Tautkan ke Driver</label>
-                            <select
-                                value={editTeamForm.data.driver_id}
-                                onChange={(e) => editTeamForm.setData('driver_id', e.target.value)}
-                                className={selectBaseClass}
-                            >
-                                <option value="">-- Bukan Driver / Staf Umum --</option>
-                                {drivers.map((drv) => (
-                                    <option key={drv.id} value={drv.id}>
-                                        {drv.full_name || drv.name} {drv.whatsapp_number || drv.phone ? `(${drv.whatsapp_number || drv.phone})` : ''}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
                         <div>
                             <label className="block text-xs font-bold text-slate-700 mb-1">Pengalaman</label>
                             <input

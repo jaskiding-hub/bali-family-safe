@@ -53,7 +53,7 @@ export default function Home({
             </Head>
 
             {/* Sticky Navbar */}
-            <Navbar />
+            <Navbar siteSettings={site_settings} />
 
             {/* Hero — includes BookingWidget */}
             <Hero

@@ -3,14 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class TeamMember extends Model
 {
     public $timestamps = false;
 
     protected $fillable = [
-        'driver_id',
         'name',
         'role_title',
         'bio',
@@ -19,13 +17,9 @@ class TeamMember extends Model
         'languages',
         'specialty_route',
         'is_founder',
+        'role',
         'display_order',
     ];
 
     protected $casts = ['is_founder' => 'boolean'];
-
-    public function driver(): BelongsTo
-    {
-        return $this->belongsTo(Driver::class);
-    }
 }

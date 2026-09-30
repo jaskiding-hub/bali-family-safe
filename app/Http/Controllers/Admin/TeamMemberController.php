@@ -22,7 +22,7 @@ class TeamMemberController extends Controller
             'languages' => ['nullable', 'string', 'max:255'],
             'specialty_route' => ['nullable', 'string', 'max:255'],
             'is_founder' => ['nullable', 'boolean'],
-            'driver_id' => ['nullable', 'integer', 'exists:drivers,id'],
+            'role' => ['required', 'string', 'in:Driver,Admin,Customer Support,Staff'],
         ]);
 
         DB::transaction(function () use ($request, $validated) {
@@ -34,7 +34,7 @@ class TeamMemberController extends Controller
                 'languages' => $validated['languages'] ?? null,
                 'specialty_route' => $validated['specialty_route'] ?? null,
                 'is_founder' => ! empty($validated['is_founder']),
-                'driver_id' => ! empty($validated['driver_id']) ? $validated['driver_id'] : null,
+                'role' => $validated['role'],
                 'display_order' => (int) (TeamMember::max('display_order') ?? 0) + 1,
             ];
 
@@ -61,7 +61,7 @@ class TeamMemberController extends Controller
             'languages' => ['nullable', 'string', 'max:255'],
             'specialty_route' => ['nullable', 'string', 'max:255'],
             'is_founder' => ['nullable', 'boolean'],
-            'driver_id' => ['nullable', 'integer', 'exists:drivers,id'],
+            'role' => ['required', 'string', 'in:Driver,Admin,Customer Support,Staff'],
         ]);
 
         DB::transaction(function () use ($request, $team_member, $validated) {
@@ -73,7 +73,7 @@ class TeamMemberController extends Controller
                 'languages' => $validated['languages'] ?? null,
                 'specialty_route' => $validated['specialty_route'] ?? null,
                 'is_founder' => ! empty($validated['is_founder']),
-                'driver_id' => ! empty($validated['driver_id']) ? $validated['driver_id'] : null,
+                'role' => $validated['role'],
             ];
 
             if ($request->hasFile('photo')) {

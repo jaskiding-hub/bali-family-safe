@@ -22,13 +22,16 @@ const IconClock = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="cu
 const IconTourMap = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M20.5 3l-.16.03L15 5.1 9 3 3.36 4.9c-.21.07-.36.25-.36.48V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.64-1.9c.21-.07.36-.25.36-.48V3.5c0-.28-.22-.5-.5-.5zM15 19l-6-2.11V5l6 2.11V19z"/></svg>;
 const IconNote = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>;
 
-export default function DayTourForm({ packages = [], vehicles = [], childSeatTypes = [] }) {
+export default function DayTourForm({ packages = [], vehicles = [], childSeatTypes = [], siteSettings = null }) {
     const { flash = {} } = usePage().props;
     const [selectedSeats, setSelectedSeats] = useState({});
     const [estimatedFee, setEstimatedFee] = useState(null);
     const [loadingEstimate, setLoadingEstimate] = useState(false);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [showCapacityModal, setShowCapacityModal] = useState(false);
+
+    // Get WhatsApp number from settings or fallback
+    const waNumber = (siteSettings?.whatsapp_number || '6281234567890').replace(/[^0-9]/g, '');
 
     const defaultVehicle = vehicles[0];
     const defaultPackage = packages[0];
@@ -149,7 +152,7 @@ export default function DayTourForm({ packages = [], vehicles = [], childSeatTyp
 - Estimated Price: ${estimatedFee ? `Rp ${Number(estimatedFee).toLocaleString('id-ID')}` : 'To be confirmed'}
 - Notes: ${data.notes || '-'}`;
 
-        window.open(`https://wa.me/6281234567890?text=${encodeURIComponent(msg)}`, '_blank');
+        window.open(`https://wa.me/${waNumber}?text=${encodeURIComponent(msg)}`, '_blank');
     };
 
     return (

@@ -2,99 +2,14 @@ import React, { useState, useMemo } from 'react';
 import GalleryModal from './GalleryModal';
 import { MagnifyingGlassPlus, Images } from '@phosphor-icons/react';
 
-// Curated authentic photography for Bali Family Safe
-const DEFAULT_PHOTO_CATALOG = [
-    {
-        id: 'photo-1',
-        src: '/images/gallery/infant-capsule-isofix.jpg',
-        title: 'Certified Infant Safety Capsule',
-        caption: 'Rear-facing capsule with ISOFIX base and plush newborn insert for maximum spine protection.',
-        category: 'safety',
-        categoryLabel: 'Car Seat',
-        alt: 'Certified rear-facing infant safety capsule installed with ISOFIX in Bali Family Safe vehicle',
-    },
-    {
-        id: 'photo-2',
-        src: '/images/gallery/toddler-car-seat.jpg',
-        title: 'Forward-Facing Toddler Seat',
-        caption: 'Premium 5-point harness car seat for toddlers aged 1 to 4 years, cleaned and steam-sanitized.',
-        category: 'safety',
-        categoryLabel: 'Car Seat',
-        alt: 'Clean forward-facing toddler seat with child riding comfortably',
-    },
-    {
-        id: 'photo-3',
-        src: '/images/gallery/isofix-safety-inspection.jpg',
-        title: 'Professional Safety Protocol',
-        caption: 'Rigorous ISOFIX anchor verification and sanitize check before every family arrival.',
-        category: 'safety',
-        categoryLabel: 'Safety Protocol',
-        alt: 'Professional hands inspecting child car seat ISOFIX anchor installation',
-    },
-    {
-        id: 'photo-4',
-        src: '/images/gallery/luxury-cabin-interior.jpg',
-        title: 'Spacious Family Cabin & Cold A/C',
-        caption: 'Leather captain seating with dedicated rear climate control vents for hot Bali afternoons.',
-        category: 'fleet',
-        categoryLabel: 'Fleet Interior',
-        alt: 'Spotless vehicle interior with captain seats and child car seat',
-    },
-    {
-        id: 'photo-5',
-        src: '/images/gallery/innova-exterior-villa.jpg',
-        title: 'Toyota Innova Reborn Fleet',
-        caption: 'Immaculate family MPV ready for private hotel pickup and comfortable day tours.',
-        category: 'fleet',
-        categoryLabel: 'Vehicle Fleet',
-        alt: 'White Toyota Innova family vehicle parked at Bali villa',
-    },
-    {
-        id: 'photo-6',
-        src: '/images/gallery/airport-driver-greeting.jpg',
-        title: 'Ngurah Rai Airport Welcome',
-        caption: 'Warm, personalized arrival greeting at DPS Airport with name signboard and luggage care.',
-        category: 'tours',
-        categoryLabel: 'Airport Transfer',
-        alt: 'Friendly Balinese private driver with airport greeting sign',
-    },
-    {
-        id: 'photo-7',
-        src: '/images/gallery/ubud-rice-terrace-family.jpg',
-        title: 'Scenic Ubud Day Tour',
-        caption: 'Gentle family day tour through Tegallalang rice terraces with flexible rest stops.',
-        category: 'tours',
-        categoryLabel: 'Private Tour',
-        alt: 'Family enjoying scenic Ubud rice terraces in Bali',
-    },
-    {
-        id: 'photo-8',
-        src: '/images/gallery/ulun-danu-temple-family.jpg',
-        title: 'Ulun Danu Beratan Excursion',
-        caption: 'Tranquil highland excursion surrounded by cool mountain air and historic lake temples.',
-        category: 'tours',
-        categoryLabel: 'Culture & Nature',
-        alt: 'Family walking near Ulun Danu Beratan water temple in Bali',
-    },
-    {
-        id: 'photo-9',
-        src: '/images/gallery/sanur-beach-sunset-family.jpg',
-        title: 'Calm Family Beach Transfers',
-        caption: 'Smooth private transfer to swimmable, family-friendly beaches along Sanur coast.',
-        category: 'tours',
-        categoryLabel: 'Beach & Coastal',
-        alt: 'Family walking along calm Bali beach at golden sunset',
-    },
-];
-
 export default function GallerySection({ gallery = [] }) {
     const [lightboxOpen, setLightboxOpen] = useState(false);
     const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(0);
 
-    // Merge backend photos with default catalog
+    // Format CMS gallery data
     const allPhotos = useMemo(() => {
         if (gallery && gallery.length > 0) {
-            const formattedBackend = gallery.map((item, index) => {
+            return gallery.map((item, index) => {
                 const category = item.category || (index % 3 === 0 ? 'safety' : index % 3 === 1 ? 'fleet' : 'tours');
                 return {
                     id: item.id || `db-${index}`,
@@ -106,13 +21,8 @@ export default function GallerySection({ gallery = [] }) {
                     alt: item.caption || 'Bali Family Safe Tours gallery photo',
                 };
             });
-
-            const existingUrls = new Set(formattedBackend.map((p) => p.src));
-            const extra = DEFAULT_PHOTO_CATALOG.filter((p) => !existingUrls.has(p.src));
-            return [...formattedBackend, ...extra];
         }
-
-        return DEFAULT_PHOTO_CATALOG;
+        return [];
     }, [gallery]);
 
     // Show only first 4 photos in preview
@@ -255,16 +165,16 @@ export default function GallerySection({ gallery = [] }) {
                 </div>
 
                 {/* ── VIEW ALL BUTTON ── */}
-                {allPhotos.length > 4 && (
+                {allPhotos.length > 0 && (
                     <div className="flex justify-center mt-8 sm:mt-10">
                         <button
                             type="button"
                             onClick={handleViewAll}
-                            className="group inline-flex items-center gap-2.5 px-6 py-3.5 bg-slate-900 hover:bg-slate-800 text-white font-semibold text-sm rounded-full shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-105 active:scale-95"
+                            className="group inline-flex items-center gap-2.5 px-6 py-3.5 bg-[#00658D] hover:bg-[#004d6b] text-white font-semibold text-sm rounded-full shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-105 active:scale-95"
                         >
                             <Images size={20} weight="bold" />
                             <span>View All Photos</span>
-                            <span className="text-xs text-slate-300 bg-slate-800/50 px-2 py-0.5 rounded-full">
+                            <span className="text-xs text-white/80 bg-white/20 px-2 py-0.5 rounded-full">
                                 {allPhotos.length}
                             </span>
                         </button>

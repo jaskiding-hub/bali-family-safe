@@ -14,10 +14,13 @@ const NAV_LINKS = [
     { label: 'FAQ', href: '#faq' },
 ];
 
-export default function Navbar() {
+export default function Navbar({ siteSettings = null }) {
     const [scrolled, setScrolled] = useState(false);
     const [mobileOpen, setMobileOpen] = useState(false);
     const [mounted, setMounted] = useState(false);
+
+    // Get WhatsApp number from settings or fallback
+    const waNumber = (siteSettings?.whatsapp_number || '6281234567890').replace(/[^0-9]/g, '');
     const [activeSection, setActiveSection] = useState('#hero');
 
     useEffect(() => {
@@ -282,7 +285,7 @@ export default function Navbar() {
                         gap: '10px',
                     }}>
                         <a
-                            href="https://wa.me/6281234567890"
+                            href={`https://wa.me/${waNumber}`}
                             target="_blank"
                             rel="noreferrer"
                             style={{

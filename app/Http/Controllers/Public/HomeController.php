@@ -186,7 +186,7 @@ class HomeController extends Controller
 
         $siteSettings = SiteSetting::first();
 
-        $teamMembers = TeamMember::with('driver')->orderBy('display_order', 'asc')->get()->map(function (TeamMember $tm) {
+        $teamMembers = TeamMember::orderBy('display_order', 'asc')->get()->map(function (TeamMember $tm) {
             return [
                 'id' => $tm->id,
                 'name' => $tm->name,
@@ -200,8 +200,6 @@ class HomeController extends Controller
                 'specialty_route' => $tm->specialty_route,
                 'specialty' => ($tm->years_experience ? $tm->years_experience . ' experience' : '') . ($tm->specialty_route ? ' • ' . $tm->specialty_route : ''),
                 'is_founder' => (bool) $tm->is_founder,
-                'driver_id' => $tm->driver_id,
-                'type' => $tm->driver_id ? 'driver' : 'staff',
             ];
         });
 

@@ -195,7 +195,7 @@ function FleetModal({ vehicle, onClose }) {
                         <button
                             type="button"
                             onClick={scrollToBooking}
-                            className="w-full py-2.5 bg-sky-900 hover:bg-sky-950 text-white font-bold rounded-xl shadow-md active:scale-[0.98] transition-all cursor-pointer text-xs sm:text-sm text-center"
+                            className="w-full py-2.5 bg-[#00658D] hover:bg-[#004d6b] text-white font-bold rounded-xl shadow-md active:scale-[0.98] transition-all cursor-pointer text-xs sm:text-sm text-center"
                         >
                             Book This Vehicle Now
                         </button>
@@ -212,29 +212,39 @@ export default function FleetSection({ vehicles = [] }) {
 
     const displayFleet = vehicles && vehicles.length > 0
         ? vehicles.map((car, i) => {
-            const fallback = FLEET[i % FLEET.length];
+            const seatCount = car.category?.includes('HiAce') || car.category?.includes('Commuter')
+                ? '3+ Car Seats'
+                : (car.passenger_capacity > 5 ? '2 Car Seats' : '1 Car Seat');
+
+            const defaultFeatures = [
+                'Air-conditioned cabin for comfort',
+                'Professional English-speaking driver',
+                'Cleaned and sanitized before every trip',
+                'USB charging ports available',
+            ];
+
             return {
-                title: car.name,
+                title: car.name || 'Vehicle',
                 capacity: `1–${car.passenger_capacity || 6} Passengers`,
-                seats: car.category?.includes('HiAce') ? '3+ Car Seats' : (car.passenger_capacity > 5 ? '2 Car Seats' : '1 Car Seat'),
-                price: car.daily_rate ? `From Rp ${Number(car.daily_rate).toLocaleString()} / day` : fallback.price,
-                badge: i === 1 ? 'MOST POPULAR' : null,
-                img: car.photo_url || fallback.img,
-                shortDesc: car.description || fallback.shortDesc,
-                highlighted: i === 1,
+                seats: seatCount,
+                price: car.daily_rate ? `From Rp ${Number(car.daily_rate).toLocaleString()} / day` : 'Contact for price',
+                badge: car.is_featured ? 'MOST POPULAR' : null,
+                img: car.photo_url || 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=600&q=80',
+                shortDesc: car.description || 'Comfortable family vehicle with air conditioning and professional driver.',
+                highlighted: car.is_featured || false,
                 details: {
-                    heading: car.name,
-                    description: car.description || fallback.details.description,
+                    heading: car.name || 'Vehicle',
+                    description: car.description || 'Comfortable and reliable family vehicle perfect for exploring Bali with certified child car seats and professional English-speaking driver.',
                     specs: [
                         { label: 'Passenger Capacity', value: `1–${car.passenger_capacity || 6} passengers + driver` },
-                        { label: 'Car Seats', value: car.passenger_capacity > 5 ? 'Up to 2 certified child seats' : '1 certified child seat' },
-                        { label: 'Luggage Space', value: `${car.luggage_capacity || 3} medium/large suitcases + stroller` },
-                        { label: 'Air Conditioning', value: car.ac_info || 'Dual-zone climate control with rear vents' },
+                        { label: 'Car Seats', value: seatCount.replace('Car Seats', 'certified child seat(s) available') },
+                        { label: 'Luggage Space', value: car.luggage_capacity ? `${car.luggage_capacity} suitcase(s) + stroller` : 'Standard luggage space + stroller' },
+                        { label: 'Air Conditioning', value: car.features?.includes('AC') || car.name?.toLowerCase().includes('ac') ? 'Full cabin air conditioning' : 'Climate control available' },
                     ],
                     features: (car.key_features && Array.isArray(car.key_features) && car.key_features.length > 0)
                         ? car.key_features
-                        : (car.features && car.features.length > 0 ? car.features : fallback.details.features),
-                    bestFor: fallback.details.bestFor,
+                        : (car.features && Array.isArray(car.features) && car.features.length > 0 ? car.features : defaultFeatures),
+                    bestFor: car.best_for || `Perfect for ${car.passenger_capacity <= 4 ? 'small' : car.passenger_capacity <= 6 ? 'medium' : 'large'} families and group travel.`,
                 },
             };
         })

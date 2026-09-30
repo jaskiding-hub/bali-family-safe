@@ -299,9 +299,21 @@ export function BookingFooter({ onWhatsApp, onBook, estimatedFee, loadingEstimat
                     <span style={{ fontSize: '14px', fontWeight: 500, color: '#475569' }}>
                         Estimated fare
                     </span>
-                    <span style={{ fontSize: '18px', fontWeight: 600, color: '#1E293B' }}>
-                        {loadingEstimate ? '—' : `Rp ${Number(estimatedFee).toLocaleString('id-ID')}`}
-                    </span>
+                    {loadingEstimate ? (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <circle cx="12" cy="12" r="10" strokeWidth="4" className="opacity-25" stroke="#CBD5E1" />
+                                <path fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" className="opacity-75" />
+                            </svg>
+                            <span style={{ fontSize: '14px', fontWeight: 500, color: '#94A3B8' }}>
+                                Calculating...
+                            </span>
+                        </div>
+                    ) : (
+                        <span style={{ fontSize: '18px', fontWeight: 600, color: '#1E293B' }}>
+                            Rp {Number(estimatedFee).toLocaleString('id-ID')}
+                        </span>
+                    )}
                 </div>
             )}
 

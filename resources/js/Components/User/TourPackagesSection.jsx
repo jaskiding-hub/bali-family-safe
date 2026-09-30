@@ -4,6 +4,13 @@ import { Link } from '@inertiajs/react';
 export default function TourPackagesSection({ packages = [] }) {
     const tourList = packages.length > 0 ? packages.slice(0, 3) : [];
 
+    const scrollToBooking = () => {
+        const bookingSection = document.getElementById('booking');
+        if (bookingSection) {
+            bookingSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    };
+
     return (
         <section
             id="tours"
@@ -131,7 +138,7 @@ export default function TourPackagesSection({ packages = [] }) {
                                         {tourDesc}
                                     </p>
 
-                                    {/* Horizontal border + View Details button */}
+                                    {/* Horizontal border + Book button */}
                                     <div style={{
                                         display: 'flex',
                                         flexDirection: 'row',
@@ -141,13 +148,13 @@ export default function TourPackagesSection({ packages = [] }) {
                                         marginTop: '24px',
                                         borderTop: '1px solid #E1E3E4',
                                     }}>
-                                        <Link
-                                            href={tourLink}
-                                            className="btn-secondary-hover-fluid inline-flex items-center justify-center px-4 py-2 rounded-xl text-white font-medium text-xs bg-[#3E5E96] hover:bg-[#2e4f82] cursor-pointer shadow-xs"
-                                            style={{ textDecoration: 'none' }}
+                                        <button
+                                            type="button"
+                                            onClick={scrollToBooking}
+                                            className="btn-secondary-hover-fluid inline-flex items-center justify-center px-4 py-2 rounded-xl text-white font-medium text-xs bg-[#00658D] hover:bg-[#004d6b] cursor-pointer shadow-xs"
                                         >
-                                            View Details
-                                        </Link>
+                                            Book This Tour
+                                        </button>
                                     </div>
                                 </div>
                             </div>
