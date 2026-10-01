@@ -153,21 +153,90 @@ export default function BookingModal({ isOpen, onClose, bookingData }) {
                             </p>
 
                             {/* Actions */}
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid grid-cols-2 gap-3.5">
                                 <button
                                     type="button"
                                     onClick={handleWhatsAppConfirm}
-                                    className="flex items-center justify-center gap-2 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-medium rounded-lg transition-colors"
+                                    style={{
+                                        position: 'relative',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        gap: '9px',
+                                        padding: '13px 20px',
+                                        background: 'linear-gradient(135deg, #25D366 0%, #22C55E 100%)',
+                                        border: 'none',
+                                        borderRadius: '10px',
+                                        cursor: 'pointer',
+                                        fontFamily: 'Inter, sans-serif',
+                                        fontWeight: 600,
+                                        fontSize: '15px',
+                                        letterSpacing: '-0.01em',
+                                        color: '#FFFFFF',
+                                        transition: 'all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                                        boxShadow: '0 4px 14px 0 rgba(37, 211, 102, 0.3), 0 1px 3px 0 rgba(0, 0, 0, 0.08)',
+                                        overflow: 'hidden',
+                                    }}
+                                    onMouseEnter={e => {
+                                        e.currentTarget.style.transform = 'translateY(-2px) scale(1.02)';
+                                        e.currentTarget.style.boxShadow = '0 8px 24px 0 rgba(37, 211, 102, 0.4), 0 4px 8px 0 rgba(0, 0, 0, 0.1)';
+                                    }}
+                                    onMouseLeave={e => {
+                                        e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                                        e.currentTarget.style.boxShadow = '0 4px 14px 0 rgba(37, 211, 102, 0.3), 0 1px 3px 0 rgba(0, 0, 0, 0.08)';
+                                    }}
+                                    onMouseDown={e => {
+                                        e.currentTarget.style.transform = 'translateY(0) scale(0.98)';
+                                        e.currentTarget.style.boxShadow = '0 2px 8px 0 rgba(37, 211, 102, 0.25), 0 1px 2px 0 rgba(0, 0, 0, 0.08)';
+                                    }}
+                                    onMouseUp={e => {
+                                        e.currentTarget.style.transform = 'translateY(-2px) scale(1.02)';
+                                        e.currentTarget.style.boxShadow = '0 8px 24px 0 rgba(37, 211, 102, 0.4), 0 4px 8px 0 rgba(0, 0, 0, 0.1)';
+                                    }}
                                 >
-                                    <WhatsappLogo size={18} weight="fill" />
-                                    <span>WhatsApp</span>
+                                    <WhatsappLogo size={19} weight="fill" style={{ filter: 'drop-shadow(0 1px 1px rgba(0,0,0,0.1))' }} />
+                                    <span style={{ textShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>WhatsApp</span>
                                 </button>
                                 <button
                                     type="button"
                                     onClick={handleDirectSubmit}
-                                    className="py-3 bg-slate-900 hover:bg-slate-800 text-white font-medium rounded-lg transition-colors"
+                                    style={{
+                                        position: 'relative',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        padding: '13px 20px',
+                                        background: 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)',
+                                        border: 'none',
+                                        borderRadius: '10px',
+                                        cursor: 'pointer',
+                                        fontFamily: 'Inter, sans-serif',
+                                        fontWeight: 600,
+                                        fontSize: '15px',
+                                        letterSpacing: '-0.01em',
+                                        color: '#FFFFFF',
+                                        transition: 'all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                                        boxShadow: '0 4px 14px 0 rgba(59, 130, 246, 0.35), 0 1px 3px 0 rgba(0, 0, 0, 0.08)',
+                                        overflow: 'hidden',
+                                    }}
+                                    onMouseEnter={e => {
+                                        e.currentTarget.style.transform = 'translateY(-2px) scale(1.02)';
+                                        e.currentTarget.style.boxShadow = '0 8px 24px 0 rgba(59, 130, 246, 0.45), 0 4px 8px 0 rgba(0, 0, 0, 0.1)';
+                                    }}
+                                    onMouseLeave={e => {
+                                        e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                                        e.currentTarget.style.boxShadow = '0 4px 14px 0 rgba(59, 130, 246, 0.35), 0 1px 3px 0 rgba(0, 0, 0, 0.08)';
+                                    }}
+                                    onMouseDown={e => {
+                                        e.currentTarget.style.transform = 'translateY(0) scale(0.98)';
+                                        e.currentTarget.style.boxShadow = '0 2px 8px 0 rgba(59, 130, 246, 0.3), 0 1px 2px 0 rgba(0, 0, 0, 0.08)';
+                                    }}
+                                    onMouseUp={e => {
+                                        e.currentTarget.style.transform = 'translateY(-2px) scale(1.02)';
+                                        e.currentTarget.style.boxShadow = '0 8px 24px 0 rgba(59, 130, 246, 0.45), 0 4px 8px 0 rgba(0, 0, 0, 0.1)';
+                                    }}
                                 >
-                                    Book now
+                                    <span style={{ textShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>Book now</span>
                                 </button>
                             </div>
                         </div>
