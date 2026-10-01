@@ -25,6 +25,7 @@ class Driver extends Authenticatable
         'profile_photo_url',
         'status',
         'is_online',
+        'remember_token',
     ];
 
     protected $casts = [

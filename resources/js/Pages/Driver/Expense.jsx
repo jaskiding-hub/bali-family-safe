@@ -288,7 +288,6 @@ export default function Expense({ trip, authDriver }) {
                         {expenses.length > 0 ? (
                             expenses.map((savedExp) => {
                                 const hasReceipt = !!savedExp.receipt_path;
-                                const timeStr = savedExp.created_at ? (typeof savedExp.created_at === 'string' && savedExp.created_at.includes('T') ? new Date(savedExp.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : savedExp.created_at) : null;
 
                                 return (
                                     <div 
@@ -311,11 +310,6 @@ export default function Expense({ trip, authDriver }) {
                                                 ) : (
                                                     <span className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200/60">
                                                         No Receipt
-                                                    </span>
-                                                )}
-                                                {timeStr && (
-                                                    <span className="text-[11px] text-slate-400">
-                                                        • {timeStr}
                                                     </span>
                                                 )}
                                             </div>
@@ -532,7 +526,7 @@ export default function Expense({ trip, authDriver }) {
                         <button
                             type="submit"
                             disabled={isSubmitting}
-                            className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition shadow-xs cursor-pointer disabled:opacity-60"
+                            className="px-5 py-2.5 bg-[#00AEEF] hover:bg-[#009cd7] active:scale-[0.98] text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition shadow-xs cursor-pointer disabled:opacity-60"
                         >
                             <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />

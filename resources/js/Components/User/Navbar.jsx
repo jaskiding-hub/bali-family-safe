@@ -69,15 +69,44 @@ export default function Navbar({ siteSettings = null }) {
     }, [mobileOpen]);
 
     const scrollTo = (e, href) => {
+        if (e) e.preventDefault();
         setMobileOpen(false);
-        const el = document.querySelector(href);
-        if (el) {
-            e.preventDefault();
-            el.scrollIntoView({ behavior: 'smooth' });
-        } else if (href.startsWith('#')) {
-            e.preventDefault();
+        document.body.style.overflow = 'unset';
+        document.body.style.removeProperty('overflow');
+
+        if (window.location.pathname !== '/' && window.location.pathname !== '') {
             window.location.href = '/' + href;
+            return;
         }
+
+        setTimeout(() => {
+            if (href === '#hero' || href === '#home') {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                setActiveSection('#hero');
+                return;
+            }
+
+            let el = document.querySelector(href);
+            if (!el && href === '#drivers') {
+                el = document.querySelector('#team') || document.querySelector('#our-team');
+            }
+            if (!el && href === '#tours') {
+                el = document.querySelector('#day-tours') || document.querySelector('#packages');
+            }
+
+            if (el) {
+                const navHeight = 75;
+                const rect = el.getBoundingClientRect();
+                const offsetTop = rect.top + window.pageYOffset - navHeight;
+                window.scrollTo({
+                    top: Math.max(0, offsetTop),
+                    behavior: 'smooth'
+                });
+                setActiveSection(href);
+            } else if (href.startsWith('#')) {
+                window.location.href = '/' + href;
+            }
+        }, 80);
     };
 
     return (

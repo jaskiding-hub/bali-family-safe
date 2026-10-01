@@ -522,6 +522,7 @@ input, select, textarea, button {
         align-items: center !important;
     }
     .bfs-about-flex > div:first-child {
+        width: 100% !important;
         height: 280px !important;
         max-width: 100% !important;
     }

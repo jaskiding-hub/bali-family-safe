@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useForm, router, usePage, Head } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import Modal from '@/Components/Modal';
@@ -62,11 +62,31 @@ export default function MasterData({
         photo: null,
     });
 
+    const isFirstVehicleSearch = useRef(true);
+    useEffect(() => {
+        if (isFirstVehicleSearch.current) {
+            isFirstVehicleSearch.current = false;
+            return;
+        }
+        const timer = setTimeout(() => {
+            router.get(
+                '/admin/master-data',
+                {
+                    tab: 'vehicles',
+                    search_vehicle: vehicleSearch || undefined,
+                    category_vehicle: selectedVehicleCategory !== 'all' ? selectedVehicleCategory : undefined,
+                },
+                { preserveState: true, replace: true }
+            );
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [vehicleSearch]);
+
     const handleVehicleFilterSubmit = (e) => {
-        e.preventDefault();
+        if (e && e.preventDefault) e.preventDefault();
         router.get(
             '/admin/master-data',
-            { tab: 'vehicles', search_vehicle: vehicleSearch, category_vehicle: selectedVehicleCategory },
+            { tab: 'vehicles', search_vehicle: vehicleSearch || undefined, category_vehicle: selectedVehicleCategory !== 'all' ? selectedVehicleCategory : undefined },
             { preserveState: true, replace: true }
         );
     };
@@ -263,15 +283,36 @@ export default function MasterData({
         highlights: [],
     });
 
+    const isFirstPackageSearch = useRef(true);
+    useEffect(() => {
+        if (isFirstPackageSearch.current) {
+            isFirstPackageSearch.current = false;
+            return;
+        }
+        const timer = setTimeout(() => {
+            router.get(
+                '/admin/master-data',
+                {
+                    tab: 'packages',
+                    search_package: packageSearch || undefined,
+                    type_package: selectedPackageType !== 'all' ? selectedPackageType : undefined,
+                    duration_package: selectedPackageDuration !== 'all' ? selectedPackageDuration : undefined,
+                },
+                { preserveState: true, replace: true }
+            );
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [packageSearch]);
+
     const handlePackageFilterSubmit = (e) => {
-        e.preventDefault();
+        if (e && e.preventDefault) e.preventDefault();
         router.get(
             '/admin/master-data',
             {
                 tab: 'packages',
-                search_package: packageSearch,
-                type_package: selectedPackageType,
-                duration_package: selectedPackageDuration,
+                search_package: packageSearch || undefined,
+                type_package: selectedPackageType !== 'all' ? selectedPackageType : undefined,
+                duration_package: selectedPackageDuration !== 'all' ? selectedPackageDuration : undefined,
             },
             { preserveState: true, replace: true }
         );
@@ -459,11 +500,27 @@ export default function MasterData({
         profile_photo: null,
     });
 
+    const isFirstDriverSearch = useRef(true);
+    useEffect(() => {
+        if (isFirstDriverSearch.current) {
+            isFirstDriverSearch.current = false;
+            return;
+        }
+        const timer = setTimeout(() => {
+            router.get(
+                '/admin/master-data',
+                { tab: 'drivers', search_driver: driverSearch || undefined },
+                { preserveState: true, replace: true }
+            );
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [driverSearch]);
+
     const handleDriverSearch = (e) => {
-        e.preventDefault();
+        if (e && e.preventDefault) e.preventDefault();
         router.get(
             '/admin/master-data',
-            { tab: 'drivers', search_driver: driverSearch },
+            { tab: 'drivers', search_driver: driverSearch || undefined },
             { preserveState: true, replace: true }
         );
     };
@@ -558,11 +615,27 @@ export default function MasterData({
         airport_ids: [],
     });
 
+    const isFirstHotelSearch = useRef(true);
+    useEffect(() => {
+        if (isFirstHotelSearch.current) {
+            isFirstHotelSearch.current = false;
+            return;
+        }
+        const timer = setTimeout(() => {
+            router.get(
+                '/admin/master-data',
+                { tab: 'hotels', search_hotel: hotelSearch || undefined },
+                { preserveState: true, replace: true }
+            );
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [hotelSearch]);
+
     const handleHotelSearch = (e) => {
-        e.preventDefault();
+        if (e && e.preventDefault) e.preventDefault();
         router.get(
             '/admin/master-data',
-            { tab: 'hotels', search_hotel: hotelSearch },
+            { tab: 'hotels', search_hotel: hotelSearch || undefined },
             { preserveState: true, replace: true }
         );
     };
@@ -641,11 +714,35 @@ export default function MasterData({
         unit_prices: {},
     });
 
+    const isFirstAirportSearch = useRef(true);
+    useEffect(() => {
+        if (isFirstAirportSearch.current) {
+            isFirstAirportSearch.current = false;
+            return;
+        }
+        const timer = setTimeout(() => {
+            router.get(
+                '/admin/master-data',
+                {
+                    tab: 'airports',
+                    search_airport: airportSearch || undefined,
+                    type_airport: airportTypeFilter !== 'all' ? airportTypeFilter : undefined,
+                },
+                { preserveState: true, replace: true }
+            );
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [airportSearch]);
+
     const handleAirportFilterSubmit = (e) => {
-        e.preventDefault();
+        if (e && e.preventDefault) e.preventDefault();
         router.get(
             '/admin/master-data',
-            { tab: 'airports', search_airport: airportSearch, type_airport: airportTypeFilter },
+            {
+                tab: 'airports',
+                search_airport: airportSearch || undefined,
+                type_airport: airportTypeFilter !== 'all' ? airportTypeFilter : undefined,
+            },
             { preserveState: true, replace: true }
         );
     };
@@ -726,11 +823,27 @@ export default function MasterData({
         unit_prices: {},
     });
 
+    const isFirstHotelPriceSearch = useRef(true);
+    useEffect(() => {
+        if (isFirstHotelPriceSearch.current) {
+            isFirstHotelPriceSearch.current = false;
+            return;
+        }
+        const timer = setTimeout(() => {
+            router.get(
+                '/admin/master-data',
+                { tab: 'hotel_transfer_price_lists', search_hotel_pricelist: hotelPriceSearch || undefined },
+                { preserveState: true, replace: true }
+            );
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [hotelPriceSearch]);
+
     const handleHotelPriceSearch = (e) => {
-        e.preventDefault();
+        if (e && e.preventDefault) e.preventDefault();
         router.get(
             '/admin/master-data',
-            { tab: 'hotel_transfer_price_lists', search_hotel_pricelist: hotelPriceSearch },
+            { tab: 'hotel_transfer_price_lists', search_hotel_pricelist: hotelPriceSearch || undefined },
             { preserveState: true, replace: true }
         );
     };

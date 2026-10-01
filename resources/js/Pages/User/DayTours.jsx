@@ -183,52 +183,17 @@ export default function DayTours({ packages = [] }) {
                     maxWidth: '800px',
                     padding: '0 24px',
                 }}>
-                    <div style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        padding: '6px 16px',
-                        background: 'rgba(0, 27, 64, 0.5)',
-                        border: '1px solid rgba(198, 231, 255, 0.2)',
-                        backdropFilter: 'blur(2px)',
-                        WebkitBackdropFilter: 'blur(2px)',
-                        borderRadius: '9999px',
-                        marginBottom: '16px',
-                    }}>
-                        <span style={{
-                            fontFamily: "'Inter', sans-serif",
-                            fontWeight: 600,
-                            fontSize: '14px',
-                            lineHeight: '20px',
-                            letterSpacing: '2.8px',
-                            textTransform: 'uppercase',
-                            color: '#82CFFF',
-                        }}>
+                    <div className="inline-flex items-center px-3.5 py-1 bg-[#001B40]/60 border border-[#C6E7FF]/25 backdrop-blur-xs rounded-full mb-3.5 shadow-xs">
+                        <span className="font-['Inter'] font-semibold text-xs tracking-widest uppercase text-[#82CFFF]">
                             EXPLORE BALI
                         </span>
                     </div>
 
-                    <h1 style={{
-                        fontFamily: "'Inter', sans-serif",
-                        fontWeight: 700,
-                        fontSize: '64px',
-                        lineHeight: '72px',
-                        letterSpacing: '-1.8px',
-                        color: '#FFFFFF',
-                        filter: 'drop-shadow(0px 4px 3px rgba(0, 0, 0, 0.1)) drop-shadow(0px 10px 8px rgba(0, 0, 0, 0.04))',
-                        margin: '0 0 16px 0',
-                    }}>
+                    <h1 className="font-['Inter'] font-bold text-3xl sm:text-4xl lg:text-[42px] lg:leading-[50px] text-white tracking-tight mb-3 drop-shadow-md">
                         All Day Tour Packages
                     </h1>
 
-                    <p style={{
-                        fontFamily: "'Inter', sans-serif",
-                        fontWeight: 600,
-                        fontSize: '24px',
-                        lineHeight: '32px',
-                        color: '#F8F9FA',
-                        filter: 'drop-shadow(0px 2px 2px rgba(0, 0, 0, 0.06)) drop-shadow(0px 4px 3px rgba(0, 0, 0, 0.07))',
-                        margin: 0,
-                    }}>
+                    <p className="font-['Inter'] font-medium text-sm sm:text-base lg:text-lg text-slate-100/95 max-w-2xl mx-auto leading-relaxed drop-shadow-sm">
                         Choose your perfect Bali adventure with private driver and family-safe transport
                     </p>
                 </div>

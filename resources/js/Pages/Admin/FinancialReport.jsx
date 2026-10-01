@@ -92,9 +92,33 @@ export default function FinancialReport({
         router.get('/admin/financial-report', { period: 'all_time', search: searchQuery || undefined }, { preserveState: true, replace: true });
     };
 
+    // Real-time Debounced Search
+    const isFirstSearchRender = useRef(true);
+    useEffect(() => {
+        if (isFirstSearchRender.current) {
+            isFirstSearchRender.current = false;
+            return;
+        }
+
+        const timer = setTimeout(() => {
+            router.get(
+                '/admin/financial-report',
+                {
+                    period: filters.period,
+                    month: filters.month || undefined,
+                    year: filters.year || undefined,
+                    search: searchQuery || undefined,
+                },
+                { preserveState: true, replace: true }
+            );
+        }, 300);
+
+        return () => clearTimeout(timer);
+    }, [searchQuery]);
+
     // Search submit
     const handleSearch = (e) => {
-        e.preventDefault();
+        if (e && e.preventDefault) e.preventDefault();
         router.get(
             '/admin/financial-report',
             {

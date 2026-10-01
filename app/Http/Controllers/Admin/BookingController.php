@@ -31,19 +31,33 @@ class BookingController extends Controller
 {
     public function index(Request $request): Response
     {
-        // 1. 4 Stat Cards
+        // 1. 4 Stat Cards: All Bookings, Airport, Day Tour, Hotel Transfer
         $allBookingsCount = Booking::count();
+        $airportCount = Booking::where('booking_type', BookingType::AirportTransfer->value)->count();
+        $dayTourCount = Booking::where('booking_type', BookingType::DayTour->value)->count();
+        $hotelTransferCount = Booking::where('booking_type', BookingType::HotelTransfer->value)->count();
         $airportPickupCount = Booking::where('booking_type', BookingType::AirportTransfer->value)
             ->where('transfer_direction', TransferDirection::PickUp->value)
             ->count();
         $airportDropoffCount = Booking::where('booking_type', BookingType::AirportTransfer->value)
             ->where('transfer_direction', TransferDirection::DropOff->value)
             ->count();
-        $dayTourCount = Booking::where('booking_type', BookingType::DayTour->value)->count();
 
         // 2. Bookings Query
         $bookingSearch = $request->input('search_booking');
+        $filterType = $request->input('filter_type', 'all');
+
         $bookingsQuery = Booking::with(['driver', 'pickupHotel', 'dropoffHotel', 'airport', 'package', 'vehicle', 'childSeats.childSeatType']);
+
+        if ($filterType && $filterType !== 'all') {
+            if ($filterType === 'airport' || $filterType === BookingType::AirportTransfer->value) {
+                $bookingsQuery->where('booking_type', BookingType::AirportTransfer->value);
+            } elseif ($filterType === 'day_tour' || $filterType === BookingType::DayTour->value) {
+                $bookingsQuery->where('booking_type', BookingType::DayTour->value);
+            } elseif ($filterType === 'hotel_transfer' || $filterType === BookingType::HotelTransfer->value) {
+                $bookingsQuery->where('booking_type', BookingType::HotelTransfer->value);
+            }
+        }
 
         if ($bookingSearch) {
             $bookingsQuery->where(function ($q) use ($bookingSearch) {
@@ -229,9 +243,11 @@ class BookingController extends Controller
         return Inertia::render('Admin/BookingManagement', [
             'stats' => [
                 'all_bookings' => $allBookingsCount,
+                'airport' => $airportCount,
                 'airport_pickup' => $airportPickupCount,
                 'airport_dropoff' => $airportDropoffCount,
                 'day_tour' => $dayTourCount,
+                'hotel_transfer' => $hotelTransferCount,
             ],
             'bookings' => $bookingsData,
             'available_drivers' => $availableDrivers,
@@ -243,6 +259,7 @@ class BookingController extends Controller
             'hotel_price_lists' => $hotelPriceLists,
             'filters' => [
                 'search_booking' => $bookingSearch,
+                'filter_type' => $filterType ?? 'all',
             ],
         ]);
     }

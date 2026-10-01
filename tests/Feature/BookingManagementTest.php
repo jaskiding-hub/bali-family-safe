@@ -98,9 +98,11 @@ class BookingManagementTest extends TestCase
         $response->assertInertia(fn (Assert $page) => $page
             ->component('Admin/BookingManagement')
             ->has('stats.all_bookings')
+            ->has('stats.airport')
             ->has('stats.airport_pickup')
             ->has('stats.airport_dropoff')
             ->has('stats.day_tour')
+            ->has('stats.hotel_transfer')
             ->has('bookings.data', 1)
             ->has('available_drivers')
             ->has('available_vehicle_units', 1)
@@ -108,12 +110,68 @@ class BookingManagementTest extends TestCase
             ->where('bookings.data.0.vehicle_category', 'Regular Family SUV')
             ->missing('drivers')
             ->where('stats.all_bookings', 1)
+            ->where('stats.airport', 1)
             ->where('stats.airport_pickup', 1)
             ->where('stats.airport_dropoff', 0)
+            ->where('stats.hotel_transfer', 0)
             ->where('bookings.data.0.booking_code', 'BFS-001')
             ->where('bookings.data.0.guest_name', 'John Doe')
             ->where('bookings.data.0.detail', 'Canggu-Airport')
             ->where('bookings.data.0.payment', 'Rp 450.000')
+        );
+    }
+
+    public function test_admin_can_filter_bookings_by_type(): void
+    {
+        $pickupHotel = Hotel::firstOrCreate(['nama_hotel' => 'Seminyak'], ['wilayah' => 'Seminyak']);
+        $dropoffHotel = Hotel::firstOrCreate(['nama_hotel' => 'Ubud Resort'], ['wilayah' => 'Ubud']);
+
+        // 1 Airport Transfer
+        Booking::create([
+            'booking_code' => 'BFS-AIR',
+            'booking_type' => BookingType::AirportTransfer->value,
+            'transfer_direction' => TransferDirection::PickUp->value,
+            'status' => BookingStatus::Pending->value,
+            'guest_name' => 'Airport Guest',
+            'whatsapp_number' => '081299990001',
+            'booking_date' => Carbon::parse('2024-10-24'),
+            'pickup_time' => '09:30:00',
+            'total_fee' => 300000,
+            'vehicle_id' => $this->vehicle->id,
+        ]);
+
+        // 1 Hotel Transfer
+        Booking::create([
+            'booking_code' => 'BFS-HOTEL',
+            'booking_type' => BookingType::HotelTransfer->value,
+            'status' => BookingStatus::Pending->value,
+            'guest_name' => 'Hotel Guest',
+            'whatsapp_number' => '081299990002',
+            'pickup_hotel_id' => $pickupHotel->id,
+            'dropoff_hotel_id' => $dropoffHotel->id,
+            'booking_date' => Carbon::parse('2024-10-25'),
+            'pickup_time' => '10:00:00',
+            'total_fee' => 400000,
+            'vehicle_id' => $this->vehicle->id,
+        ]);
+
+        // Filter hotel_transfer
+        $response = $this->actingAs($this->admin, 'admin')->get(route('admin.bookings.index', ['filter_type' => 'hotel_transfer']));
+        $response->assertOk();
+        $response->assertInertia(fn (Assert $page) => $page
+            ->has('bookings.data', 1)
+            ->where('bookings.data.0.booking_code', 'BFS-HOTEL')
+            ->where('stats.hotel_transfer', 1)
+            ->where('stats.airport', 1)
+            ->where('stats.all_bookings', 2)
+        );
+
+        // Filter airport
+        $responseAirport = $this->actingAs($this->admin, 'admin')->get(route('admin.bookings.index', ['filter_type' => 'airport']));
+        $responseAirport->assertOk();
+        $responseAirport->assertInertia(fn (Assert $page) => $page
+            ->has('bookings.data', 1)
+            ->where('bookings.data.0.booking_code', 'BFS-AIR')
         );
     }
 

@@ -71,4 +71,46 @@ class AuthTest extends TestCase
         $response->assertRedirect(route('driver.home'));
         $this->assertAuthenticatedAs($driver, 'driver');
     }
+
+    public function test_admin_can_login_with_remember_me(): void
+    {
+        $admin = AdminUser::create([
+            'name' => 'Admin Remember',
+            'email' => 'admin_rem@bfs.test',
+            'password_hash' => bcrypt('password123'),
+        ]);
+
+        $response = $this->post(route('admin.login'), [
+            'email' => 'admin_rem@bfs.test',
+            'password' => 'password123',
+            'remember' => true,
+        ]);
+
+        $response->assertRedirect(route('admin.dashboard'));
+        $this->assertAuthenticatedAs($admin, 'admin');
+        $this->assertNotNull($admin->fresh()->remember_token);
+    }
+
+    public function test_driver_can_login_with_remember_me(): void
+    {
+        $driver = Driver::create([
+            'full_name' => 'Driver Remember',
+            'username' => 'driver_rem',
+            'email' => 'driver_rem@bfs.test',
+            'whatsapp_number' => '08123456780',
+            'license_number' => 'SIM-99999',
+            'license_expiry_date' => '2028-12-31',
+            'password_hash' => bcrypt('password123'),
+        ]);
+
+        $response = $this->post(route('driver.login'), [
+            'login' => 'driver_rem',
+            'password' => 'password123',
+            'remember' => true,
+        ]);
+
+        $response->assertRedirect(route('driver.home'));
+        $this->assertAuthenticatedAs($driver, 'driver');
+        $this->assertNotNull($driver->fresh()->remember_token);
+    }
 }

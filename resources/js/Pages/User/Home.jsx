@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Head } from '@inertiajs/react';
 import Navbar from '../../Components/User/Navbar';
 import Hero from '../../Components/User/Hero';
@@ -32,6 +32,23 @@ export default function Home({
     car_seat_content = [],
     owner_profile = null,
 }) {
+    useEffect(() => {
+        if (window.location.hash) {
+            const hash = window.location.hash;
+            setTimeout(() => {
+                let el = document.querySelector(hash);
+                if (!el && hash === '#drivers') {
+                    el = document.querySelector('#team') || document.querySelector('#our-team');
+                }
+                if (el) {
+                    const navHeight = 75;
+                    const offsetTop = el.getBoundingClientRect().top + window.pageYOffset - navHeight;
+                    window.scrollTo({ top: Math.max(0, offsetTop), behavior: 'smooth' });
+                }
+            }, 300);
+        }
+    }, []);
+
     return (
         <div style={{
             fontFamily: "'Inter', sans-serif",
