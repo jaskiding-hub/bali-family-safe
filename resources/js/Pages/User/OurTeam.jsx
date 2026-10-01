@@ -255,11 +255,17 @@ export default function OurTeam({ supportTeam = [], driverTeam = [] }) {
                         </div>
 
                         {/* Cards grid */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 relative z-10 max-w-5xl mx-auto w-full">
-                            {supportTeam.map((member, i) => (
-                                <SupportCard key={i} member={member} />
-                            ))}
-                        </div>
+                        {supportTeam.length > 0 ? (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 relative z-10 max-w-5xl mx-auto w-full">
+                                {supportTeam.map((member, i) => (
+                                    <SupportCard key={i} member={member} />
+                                ))}
+                            </div>
+                        ) : (
+                            <div style={{ textAlign: 'center', padding: '32px 16px', color: '#6E7881', fontSize: '14px' }}>
+                                Belum ada anggota tim support terdaftar.
+                            </div>
+                        )}
                     </div>
                 </section>
 
@@ -305,15 +311,21 @@ export default function OurTeam({ supportTeam = [], driverTeam = [] }) {
                         </div>
 
                         {/* Driver grids */}
-                        <div style={{
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: '24px',
-                            position: 'relative',
-                            zIndex: 1,
-                        }}>
-                            <DriverGrid drivers={driverTeam} />
-                        </div>
+                        {driverTeam.length > 0 ? (
+                            <div style={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '24px',
+                                position: 'relative',
+                                zIndex: 1,
+                            }}>
+                                <DriverGrid drivers={driverTeam} />
+                            </div>
+                        ) : (
+                            <div style={{ textAlign: 'center', padding: '32px 16px', color: '#6E7881', fontSize: '14px' }}>
+                                Belum ada driver terdaftar.
+                            </div>
+                        )}
                     </div>
                 </section>
             </div>

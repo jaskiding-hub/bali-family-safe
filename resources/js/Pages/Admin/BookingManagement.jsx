@@ -626,6 +626,7 @@ CATATAN / NOTES:`,
         const isHotel = typeUi === 'Hotel Transfer';
         const isDayTour = typeUi === 'Day Tour';
 
+        // STEP 1: Set transform DULU (terpisah, bukan di-chain)
         editBookingForm.transform((data) => ({
             ...data,
             pickup_hotel_id: isDropoff ? (data.selected_hotel_id || null) : (isHotel ? (data.hotel_id_pickup || null) : null),
@@ -634,7 +635,10 @@ CATATAN / NOTES:`,
             flight_number: (isPickup || isDropoff) ? (data.flight_number || null) : null,
             email: data.email || null,
             notes: data.notes || null,
-        })).post(`/admin/bookings/${selectedBooking.raw_id}`, {
+        }));
+
+        // STEP 2: Kirim POST (dipanggil setelah transform, bukan di-chain)
+        editBookingForm.post(`/admin/bookings/${selectedBooking.raw_id}`, {
             preserveScroll: true,
             onSuccess: () => {
                 setShowEditBookingModal(false);

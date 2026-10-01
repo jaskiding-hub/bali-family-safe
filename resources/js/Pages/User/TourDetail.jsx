@@ -142,10 +142,8 @@ export default function TourDetail({ tourId, tour: initialTour = null }) {
     };
 
     const handleBookingClick = () => {
-        const title = tour?.title || 'Ubud Cultural & Gentle Waterfall Family Tour';
-        const price = tour?.price || 'Rp 850,000';
-        const msg = `Hi Bali Family Safe! I'd like to book the ${title} (${price}).`;
-        window.open(`https://wa.me/6281234567890?text=${encodeURIComponent(msg)}`, '_blank');
+        const tourId = tour?.id || tourId;
+        window.location.href = `/#booking?tour=${tourId}`;
     };
 
     return (
@@ -542,7 +540,7 @@ export default function TourDetail({ tourId, tour: initialTour = null }) {
                                         flexDirection: 'column',
                                     }}
                                 >
-                                    {/* Image with Badge */}
+                                    {/* Image */}
                                     <div style={{
                                         position: 'relative',
                                         width: '100%',
@@ -559,26 +557,6 @@ export default function TourDetail({ tourId, tour: initialTour = null }) {
                                                 objectFit: 'cover',
                                             }}
                                         />
-
-                                        {/* Overlay Badge Button */}
-                                        <div style={{
-                                            position: 'absolute',
-                                            top: '16px',
-                                            right: '16px',
-                                            width: '36px',
-                                            height: '38px',
-                                            background: 'rgba(248, 249, 250, 0.9)',
-                                            boxShadow: '0px 1px 2px rgba(0, 0, 0, 0.05)',
-                                            backdropFilter: 'blur(2px)',
-                                            WebkitBackdropFilter: 'blur(2px)',
-                                            borderRadius: '9999px',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            zIndex: 2,
-                                        }}>
-                                            {renderBadgeIcon(highlight.badgeIcon)}
-                                        </div>
                                     </div>
 
                                     {/* Content */}

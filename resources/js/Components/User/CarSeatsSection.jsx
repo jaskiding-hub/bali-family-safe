@@ -1,29 +1,7 @@
 import React from 'react';
 
 export default function CarSeatsSection({ carSeatContent = [] }) {
-    // Fallback ke hardcoded jika belum ada data
-    const defaultSeats = [
-        {
-            tag: 'Age 0 – 12 Months',
-            title: 'Rear-Facing Infant',
-            description: 'Ideal for newborns and infants up to 12 months. Provides maximum protection for delicate necks and spines during transit.',
-            image_url: 'https://images.unsplash.com/photo-1555252333-9f8e92e65df9?auto=format&fit=crop&w=600&q=80',
-        },
-        {
-            tag: 'Age 1 – 4 Years',
-            title: 'Forward-Facing Toddler',
-            description: 'Secure 5-point harness systems for active toddlers aged 1 to 4 years old. Engineered for long-distance comfort and side-impact protection.',
-            image_url: 'https://images.unsplash.com/photo-1617137968427-85924c800a22?auto=format&fit=crop&w=600&q=80',
-        },
-        {
-            tag: 'Age 4 – 8+ Years',
-            title: 'Booster Seat',
-            description: 'Designed for children aged 4 to 8+ years old needing elevated height for proper vehicle seatbelt positioning. Ensures maximum safety and visibility.',
-            image_url: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=600&q=80',
-        },
-    ];
-
-    const seats = carSeatContent.length > 0 ? carSeatContent : defaultSeats;
+    const seats = carSeatContent && carSeatContent.length > 0 ? carSeatContent : [];
 
     return (
         <section
@@ -100,13 +78,14 @@ export default function CarSeatsSection({ carSeatContent = [] }) {
                     </p>
                 </div>
 
-                {/* 3 Cards Grid */}
-                <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-                    gap: '32px',
-                    alignItems: 'start',
-                }}>
+                {/* Cards Grid */}
+                {seats.length > 0 ? (
+                    <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+                        gap: '32px',
+                        alignItems: 'start',
+                    }}>
                     {seats.map((seat, index) => (
                         <div
                             key={seat.id || index}
@@ -193,6 +172,11 @@ export default function CarSeatsSection({ carSeatContent = [] }) {
                         </div>
                     ))}
                 </div>
+                ) : (
+                    <div style={{ textAlign: 'center', padding: '48px 16px', color: '#6E7881', fontSize: '14px' }}>
+                        Belum ada informasi kursi anak yang terdaftar.
+                    </div>
+                )}
             </div>
         </section>
     );

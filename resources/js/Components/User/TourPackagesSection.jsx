@@ -4,11 +4,8 @@ import { Link } from '@inertiajs/react';
 export default function TourPackagesSection({ packages = [] }) {
     const tourList = packages.length > 0 ? packages.slice(0, 3) : [];
 
-    const scrollToBooking = () => {
-        const bookingSection = document.getElementById('booking');
-        if (bookingSection) {
-            bookingSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
+    const scrollToBooking = (tourId) => {
+        window.location.href = `/#booking?tour=${tourId}`;
     };
 
     return (
@@ -61,6 +58,19 @@ export default function TourPackagesSection({ packages = [] }) {
                             Choose the perfect itinerary for your holiday. All packages include a private driver, comfortable transport, and child safety features.
                         </p>
                     </div>
+
+                    {/* See All Tours Button - only show if more than 3 packages */}
+                    {packages.length > 3 && (
+                        <Link
+                            href="/day-tours"
+                            className="inline-flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-300 hover:border-[#00658D] hover:bg-slate-50 rounded-xl text-sm font-semibold text-slate-700 hover:text-[#00658D] transition-all shadow-xs cursor-pointer"
+                        >
+                            <span>See All Tours</span>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M5 12h14M12 5l7 7-7 7"/>
+                            </svg>
+                        </Link>
+                    )}
                 </div>
 
                 {/* 3 Tour Cards */}
@@ -70,7 +80,7 @@ export default function TourPackagesSection({ packages = [] }) {
                         const tourLink = `/tours/${tour.slug || tour.id}`;
                         const tourTitle = tour.title || tour.name;
                         const tourImg = tour.image || tour.hero_image || 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=1200&q=80';
-                        const tourDesc = tour.description || tour.subtitle;
+                        const tourDesc = tour.subtitle || tour.description;
                         const tourPrice = tour.price || tour.regular_price_formatted || (tour.regular_price ? 'Rp ' + Number(tour.regular_price).toLocaleString('id-ID') : '');
 
                         return (
@@ -138,22 +148,29 @@ export default function TourPackagesSection({ packages = [] }) {
                                         {tourDesc}
                                     </p>
 
-                                    {/* Horizontal border + Book button */}
+                                    {/* Horizontal border + Buttons */}
                                     <div style={{
                                         display: 'flex',
                                         flexDirection: 'row',
                                         justifyContent: 'space-between',
                                         alignItems: 'center',
+                                        gap: '8px',
                                         paddingTop: '16px',
                                         marginTop: '24px',
                                         borderTop: '1px solid #E1E3E4',
                                     }}>
+                                        <Link
+                                            href={tourLink}
+                                            className="btn-secondary-hover-fluid inline-flex items-center justify-center px-4 py-2 rounded-xl text-[#00658D] font-medium text-xs bg-white hover:bg-slate-50 border border-[#00658D] cursor-pointer shadow-xs"
+                                        >
+                                            View Details
+                                        </Link>
                                         <button
                                             type="button"
-                                            onClick={scrollToBooking}
+                                            onClick={() => scrollToBooking(tour.id)}
                                             className="btn-secondary-hover-fluid inline-flex items-center justify-center px-4 py-2 rounded-xl text-white font-medium text-xs bg-[#00658D] hover:bg-[#004d6b] cursor-pointer shadow-xs"
                                         >
-                                            Book This Tour
+                                            Book Now
                                         </button>
                                     </div>
                                 </div>

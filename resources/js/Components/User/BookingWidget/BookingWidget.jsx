@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import AirportBookingForm from './AirportBookingForm';
 import DayTourForm from './DayTourForm';
 import HotelTransferForm from './HotelTransferForm';
@@ -34,7 +34,41 @@ const TABS = [
 ];
 
 export default function BookingWidget({ packages = [], childSeatTypes = [], vehicles = [], siteSettings = null }) {
-    const [activeTab, setActiveTab] = useState(0);
+    // Detect URL params untuk pre-fill tour booking
+    const getInitialTab = () => {
+        if (typeof window !== 'undefined') {
+            // Parse query params from hash (e.g., #booking?tour=123)
+            const hash = window.location.hash; // "#booking?tour=123"
+            const queryStartIndex = hash.indexOf('?');
+
+            if (queryStartIndex > -1) {
+                const queryString = hash.substring(queryStartIndex); // "?tour=123"
+                const params = new URLSearchParams(queryString);
+                const tourParam = params.get('tour') || params.get('tourSlug') || params.get('package');
+                if (tourParam) {
+                    console.log('[BookingWidget] Tour param detected:', tourParam, '→ switching to Day Tour tab');
+                    return 1; // Day Tour tab
+                }
+            }
+        }
+        return 0;
+    };
+
+    const [activeTab, setActiveTab] = useState(getInitialTab());
+
+    // Listen for URL changes (when navigating from tour page)
+    useEffect(() => {
+        const handleHashChange = () => {
+            const newTab = getInitialTab();
+            if (newTab !== activeTab) {
+                console.log('[BookingWidget] Hash changed, switching tab to:', newTab);
+                setActiveTab(newTab);
+            }
+        };
+
+        window.addEventListener('hashchange', handleHashChange);
+        return () => window.removeEventListener('hashchange', handleHashChange);
+    }, [activeTab]);
 
     return (
         <div className="bfs-bw" style={{

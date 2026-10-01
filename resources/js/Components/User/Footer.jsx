@@ -223,10 +223,20 @@ export default function Footer({ siteSettings = null }) {
                                 }}>
                                     Our Location
                                 </h4>
-                                <div style={{ width: '100%', height: '240px', borderRadius: '8px', overflow: 'hidden', border: '1px solid #E1E3E4' }}
+                                <div style={{
+                                    maxWidth: '240px',
+                                    width: '100%',
+                                    height: '160px',
+                                    borderRadius: '12px',
+                                    overflow: 'hidden',
+                                    border: '1px solid #E1E3E4',
+                                    boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+                                }}
                                     dangerouslySetInnerHTML={{
                                         __html: siteSettings.google_maps_embed.includes('<iframe')
                                             ? siteSettings.google_maps_embed
+                                                .replace(/width="[^"]*"/g, 'width="100%"')
+                                                .replace(/height="[^"]*"/g, 'height="100%"')
                                             : `<iframe src="${siteSettings.google_maps_embed}" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>`
                                     }}
                                 />

@@ -1,32 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 
-const FAQS = [
-    {
-        q: 'Are the child car seats really 100% free?',
-        a: 'Yes! We provide certified infant capsules, toddler seats, and booster seats completely free of charge with all airport transfers and private day tours. Every seat is sanitized before each trip.',
-    },
-    {
-        q: 'How do we find our driver at DPS Airport?',
-        a: 'Your driver will be waiting in the arrival hall holding a clear sign with your full name. We will also send you a WhatsApp message before your flight lands so you know exactly where to go.',
-    },
-    {
-        q: 'What happens if our flight is delayed?',
-        a: 'We monitor your flight status in real-time. If your arrival is delayed, your driver adjusts the pickup time automatically at no extra charge. We\'ll keep you informed via WhatsApp.',
-    },
-    {
-        q: 'Can we request multiple car seats?',
-        a: 'Absolutely. We can provide up to 2 car seats in our Toyota Innova and up to 4 in our Toyota HiAce Commuter. Just let us know the ages and weights of your children when booking.',
-    },
-    {
-        q: 'What payment methods do you accept?',
-        a: 'You can pay directly to your driver in Cash (IDR/AUD/USD) upon completion of your trip, or via Bank Transfer and QRIS. No prepayment is required to confirm your booking.',
-    },
-    {
-        q: 'How far in advance should we book?',
-        a: 'We recommend booking at least 48 hours before your arrival to guarantee car seat availability. However, we often accommodate last-minute bookings — just send us a WhatsApp message.',
-    },
-];
-
 function AccordionItem({ faq, isOpen, onToggle }) {
     const contentRef = useRef(null);
     const [height, setHeight] = useState(0);
@@ -138,7 +111,7 @@ export default function FaqSection({ faqs = [] }) {
             q: f.question,
             a: f.answer,
         }))
-        : FAQS;
+        : [];
 
     return (
         <section
@@ -179,16 +152,22 @@ export default function FaqSection({ faqs = [] }) {
                 </div>
 
                 {/* FAQ Accordion */}
-                <div className="bfs-faq-list" style={{ maxWidth: '768px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    {displayFaqs.map((faq, i) => (
-                        <AccordionItem
-                            key={i}
-                            faq={faq}
-                            isOpen={openIndex === i}
-                            onToggle={() => setOpenIndex(openIndex === i ? -1 : i)}
-                        />
-                    ))}
-                </div>
+                {displayFaqs.length > 0 ? (
+                    <div className="bfs-faq-list" style={{ maxWidth: '768px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        {displayFaqs.map((faq, i) => (
+                            <AccordionItem
+                                key={i}
+                                faq={faq}
+                                isOpen={openIndex === i}
+                                onToggle={() => setOpenIndex(openIndex === i ? -1 : i)}
+                            />
+                        ))}
+                    </div>
+                ) : (
+                    <div style={{ textAlign: 'center', padding: '32px 16px', color: '#6E7881', fontSize: '14px' }}>
+                        Belum ada pertanyaan umum (FAQ) saat ini.
+                    </div>
+                )}
             </div>
         </section>
     );

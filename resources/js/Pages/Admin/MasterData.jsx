@@ -4136,9 +4136,11 @@ export default function MasterData({
                                 onChange={(e) => addHotelPriceForm.setData('hotel_id_dropoff', e.target.value)}
                                 className={selectBaseClass}
                             >
-                                {hotels_list && hotels_list.map((h) => (
-                                    <option key={h.id} value={h.id}>{h.name}</option>
-                                ))}
+                                {hotels_list && hotels_list
+                                    .filter((h) => String(h.id) !== String(addHotelPriceForm.data.hotel_id_pickup))
+                                    .map((h) => (
+                                        <option key={h.id} value={h.id}>{h.name}</option>
+                                    ))}
                             </select>
                         </div>
                     </div>
@@ -4247,9 +4249,11 @@ export default function MasterData({
                                 onChange={(e) => editHotelPriceForm.setData('hotel_id_dropoff', e.target.value)}
                                 className={selectBaseClass}
                             >
-                                {hotels_list && hotels_list.map((h) => (
-                                    <option key={h.id} value={h.id}>{h.name}</option>
-                                ))}
+                                {hotels_list && hotels_list
+                                    .filter((h) => String(h.id) !== String(editHotelPriceForm.data.hotel_id_pickup))
+                                    .map((h) => (
+                                        <option key={h.id} value={h.id}>{h.name}</option>
+                                    ))}
                             </select>
                         </div>
                     </div>

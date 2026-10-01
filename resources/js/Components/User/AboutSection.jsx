@@ -1,15 +1,12 @@
 import React from 'react';
 
 export default function AboutSection({ aboutContent = null }) {
-    // Fallback ke hardcoded jika belum ada data
-    const defaultContent = {
-        title: 'Your Trusted Partner for Family Adventures in Bali',
-        description: "Bali Family Safe was founded by a family for families. We understand the unique challenges of traveling with little ones — from navigating car seat logistics to finding family-friendly routes across Bali.\n\nOur fleet of modern, air-conditioned vehicles comes with complimentary certified child seats, friendly English-speaking drivers, and a commitment to punctuality and safety that families across Australia, New Zealand and Europe have trusted since 2018.",
-        image_url: 'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=800&q=80',
-    };
+    if (!aboutContent || !aboutContent.description) {
+        return null;
+    }
 
-    const content = aboutContent || defaultContent;
-    const paragraphs = content.description.split('\n\n');
+    const content = aboutContent;
+    const paragraphs = (content.description || '').split('\n\n');
 
     return (
         <section

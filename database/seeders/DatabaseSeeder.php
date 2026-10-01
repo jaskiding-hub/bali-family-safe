@@ -20,8 +20,6 @@ class DatabaseSeeder extends Seeder
             PackageSeeder::class,
             SiteSettingSeeder::class,
             DriverSeeder::class,
-            DriverBookingSeeder::class,
-            DummyDataSeeder::class,
             AboutContentSeeder::class,
             CarSeatContentSeeder::class,
         ]);

@@ -1,90 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 
-const SERVICES = [
-    {
-        title: 'Airport Transfers',
-        shortDesc: 'Hassle-free arrivals and departures. Our driver will meet you with a personalized sign and help with your luggage, ensuring a smooth transition to your hotel.',
-        icon: (
-            <svg width="21" height="24" viewBox="0 0 24 24" fill="#00658D">
-                <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/>
-            </svg>
-        ),
-        details: {
-            heading: 'Airport Transfers',
-            description: 'Start or end your Bali holiday stress-free. Our professional drivers provide punctual, comfortable airport pickup and drop-off services with child-safe seating and cold bottled water.',
-            includes: [
-                'Meet & greet with personalized name sign at arrival hall',
-                'Free certified child car seats (capsule, toddler, or booster)',
-                'Flight tracking — we adjust pickup time if your flight is delayed',
-                'Cold bottled mineral water provided',
-                'Door-to-door service to any hotel, villa, or Airbnb in Bali',
-                'Assist with loading and unloading luggage',
-                'Spacious, air-conditioned vehicles (Toyota Avanza, Innova, or similar)',
-                'English-speaking driver for easy communication',
-            ],
-            vehicles: 'Toyota Avanza, Toyota Innova Reborn, Toyota HiAce',
-            capacity: 'Up to 5 passengers per vehicle',
-            duration: 'Depends on airport ↔ destination distance',
-            price: 'Starting from Rp 350,000',
-        },
-    },
-    {
-        title: 'Hotel Transfers',
-        shortDesc: 'Seamless connection between any accommodations in Bali. Avoid the hassle of negotiating with local taxis while managing luggage and tired children.',
-        icon: (
-            <svg width="21" height="21" viewBox="0 0 24 24" fill="#00658D">
-                <path d="M7 13c1.66 0 3-1.34 3-3S8.66 7 7 7s-3 1.34-3 3 1.34 3 3 3zm12-6h-8v7H3V5H1v15h2v-3h18v3h2v-9c0-2.21-1.79-4-4-4z"/>
-            </svg>
-        ),
-        details: {
-            heading: 'Hotel Transfers',
-            description: 'Moving between hotels, villas, or any accommodation in Bali? Our family-friendly transfer service ensures a safe, comfortable ride with no stress about navigating unfamiliar roads.',
-            includes: [
-                'Door-to-door pickup and drop-off at any Bali address',
-                'Free certified child car seats installed and ready',
-                'Flexible scheduling — depart when you are ready',
-                'Cold bottled mineral water provided',
-                'Assist with all luggage and belongings',
-                'Direct, scenic routes — no unnecessary detours',
-                'Air-conditioned, well-maintained vehicles',
-                'English-speaking driver for local tips en route',
-            ],
-            vehicles: 'Toyota Avanza, Toyota Innova Reborn, Toyota HiAce',
-            capacity: 'Up to 5 passengers per vehicle',
-            duration: 'Depends on distance between locations',
-            price: 'Starting from Rp 300,000',
-        },
-    },
-    {
-        title: 'Private Family Tours',
-        shortDesc: 'Explore Bali at your own pace. Customizable itineraries perfect for families, including cultural sites, nature parks, and beautiful beaches with plenty of rest stops.',
-        icon: (
-            <svg width="23" height="23" viewBox="0 0 24 24" fill="#00658D">
-                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-            </svg>
-        ),
-        details: {
-            heading: 'Private Family Tours',
-            description: 'Discover Bali through the eyes of a local. Our private family tours are fully customizable — visit temples, rice terraces, waterfalls, beaches, and cultural sites at your own pace with a knowledgeable driver-guide.',
-            includes: [
-                'Fully customizable itinerary — choose your own destinations',
-                'Dedicated driver-guide who knows Bali inside out',
-                'Free certified child car seats for all ages',
-                'Flexible rest stops whenever your family needs a break',
-                'Cold bottled mineral water and tissue throughout the day',
-                'Visit top family-friendly spots: Monkey Forest, rice terraces, waterfalls, temples',
-                'Photo opportunities at every scenic viewpoint',
-                'English-speaking driver with cultural knowledge',
-            ],
-            vehicles: 'Toyota Innova Reborn, Toyota HiAce',
-            capacity: 'Up to 5 passengers per vehicle',
-            duration: '8–10 hours (full day) or 4–5 hours (half day)',
-            price: 'Starting from Rp 800,000',
-        },
-    },
-];
-
 function ServiceModal({ service, onClose }) {
     useEffect(() => {
         if (service) {
@@ -207,11 +123,9 @@ export default function ServicesSection({ services = [] }) {
             icon: srv.image_url ? (
                 <img src={srv.image_url} alt={srv.name} className="w-8 h-8 rounded-full object-cover" />
             ) : (
-                SERVICES[i % SERVICES.length]?.icon || (
-                    <svg width="21" height="24" viewBox="0 0 24 24" fill="#00658D">
-                        <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/>
-                    </svg>
-                )
+                <svg width="21" height="24" viewBox="0 0 24 24" fill="#00658D">
+                    <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/>
+                </svg>
             ),
             details: {
                 heading: srv.name,
@@ -219,13 +133,13 @@ export default function ServicesSection({ services = [] }) {
                 includes: (srv.features && srv.features.length > 0)
                     ? srv.features.map((f) => f.feature_text)
                     : ['Free certified child car seats', 'Cold bottled water', 'English-speaking driver', 'Door-to-door service'],
-                vehicles: 'Toyota Avanza, Toyota Innova Reborn, Toyota HiAce',
-                capacity: 'Up to 5–12 passengers per vehicle',
-                duration: 'Flexible / As required',
-                price: srv.category ? `Category: ${srv.category}` : 'Starting from Rp 350,000',
+                vehicles: 'Toyota Avanza, Toyota Innova, Toyota HiAce',
+                capacity: '5–12 Penumpang',
+                duration: 'Sesuai kebutuhan',
+                price: srv.category ? `Kategori: ${srv.category}` : '',
             },
         }))
-        : SERVICES;
+        : [];
 
     return (
         <section
@@ -271,111 +185,119 @@ export default function ServicesSection({ services = [] }) {
                     </p>
                 </div>
 
-                {/* 3 Cards */}
-                <div className="bfs-row" style={{
-                    display: 'flex',
-                    flexDirection: 'row',
-                    justifyContent: 'center',
-                    gap: '32px',
-                    maxWidth: '1072px',
-                    marginLeft: 'auto',
-                    marginRight: 'auto',
-                    width: '100%',
-                }}>
-                    {displayServices.map((srv, i) => (
-                        <div
-                            key={i}
-                            className="card-hover-fluid group"
-                            style={{
-                                flex: '1 1 0',
-                                maxWidth: '336px',
-                                background: '#FFFFFF',
-                                border: '1px solid rgba(189,200,209,0.25)',
-                                boxShadow: '0px 1px 3px rgba(0,0,0,0.05)',
-                                borderRadius: '16px',
-                                padding: '32px',
-                                display: 'flex',
-                                flexDirection: 'column',
-                                justifyContent: 'space-between',
-                                minHeight: '390px',
-                            }}
-                        >
-                            {/* Top: icon + title + desc */}
-                            <div>
-                                <div
-                                    className="transition-transform duration-300 ease-out group-hover:scale-110"
-                                    style={{
-                                        width: '56px',
-                                        height: '56px',
-                                        background: 'rgba(0, 174, 239, 0.15)',
-                                        borderRadius: '9999px',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        marginBottom: '24px',
-                                    }}
-                                >
-                                    {srv.icon}
-                                </div>
-
-                                <h3 style={{
-                                    fontFamily: 'Inter, sans-serif',
-                                    fontWeight: 600,
-                                    fontSize: '24px',
-                                    lineHeight: '32px',
-                                    color: '#191C1D',
-                                    margin: 0,
-                                    marginBottom: '12px',
-                                }}>
-                                    {srv.title}
-                                </h3>
-
-                                <p style={{
-                                    fontFamily: 'Inter, sans-serif',
-                                    fontWeight: 400,
-                                    fontSize: '16px',
-                                    lineHeight: '24px',
-                                    color: '#3E4850',
-                                    margin: 0,
-                                }}>
-                                    {srv.shortDesc}
-                                </p>
-                            </div>
-
-                            {/* View Details button */}
-                            <button
-                                type="button"
-                                onClick={() => setSelectedService(srv)}
-                                className="btn-hover-fluid"
+                {/* Cards */}
+                {displayServices.length > 0 ? (
+                    <div className="bfs-row" style={{
+                        display: 'flex',
+                        flexDirection: 'row',
+                        justifyContent: 'center',
+                        gap: '32px',
+                        maxWidth: '1072px',
+                        marginLeft: 'auto',
+                        marginRight: 'auto',
+                        width: '100%',
+                        flexWrap: 'wrap',
+                    }}>
+                        {displayServices.map((srv, i) => (
+                            <div
+                                key={i}
+                                className="card-hover-fluid group"
                                 style={{
-                                    width: '100%',
-                                    height: '48px',
-                                    border: '2px solid #00AEEF',
-                                    borderRadius: '12px',
-                                    background: 'transparent',
-                                    fontFamily: 'Inter, sans-serif',
-                                    fontWeight: 600,
-                                    fontSize: '14px',
-                                    lineHeight: '20px',
-                                    letterSpacing: '0.14px',
-                                    color: '#00658D',
-                                    cursor: 'pointer',
-                                    transition: 'all 0.25s ease',
-                                }}
-                                onMouseEnter={e => {
-                                    e.currentTarget.style.background = '#00AEEF';
-                                    e.currentTarget.style.color = '#FFFFFF';
-                                }}
-                                onMouseLeave={e => {
-                                    e.currentTarget.style.background = 'transparent';
-                                    e.currentTarget.style.color = '#00658D';
+                                    flex: '1 1 0',
+                                    maxWidth: '336px',
+                                    minWidth: '280px',
+                                    background: '#FFFFFF',
+                                    border: '1px solid rgba(189,200,209,0.25)',
+                                    boxShadow: '0px 1px 3px rgba(0,0,0,0.05)',
+                                    borderRadius: '16px',
+                                    padding: '32px',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    justifyContent: 'space-between',
+                                    minHeight: '390px',
                                 }}
                             >
-                                View Details
-                            </button>
-                        </div>
-                    ))}
-                </div>
+                                {/* Top: icon + title + desc */}
+                                <div>
+                                    <div
+                                        className="transition-transform duration-300 ease-out group-hover:scale-110"
+                                        style={{
+                                            width: '56px',
+                                            height: '56px',
+                                            background: 'rgba(0, 174, 239, 0.15)',
+                                            borderRadius: '9999px',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            marginBottom: '24px',
+                                        }}
+                                    >
+                                        {srv.icon}
+                                    </div>
+
+                                    <h3 style={{
+                                        fontFamily: 'Inter, sans-serif',
+                                        fontWeight: 600,
+                                        fontSize: '24px',
+                                        lineHeight: '32px',
+                                        color: '#191C1D',
+                                        margin: 0,
+                                        marginBottom: '12px',
+                                    }}>
+                                        {srv.title}
+                                    </h3>
+
+                                    <p style={{
+                                        fontFamily: 'Inter, sans-serif',
+                                        fontWeight: 400,
+                                        fontSize: '16px',
+                                        lineHeight: '24px',
+                                        color: '#3E4850',
+                                        margin: 0,
+                                    }}>
+                                        {srv.shortDesc}
+                                    </p>
+                                </div>
+
+                                {/* View Details button */}
+                                <button
+                                    type="button"
+                                    onClick={() => setSelectedService(srv)}
+                                    className="btn-hover-fluid"
+                                    style={{
+                                        width: '100%',
+                                        height: '48px',
+                                        border: '2px solid #00AEEF',
+                                        borderRadius: '12px',
+                                        background: 'transparent',
+                                        fontFamily: 'Inter, sans-serif',
+                                        fontWeight: 600,
+                                        fontSize: '14px',
+                                        lineHeight: '20px',
+                                        letterSpacing: '0.14px',
+                                        color: '#00658D',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.25s ease',
+                                    }}
+                                    onMouseEnter={e => {
+                                        e.currentTarget.style.background = '#00AEEF';
+                                        e.currentTarget.style.color = '#FFFFFF';
+                                    }}
+                                    onMouseLeave={e => {
+                                        e.currentTarget.style.background = 'transparent';
+                                        e.currentTarget.style.color = '#00658D';
+                                    }}
+                                >
+                                    View Details
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <div style={{ textAlign: 'center', padding: '48px 16px', color: '#6E7881', fontSize: '14px' }}>
+                        Belum ada layanan yang ditampilkan.
+                    </div>
+                )}
             </div>
 
             {/* Service Detail Modal */}

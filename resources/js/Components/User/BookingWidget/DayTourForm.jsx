@@ -33,6 +33,39 @@ export default function DayTourForm({ packages = [], vehicles = [], childSeatTyp
     // Get WhatsApp number from settings or fallback
     const waNumber = (siteSettings?.whatsapp_number || '6281234567890').replace(/[^0-9]/g, '');
 
+    // Detect URL params untuk pre-fill tour (parse from hash)
+    const getPrefilledPackageId = () => {
+        if (typeof window !== 'undefined') {
+            // Parse query params from hash (e.g., #booking?tour=123)
+            const hash = window.location.hash;
+            const queryStartIndex = hash.indexOf('?');
+
+            if (queryStartIndex > -1) {
+                const queryString = hash.substring(queryStartIndex);
+                const params = new URLSearchParams(queryString);
+                const tourParam = params.get('tour') || params.get('package');
+                const tourSlug = params.get('tourSlug');
+
+                if (tourParam) {
+                    const foundById = packages.find(p => String(p.id) === String(tourParam));
+                    if (foundById) {
+                        console.log('[DayTourForm] Pre-filled package from tour param:', foundById.name);
+                        return foundById.id;
+                    }
+                }
+
+                if (tourSlug) {
+                    const foundBySlug = packages.find(p => p.slug === tourSlug);
+                    if (foundBySlug) {
+                        console.log('[DayTourForm] Pre-filled package from slug:', foundBySlug.name);
+                        return foundBySlug.id;
+                    }
+                }
+            }
+        }
+        return defaultPackage?.id || '';
+    };
+
     const defaultVehicle = vehicles[0];
     const defaultPackage = packages[0];
 
@@ -41,7 +74,7 @@ export default function DayTourForm({ packages = [], vehicles = [], childSeatTyp
         whatsapp_number: '',
         email: '',
         booking_type: 'Day Tour',
-        package_id: defaultPackage?.id || '',
+        package_id: getPrefilledPackageId(),
         vehicle_unit_id: defaultVehicle?.id || '',
         pickup_hotel_id: null,
         dropoff_hotel_id: null,
@@ -56,6 +89,20 @@ export default function DayTourForm({ packages = [], vehicles = [], childSeatTyp
     const selectedVehicle = vehicles.find((v) => String(v.id) === String(data.vehicle_unit_id));
     const totalPax = (parseInt(data.adults, 10) || 0) + (parseInt(data.children, 10) || 0);
     const isOverCapacity = Boolean(selectedVehicle?.passenger_capacity && totalPax > selectedVehicle.passenger_capacity);
+
+    // Watch for hash changes to update package selection
+    useEffect(() => {
+        const handleHashChange = () => {
+            const newPackageId = getPrefilledPackageId();
+            if (newPackageId && String(newPackageId) !== String(data.package_id)) {
+                console.log('[DayTourForm] Hash changed, updating package to:', newPackageId);
+                setData('package_id', newPackageId);
+            }
+        };
+
+        window.addEventListener('hashchange', handleHashChange);
+        return () => window.removeEventListener('hashchange', handleHashChange);
+    }, [data.package_id, packages]);
 
     useEffect(() => {
         if (!data.vehicle_unit_id && defaultVehicle?.id) {

@@ -9,6 +9,7 @@ use App\Http\Controllers\Public\OurTeamController;
 use App\Http\Controllers\Public\TourController;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/day-tours', [HomeController::class, 'dayTours'])->name('day-tours');
 
 Route::get('/tours/{id}', [TourController::class, 'show'])->name('tours.show');
 
