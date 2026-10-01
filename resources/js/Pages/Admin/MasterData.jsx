@@ -290,12 +290,47 @@ export default function MasterData({
 
     const handleAddPackageSubmit = (e) => {
         e.preventDefault();
+
+        // Validation: Check if any highlight has title but no description (or vice versa)
+        const highlights = addPackageForm.data.highlights || [];
+        for (let i = 0; i < highlights.length; i++) {
+            const hl = highlights[i];
+            const hasTitle = hl.title && hl.title.trim() !== '';
+            const hasDesc = hl.description && hl.description.trim() !== '';
+
+            // If one field is filled, the other must be filled too
+            if (hasTitle && !hasDesc) {
+                alert(`Itinerary #${i + 1}: Deskripsi wajib diisi jika judul sudah diisi.`);
+                return;
+            }
+            if (!hasTitle && hasDesc) {
+                alert(`Itinerary #${i + 1}: Judul wajib diisi jika deskripsi sudah diisi.`);
+                return;
+            }
+        }
+
+        // Check if at least one price is filled
+        const hasPrices = addPackageForm.data.unit_prices &&
+            Object.values(addPackageForm.data.unit_prices).some(price => price && parseFloat(price) > 0);
+
+        if (!hasPrices) {
+            alert('Minimal satu tarif kendaraan harus diisi.');
+            return;
+        }
+
         addPackageForm.post('/admin/packages', {
             forceFormData: true,
             onSuccess: () => {
                 setShowAddPackageModal(false);
                 addPackageForm.reset();
                 setAddPackagePhotoPreview(null);
+            },
+            onError: (errors) => {
+                console.error('Validation errors:', errors);
+                const firstError = Object.values(errors)[0];
+                if (firstError) {
+                    alert('Gagal menyimpan paket tour: ' + firstError);
+                }
             },
         });
     };
@@ -325,6 +360,34 @@ export default function MasterData({
     const handleEditPackageSubmit = (e) => {
         e.preventDefault();
         if (!selectedPackage) return;
+
+        // Validation: Check if any highlight has title but no description (or vice versa)
+        const highlights = editPackageForm.data.highlights || [];
+        for (let i = 0; i < highlights.length; i++) {
+            const hl = highlights[i];
+            const hasTitle = hl.title && hl.title.trim() !== '';
+            const hasDesc = hl.description && hl.description.trim() !== '';
+
+            // If one field is filled, the other must be filled too
+            if (hasTitle && !hasDesc) {
+                alert(`Itinerary #${i + 1}: Deskripsi wajib diisi jika judul sudah diisi.`);
+                return;
+            }
+            if (!hasTitle && hasDesc) {
+                alert(`Itinerary #${i + 1}: Judul wajib diisi jika deskripsi sudah diisi.`);
+                return;
+            }
+        }
+
+        // Check if at least one price is filled
+        const hasPrices = editPackageForm.data.unit_prices &&
+            Object.values(editPackageForm.data.unit_prices).some(price => price && parseFloat(price) > 0);
+
+        if (!hasPrices) {
+            alert('Minimal satu tarif kendaraan harus diisi.');
+            return;
+        }
+
         editPackageForm.post(`/admin/packages/${selectedPackage.id}`, {
             forceFormData: true,
             onSuccess: () => {
@@ -332,6 +395,13 @@ export default function MasterData({
                 editPackageForm.reset();
                 setEditPackagePhotoPreview(null);
                 setSelectedPackage(null);
+            },
+            onError: (errors) => {
+                console.error('Validation errors:', errors);
+                const firstError = Object.values(errors)[0];
+                if (firstError) {
+                    alert('Gagal memperbarui paket tour: ' + firstError);
+                }
             },
         });
     };
