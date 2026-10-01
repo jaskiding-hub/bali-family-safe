@@ -560,6 +560,87 @@ class BookingManagementTest extends TestCase
         $this->assertDatabaseHas('hotels', ['nama_hotel' => 'DPS International Airport']);
     }
 
+    public function test_admin_can_update_booking_with_child_seats(): void
+    {
+        $unit = VehicleUnit::first() ?? VehicleUnit::create([
+            'category' => 'Test Unit ' . uniqid(),
+            'name' => 'Test Car',
+            'plate_number' => 'DK 9999 XX',
+            'passenger_capacity' => 6,
+            'luggage_capacity' => 4,
+            'is_active' => true,
+        ]);
+
+        $seatType1 = \App\Models\ChildSeatType::first() ?? \App\Models\ChildSeatType::create([
+            'name' => 'Infant Capsule',
+            'age_range' => '0–1 yr',
+            'weight_range' => '0–13 kg',
+            'display_order' => 1,
+        ]);
+        $seatType2 = \App\Models\ChildSeatType::skip(1)->first() ?? \App\Models\ChildSeatType::create([
+            'name' => 'Toddler Seat',
+            'age_range' => '1–4 yr',
+            'weight_range' => '9–18 kg',
+            'display_order' => 2,
+        ]);
+
+        $booking = Booking::create([
+            'booking_code' => 'BFS-SEAT-001',
+            'booking_type' => BookingType::AirportTransfer->value,
+            'transfer_direction' => TransferDirection::PickUp->value,
+            'status' => BookingStatus::Pending->value,
+            'guest_name' => 'Parent User',
+            'whatsapp_number' => '08123456789',
+            'booking_date' => Carbon::parse('2026-10-01'),
+            'pickup_time' => '10:00:00',
+            'adults' => 2,
+            'children' => 2,
+            'total_fee' => 350000,
+            'vehicle_id' => $this->vehicle->id,
+            'vehicle_unit_id' => $unit->id,
+        ]);
+
+        \App\Models\BookingChildSeat::create([
+            'booking_id' => $booking->id,
+            'child_seat_type_id' => $seatType1->id,
+            'quantity' => 1,
+        ]);
+
+        $updatePayload = [
+            'booking_type_ui' => 'Airport Pick-Up',
+            'status' => BookingStatus::Confirmed->value,
+            'guest_name' => 'Parent User',
+            'whatsapp_number' => '08123456789',
+            'vehicle_unit_id' => $unit->id,
+            'booking_date' => '2026-10-05',
+            'pickup_time' => '12:00',
+            'adults' => 2,
+            'children' => 2,
+            'total_fee' => 350000,
+            'child_seats' => [
+                ['id' => $seatType1->id, 'quantity' => 1],
+                ['id' => $seatType2->id, 'quantity' => 1],
+            ],
+        ];
+
+        $response = $this->actingAs($this->admin, 'admin')
+            ->put(route('admin.bookings.update', $booking), $updatePayload);
+
+        $response->assertRedirect(route('admin.bookings.index'));
+        $response->assertSessionHas('success', 'Booking berhasil diperbarui.');
+
+        $this->assertDatabaseHas('booking_child_seats', [
+            'booking_id' => $booking->id,
+            'child_seat_type_id' => $seatType1->id,
+            'quantity' => 1,
+        ]);
+        $this->assertDatabaseHas('booking_child_seats', [
+            'booking_id' => $booking->id,
+            'child_seat_type_id' => $seatType2->id,
+            'quantity' => 1,
+        ]);
+    }
+
     public function test_calculate_airport_pickup_pricing_matches_airports_table_data(): void
     {
         $airport = Airport::create([

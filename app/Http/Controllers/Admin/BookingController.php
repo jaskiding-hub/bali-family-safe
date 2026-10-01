@@ -21,6 +21,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Enum;
 use Inertia\Inertia;
@@ -102,7 +103,10 @@ class BookingController extends Controller
                     'adults' => $booking->adults,
                     'children' => $booking->children,
                     'child_seats' => $booking->childSeats->map(fn($cs) => [
+                        'id' => $cs->child_seat_type_id,
+                        'child_seat_type_id' => $cs->child_seat_type_id,
                         'type' => $cs->childSeatType->name ?? 'Car Seat',
+                        'name' => $cs->childSeatType->name ?? 'Car Seat',
                         'quantity' => $cs->quantity,
                     ])->all(),
                     'total_fee' => $booking->total_fee,
@@ -551,7 +555,13 @@ class BookingController extends Controller
             'children' => ['nullable', 'integer', 'min:0', 'max:100'],
             'total_fee' => ['required', 'numeric', 'min:0', 'max:9999999999.99'],
             'notes' => ['nullable', 'string', 'max:1000'],
+            'child_seats' => ['nullable', 'array'],
+            'child_seats.*.id' => ['required_with:child_seats', 'integer'],
+            'child_seats.*.quantity' => ['required_with:child_seats', 'integer', 'min:1'],
         ]);
+
+        $childSeats = $request->input('child_seats');
+        unset($validated['child_seats']);
 
         // Auto-assign vehicle_id based on vehicle_unit category for display, guarantee non-null fallback
         $vehicleUnit = VehicleUnit::find($validated['vehicle_unit_id']);
@@ -590,7 +600,26 @@ class BookingController extends Controller
         }
 
         try {
-            $booking->update($validated);
+            DB::transaction(function () use ($booking, $validated, $request, $childSeats) {
+                $booking->update($validated);
+
+                if ($request->has('child_seats')) {
+                    \App\Models\BookingChildSeat::where('booking_id', $booking->id)->delete();
+                    if (is_array($childSeats)) {
+                        foreach ($childSeats as $seat) {
+                            if (!empty($seat['id']) && !empty($seat['quantity'])) {
+                                if (\App\Models\ChildSeatType::where('id', $seat['id'])->exists()) {
+                                    \App\Models\BookingChildSeat::create([
+                                        'booking_id' => $booking->id,
+                                        'child_seat_type_id' => $seat['id'],
+                                        'quantity' => (int) $seat['quantity'],
+                                    ]);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
 
             return redirect()->route('admin.bookings.index')->with('success', 'Booking berhasil diperbarui.');
         } catch (\Throwable $e) {

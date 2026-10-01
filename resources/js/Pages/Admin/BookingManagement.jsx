@@ -28,7 +28,8 @@ export default function BookingManagement({
     const [showEditBookingModal, setShowEditBookingModal] = useState(false);
     const [showDeleteBookingModal, setShowDeleteBookingModal] = useState(false);
     const [selectedBooking, setSelectedBooking] = useState(null);
-    const [selectedSeats, setSelectedSeats] = useState({});
+    const [addSelectedSeats, setAddSelectedSeats] = useState({});
+    const [editSelectedSeats, setEditSelectedSeats] = useState({});
     const [showSuccessAlert, setShowSuccessAlert] = useState(false);
     const [successMessage, setSuccessMessage] = useState('');
 
@@ -93,6 +94,7 @@ export default function BookingManagement({
         children: 0,
         total_fee: '',
         notes: '',
+        child_seats: [],
     });
 
     // Helper functions for pricing and data filtering
@@ -214,7 +216,7 @@ export default function BookingManagement({
             notes: '',
             child_seats: [],
         });
-        setSelectedSeats({});
+        setAddSelectedSeats({});
         setShowAddBookingModal(true);
     };
 
@@ -304,6 +306,22 @@ export default function BookingManagement({
             updates.pickup_location = pickupLoc;
             updates.dropoff_location = pickupLoc;
             updates.package_id = ''; // Admin pilih manual dari dropdown
+        }
+
+        // Parse child car seats from text if available
+        const rawSeats = data['CHILD CAR SEATS'] || data['CAR SEAT'] || data['CHILD SEAT'] || '';
+        if (rawSeats) {
+            const parsedSeats = {};
+            childSeatTypes.forEach(seat => {
+                const regex = new RegExp(`(\\d+)\\s*x?\\s*${seat.name.split(' ')[0]}`, 'i');
+                const match = rawSeats.match(regex);
+                if (match) {
+                    parsedSeats[seat.id] = parseInt(match[1], 10);
+                }
+            });
+            if (Object.keys(parsedSeats).length > 0) {
+                setAddSelectedSeats(parsedSeats);
+            }
         }
 
         // Apply to form
@@ -429,8 +447,8 @@ CATATAN / NOTES:`,
             return;
         }
 
-        // Convert selectedSeats to child_seats array
-        const childSeatsArray = Object.entries(selectedSeats)
+        // Convert addSelectedSeats to child_seats array
+        const childSeatsArray = Object.entries(addSelectedSeats)
             .filter(([_, qty]) => qty > 0)
             .map(([seatId, qty]) => {
                 const seat = childSeatTypes.find(s => s.id === parseInt(seatId));
@@ -467,7 +485,7 @@ CATATAN / NOTES:`,
             onSuccess: () => {
                 setShowAddBookingModal(false);
                 addBookingForm.reset();
-                setSelectedSeats({});
+                setAddSelectedSeats({});
                 setSuccessMessage('✓ Booking berhasil dibuat!');
                 setShowSuccessAlert(true);
                 setTimeout(() => setShowSuccessAlert(false), 3000);
@@ -587,6 +605,21 @@ CATATAN / NOTES:`,
             }
         }
 
+        // Populate existing child seats
+        const initialEditSeats = {};
+        (booking.child_seats || []).forEach(cs => {
+            const sId = cs.id || cs.child_seat_type_id;
+            if (sId) {
+                initialEditSeats[sId] = cs.quantity;
+            } else {
+                const found = childSeatTypes.find(t => t.name?.toLowerCase() === (cs.type || cs.name || '').toLowerCase());
+                if (found) {
+                    initialEditSeats[found.id] = cs.quantity;
+                }
+            }
+        });
+        setEditSelectedSeats(initialEditSeats);
+
         editBookingForm.setData({
             _method: 'put',
             auto_parse_text: '',
@@ -612,6 +645,7 @@ CATATAN / NOTES:`,
             children: booking.children ?? 0,
             total_fee: booking.total_fee ? String(Number(booking.total_fee)) : '',
             notes: booking.notes || '',
+            child_seats: booking.child_seats || [],
         });
         setShowEditBookingModal(true);
     };
@@ -626,6 +660,13 @@ CATATAN / NOTES:`,
         const isHotel = typeUi === 'Hotel Transfer';
         const isDayTour = typeUi === 'Day Tour';
 
+        const editChildSeatsArray = Object.entries(editSelectedSeats)
+            .filter(([_, qty]) => qty > 0)
+            .map(([seatId, qty]) => {
+                const seat = childSeatTypes.find(s => s.id === parseInt(seatId));
+                return { id: parseInt(seatId), name: seat?.name, quantity: qty };
+            });
+
         // STEP 1: Set transform DULU (terpisah, bukan di-chain)
         editBookingForm.transform((data) => ({
             ...data,
@@ -635,6 +676,7 @@ CATATAN / NOTES:`,
             flight_number: (isPickup || isDropoff) ? (data.flight_number || null) : null,
             email: data.email || null,
             notes: data.notes || null,
+            child_seats: editChildSeatsArray,
         }));
 
         // STEP 2: Kirim POST (dipanggil setelah transform, bukan di-chain)
@@ -643,6 +685,7 @@ CATATAN / NOTES:`,
             onSuccess: () => {
                 setShowEditBookingModal(false);
                 editBookingForm.reset();
+                setEditSelectedSeats({});
                 setSelectedBooking(null);
             },
             onError: (errors) => {
@@ -796,7 +839,7 @@ CATATAN / NOTES:`,
     };
 
     // Render Conditional Booking Form Fields for Add and Edit Modals
-    const renderBookingFormFields = (form, formId) => {
+    const renderBookingFormFields = (form, formId, currentSeats, setCurrentSeats) => {
         const typeUi = form.data.booking_type_ui;
         const isAirport = typeUi === 'Airport Pick-Up' || typeUi === 'Airport Drop-Off';
         const direction = typeUi === 'Airport Pick-Up' ? 'Pick-Up' : 'Drop-Off';
@@ -1592,55 +1635,102 @@ CATATAN / NOTES:`,
                     )}
                 </div>
 
-                {/* Notes */}
-                <div className="sm:col-span-2">
-                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                        Child Car Seats (Optional)
-                    </label>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        {childSeatTypes.map((seat) => {
-                            const qty = selectedSeats[seat.id] || 0;
-                            return (
-                                <div
-                                    key={seat.id}
-                                    className="border rounded-lg p-3 flex items-center justify-between"
-                                    style={{
-                                        borderColor: qty > 0 ? '#94A3B8' : '#E2E8F0',
-                                        background: qty > 0 ? '#F8FAFC' : '#FFFFFF',
-                                    }}
-                                >
-                                    <div className="flex-1 min-w-0 pr-3">
-                                        <div className="text-sm font-medium text-slate-900">{seat.name}</div>
-                                        <div className="text-xs text-slate-500">{seat.age_range} · {seat.weight_range}</div>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                const newQty = Math.max(0, qty - 1);
-                                                setSelectedSeats(prev => ({ ...prev, [seat.id]: newQty }));
-                                            }}
-                                            className="w-7 h-7 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold"
-                                        >
-                                            −
-                                        </button>
-                                        <span className="w-6 text-center text-sm font-semibold">{qty}</span>
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                const newQty = Math.min(3, qty + 1);
-                                                setSelectedSeats(prev => ({ ...prev, [seat.id]: newQty }));
-                                            }}
-                                            className="w-7 h-7 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold"
-                                        >
-                                            +
-                                        </button>
-                                    </div>
+                {/* Child Car Seats */}
+                {(() => {
+                    const totalChildren = parseInt(form.data.children) || 0;
+                    const totalSelectedSeats = Object.values(currentSeats || {}).reduce((sum, qty) => sum + (parseInt(qty) || 0), 0);
+                    const maxTotalSeats = totalChildren;
+                    const canIncrease = totalSelectedSeats < maxTotalSeats;
+
+                    return (
+                        <div className="sm:col-span-2">
+                            <div className="flex items-center justify-between mb-1.5">
+                                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700">
+                                    Child Car Seats (Free & Sanitized)
+                                </label>
+                                <span className="text-[11px] font-medium text-slate-500">
+                                    {totalSelectedSeats} / {maxTotalSeats} terpilih
+                                </span>
+                            </div>
+
+                            {totalChildren === 0 && (
+                                <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-500 mb-3 flex items-center gap-2">
+                                    <svg className="w-4 h-4 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                        <circle cx="12" cy="12" r="10" />
+                                        <line x1="12" y1="8" x2="12" y2="12" />
+                                        <line x1="12" y1="16" x2="12.01" y2="16" />
+                                    </svg>
+                                    <span>Tambahkan jumlah anak (Children) untuk memilih child car seat.</span>
                                 </div>
-                            );
-                        })}
-                    </div>
-                </div>
+                            )}
+
+                            {totalSelectedSeats >= maxTotalSeats && maxTotalSeats > 0 && (
+                                <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 mb-3 flex items-center gap-2">
+                                    <svg className="w-4 h-4 text-amber-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                        <circle cx="12" cy="12" r="10" />
+                                        <line x1="12" y1="8" x2="12" y2="12" />
+                                        <line x1="12" y1="16" x2="12.01" y2="16" />
+                                    </svg>
+                                    <span>Maksimal {maxTotalSeats} child seat (sesuai {maxTotalSeats} anak dalam pemesanan).</span>
+                                </div>
+                            )}
+
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                {childSeatTypes.map((seat) => {
+                                    const qty = (currentSeats && currentSeats[seat.id]) || 0;
+                                    return (
+                                        <div
+                                            key={seat.id}
+                                            className="border rounded-xl p-3 flex items-center justify-between transition-all"
+                                            style={{
+                                                borderColor: qty > 0 ? '#00AEEF' : '#E2E8F0',
+                                                background: qty > 0 ? '#F0F9FF' : '#FFFFFF',
+                                            }}
+                                        >
+                                            <div className="flex-1 min-w-0 pr-3">
+                                                <div className="text-sm font-semibold text-slate-900">{seat.name}</div>
+                                                <div className="text-xs text-slate-500">{seat.age_range} · {seat.weight_range}</div>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <button
+                                                    type="button"
+                                                    disabled={qty === 0}
+                                                    onClick={() => {
+                                                        const newQty = Math.max(0, qty - 1);
+                                                        setCurrentSeats(prev => ({ ...prev, [seat.id]: newQty }));
+                                                    }}
+                                                    className={`w-7 h-7 rounded-lg text-sm font-bold flex items-center justify-center transition cursor-pointer ${
+                                                        qty === 0
+                                                            ? 'bg-slate-100 text-slate-300 cursor-not-allowed opacity-50'
+                                                            : 'bg-slate-200 hover:bg-slate-300 text-slate-700 active:scale-95'
+                                                    }`}
+                                                >
+                                                    −
+                                                </button>
+                                                <span className="w-6 text-center text-sm font-bold text-slate-900">{qty}</span>
+                                                <button
+                                                    type="button"
+                                                    disabled={!canIncrease}
+                                                    onClick={() => {
+                                                        if (!canIncrease) return;
+                                                        setCurrentSeats(prev => ({ ...prev, [seat.id]: qty + 1 }));
+                                                    }}
+                                                    className={`w-7 h-7 rounded-lg text-sm font-bold flex items-center justify-center transition cursor-pointer ${
+                                                        !canIncrease
+                                                            ? 'bg-slate-100 text-slate-300 cursor-not-allowed opacity-50'
+                                                            : 'bg-[#00AEEF] hover:bg-[#009cd7] text-white active:scale-95'
+                                                    }`}
+                                                >
+                                                    +
+                                                </button>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    );
+                })()}
 
                 {/* Notes */}
                 <div className="sm:col-span-2">
@@ -2455,7 +2545,7 @@ CATATAN / NOTES:`,
                     </div>
 
                     {/* Conditional Form Fields */}
-                    {renderBookingFormFields(addBookingForm, 'add-booking-form')}
+                    {renderBookingFormFields(addBookingForm, 'add-booking-form', addSelectedSeats, setAddSelectedSeats)}
                 </form>
             </Modal>
 
@@ -2538,7 +2628,7 @@ CATATAN / NOTES:`,
                     </div>
 
                     {/* Conditional Form Fields */}
-                    {renderBookingFormFields(editBookingForm, 'edit-booking-form')}
+                    {renderBookingFormFields(editBookingForm, 'edit-booking-form', editSelectedSeats, setEditSelectedSeats)}
                 </form>
             </Modal>
 

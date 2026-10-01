@@ -1736,18 +1736,6 @@ export default function WebsiteContent({
                         />
                     </div>
 
-                    <div className="flex items-center gap-2">
-                        <input
-                            type="checkbox"
-                            id="add_is_founder"
-                            checked={addTeamForm.data.is_founder}
-                            onChange={(e) => addTeamForm.setData('is_founder', e.target.checked)}
-                            className="w-4 h-4 rounded text-[#00AEEF] focus:ring-[#00AEEF]"
-                        />
-                        <label htmlFor="add_is_founder" className="text-xs font-bold text-slate-700 cursor-pointer">
-                            Tandai sebagai Founder / Co-Founder
-                        </label>
-                    </div>
 
                     <div className="flex justify-end gap-2 pt-4 border-t border-slate-100">
                         <button
@@ -1857,18 +1845,6 @@ export default function WebsiteContent({
                         />
                     </div>
 
-                    <div className="flex items-center gap-2">
-                        <input
-                            type="checkbox"
-                            id="edit_is_founder"
-                            checked={editTeamForm.data.is_founder}
-                            onChange={(e) => editTeamForm.setData('is_founder', e.target.checked)}
-                            className="w-4 h-4 rounded text-[#00AEEF] focus:ring-[#00AEEF]"
-                        />
-                        <label htmlFor="edit_is_founder" className="text-xs font-bold text-slate-700 cursor-pointer">
-                            Tandai sebagai Founder / Co-Founder
-                        </label>
-                    </div>
 
                     <div className="flex justify-end gap-2 pt-4 border-t border-slate-100">
                         <button

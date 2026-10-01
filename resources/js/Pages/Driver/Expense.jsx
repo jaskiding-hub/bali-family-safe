@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Link, usePage } from '@inertiajs/react';
+import { Link, usePage, router } from '@inertiajs/react';
 import DriverLayout, { useDriverProfile } from '../../Layouts/DriverLayout';
 
 function parseAmount(val) {
@@ -132,12 +132,10 @@ export default function Expense({ trip, authDriver }) {
         }
     };
 
-    const handleSubmit = async (e) => {
-        if (e) e.preventDefault();
-
+    const saveExpenseItem = async () => {
         if (!expenseType.trim() || !amount.trim()) {
             alert('Please fill in both expense type and amount.');
-            return;
+            return false;
         }
 
         setIsSubmitting(true);
@@ -174,14 +172,38 @@ export default function Expense({ trip, authDriver }) {
                     showToast(data.message || 'Expense added successfully!');
                 }
                 handleCancelEdit();
+                return true;
             } else {
                 alert(data.message || 'Failed to save expense.');
+                return false;
             }
         } catch (err) {
             console.error(err);
             setIsSubmitting(false);
             alert('An error occurred while saving.');
+            return false;
         }
+    };
+
+    const handleSubmit = async (e) => {
+        if (e && e.preventDefault) e.preventDefault();
+        await saveExpenseItem();
+    };
+
+    const handleSaveAllExpense = async () => {
+        if (isSubmitting) return;
+
+        // If driver typed an expense in the form without clicking 'Confirm Expense' first, save it
+        if (expenseType.trim() || amount.trim()) {
+            if (!expenseType.trim() || !amount.trim()) {
+                alert('Please fill in both expense type and amount before saving, or clear the form.');
+                return;
+            }
+            const success = await saveExpenseItem();
+            if (!success) return;
+        }
+
+        router.visit(backUrl);
     };
 
     const totalSum = expenses.reduce((sum, item) => sum + parseAmount(item.amount), 0);
@@ -495,6 +517,29 @@ export default function Expense({ trip, authDriver }) {
                             </span>
                         </div>
                     </div>
+
+                    {/* Box Action: Confirm Expense Button */}
+                    <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+                        {editingId && (
+                            <button
+                                type="button"
+                                onClick={handleCancelEdit}
+                                className="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition cursor-pointer"
+                            >
+                                Cancel
+                            </button>
+                        )}
+                        <button
+                            type="submit"
+                            disabled={isSubmitting}
+                            className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition shadow-xs cursor-pointer disabled:opacity-60"
+                        >
+                            <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span>{isSubmitting ? 'Saving...' : (editingId ? 'Confirm Update Expense' : 'Confirm Expense')}</span>
+                        </button>
+                    </div>
                 </form>
             </div>
 
@@ -502,7 +547,7 @@ export default function Expense({ trip, authDriver }) {
             <div className="fixed z-40 bottom-0 left-0 right-0 w-full sm:bottom-5 sm:left-1/2 sm:-translate-x-1/2 sm:max-w-xl md:max-w-2xl bg-white/95 backdrop-blur-md border border-[#DEE3E8] sm:rounded-2xl p-4 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] sm:shadow-[0_10px_30px_rgba(0,0,0,0.08)] anim-ease-up delay-5">
                 <button 
                     type="button" 
-                    onClick={handleSubmit}
+                    onClick={handleSaveAllExpense}
                     disabled={isSubmitting}
                     className="w-full h-12 bg-[#00AEEF] hover:bg-[#009cd7] active:scale-[0.985] text-[#003E58] font-bold text-sm rounded-xl flex items-center justify-center gap-2 transition-all shadow-md shadow-sky-500/20 cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
                 >
@@ -510,9 +555,7 @@ export default function Expense({ trip, authDriver }) {
                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                     </svg>
                     <span>
-                        {isSubmitting 
-                            ? (editingId ? 'Updating...' : 'Saving...') 
-                            : (editingId ? 'Update Expense' : 'Save Expense')}
+                        {isSubmitting ? 'Saving...' : 'Save All Expense'}
                     </span>
                 </button>
             </div>
