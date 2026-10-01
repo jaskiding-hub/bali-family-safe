@@ -30,6 +30,7 @@ export default function Home({
     child_seat_types = [],
     about_content = null,
     car_seat_content = [],
+    owner_profile = null,
 }) {
     return (
         <div style={{
@@ -60,6 +61,7 @@ export default function Home({
                 siteSettings={site_settings}
                 packages={packages}
                 childSeatTypes={child_seat_types}
+                carSeatContent={car_seat_content}
                 vehicles={vehicles_for_booking.length > 0 ? vehicles_for_booking : vehicles}
             />
 
@@ -68,7 +70,7 @@ export default function Home({
                 <ScrollReveal><CarSeatsSection carSeatContent={car_seat_content} /></ScrollReveal>
                 <ScrollReveal><AboutSection aboutContent={about_content} /></ScrollReveal>
                 <ScrollReveal><WhyChooseUsSection siteFeatures={site_features} /></ScrollReveal>
-                <ScrollReveal><DriversSection teamMembers={team_members} /></ScrollReveal>
+                <ScrollReveal><DriversSection teamMembers={team_members} ownerProfile={owner_profile} /></ScrollReveal>
                 <ScrollReveal><ServicesSection services={services} /></ScrollReveal>
                 <ScrollReveal><TourPackagesSection packages={packages} /></ScrollReveal>
                 <ScrollReveal><FleetSection vehicles={vehicles} /></ScrollReveal>

@@ -3,8 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\AboutContent;
+use App\Models\CarSeatContent;
 use App\Models\Faq;
 use App\Models\GalleryImage;
+use App\Models\OwnerProfile;
 use App\Models\Package;
 use App\Models\Service;
 use App\Models\SiteFeature;
@@ -28,6 +31,9 @@ class WebsiteContentController extends Controller
             ],
             'services' => Service::with('features')->orderBy('display_order')->get(),
             'team_members' => TeamMember::orderBy('display_order')->get(),
+            'owner_profile' => OwnerProfile::orderBy('id', 'desc')->get(),
+            'about_content' => AboutContent::orderBy('display_order')->get(),
+            'car_seat_content' => CarSeatContent::orderBy('display_order')->get(),
             'testimonials' => Testimonial::orderByDesc('id')->get(),
             'gallery' => GalleryImage::orderBy('display_order')->get(),
             'faqs' => Faq::orderBy('display_order')->get(),

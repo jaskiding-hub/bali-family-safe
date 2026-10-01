@@ -33,7 +33,7 @@ const TABS = [
     },
 ];
 
-export default function BookingWidget({ packages = [], childSeatTypes = [], vehicles = [], siteSettings = null }) {
+export default function BookingWidget({ packages = [], childSeatTypes = [], carSeatContent = [], vehicles = [], siteSettings = null }) {
     // Detect URL params untuk pre-fill tour booking
     const getInitialTab = () => {
         if (typeof window !== 'undefined') {
@@ -141,9 +141,9 @@ export default function BookingWidget({ packages = [], childSeatTypes = [], vehi
 
             {/* Form Body */}
             <div style={{ flex: 1 }}>
-                {activeTab === 0 && <AirportBookingForm vehicles={vehicles} childSeatTypes={childSeatTypes} siteSettings={siteSettings} />}
-                {activeTab === 1 && <DayTourForm packages={packages} vehicles={vehicles} childSeatTypes={childSeatTypes} siteSettings={siteSettings} />}
-                {activeTab === 2 && <HotelTransferForm vehicles={vehicles} childSeatTypes={childSeatTypes} siteSettings={siteSettings} />}
+                {activeTab === 0 && <AirportBookingForm vehicles={vehicles} childSeatTypes={childSeatTypes} carSeatContent={carSeatContent} siteSettings={siteSettings} />}
+                {activeTab === 1 && <DayTourForm packages={packages} vehicles={vehicles} childSeatTypes={childSeatTypes} carSeatContent={carSeatContent} siteSettings={siteSettings} />}
+                {activeTab === 2 && <HotelTransferForm vehicles={vehicles} childSeatTypes={childSeatTypes} carSeatContent={carSeatContent} siteSettings={siteSettings} />}
             </div>
         </div>
     );

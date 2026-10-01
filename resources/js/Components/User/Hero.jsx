@@ -1,7 +1,7 @@
 import React from 'react';
 import BookingWidget from './BookingWidget/BookingWidget';
 
-export default function Hero({ siteSettings = null, packages = [], childSeatTypes = [], vehicles = [] }) {
+export default function Hero({ siteSettings = null, packages = [], childSeatTypes = [], carSeatContent = [], vehicles = [] }) {
     const headline = siteSettings?.hero_headline || 'Family Transportation in Bali\nwith Child Car Seats';
     const subheadline = siteSettings?.hero_subheadline || 'Safe, comfortable and private transportation for families travelling to Bali with babies, toddlers and children.';
     const bgImage = siteSettings?.hero_background_image;
@@ -92,6 +92,7 @@ export default function Hero({ siteSettings = null, packages = [], childSeatType
                 <BookingWidget
                     packages={packages}
                     childSeatTypes={childSeatTypes}
+                    carSeatContent={carSeatContent}
                     vehicles={vehicles}
                     siteSettings={siteSettings}
                 />

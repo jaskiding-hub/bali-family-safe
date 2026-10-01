@@ -2,6 +2,9 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useForm, router, usePage, Head } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import Modal from '@/Components/Modal';
+import AboutContentTab from './WebsiteContent/AboutContentTab';
+import CarSeatContentTab from './WebsiteContent/CarSeatContentTab';
+import OwnerProfileTab from './WebsiteContent/OwnerProfileTab';
 
 const inputBaseClass = "w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#00AEEF]/20 focus:border-[#00AEEF] transition";
 const selectBaseClass = "w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#00AEEF]/20 focus:border-[#00AEEF] transition cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22%2364748b%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M5.22%208.22a.75.75%200%200%201%201.06%200L10%2011.94l3.72-3.72a.75.75%200%201%201%201.06%201.06l-4.25%204.25a.75.75%200%200%201-1.06%200L5.22%209.28a.75.75%200%200%201%200-1.06z%22%20clip-rule%3D%22evenodd%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem_1.25rem] bg-[right_0.75rem_center] bg-no-repeat pr-10";
@@ -10,6 +13,9 @@ export default function WebsiteContent({
     stats = {},
     services = [],
     team_members = [],
+    owner_profile = [],
+    about_content = [],
+    car_seat_content = [],
     testimonials = [],
     gallery = [],
     faqs = [],
@@ -570,6 +576,9 @@ export default function WebsiteContent({
                         {[
                             { id: 'services', label: 'Services', count: services.length },
                             { id: 'team', label: 'Our Team', count: team_members.length },
+                            { id: 'owner', label: 'Owner Profile', count: owner_profile.length },
+                            { id: 'about', label: 'About Us', count: about_content.length },
+                            { id: 'car-seats', label: 'Child Car Seats', count: car_seat_content.length },
                             { id: 'testimonials', label: 'Testimonials', count: testimonials.length },
                             { id: 'gallery', label: 'Gallery', count: gallery.length },
                             { id: 'faqs', label: 'FAQs', count: faqs.length },
@@ -825,6 +834,33 @@ export default function WebsiteContent({
                                 </table>
                             </div>
                         )}
+                    </div>
+                )}
+
+                {/* ----------------------------------------------------------------- */}
+                {/* TAB: OWNER PROFILE */}
+                {/* ----------------------------------------------------------------- */}
+                {activeTab === 'owner' && (
+                    <div className="bg-white rounded-2xl shadow-xs border border-slate-200/80 p-5 sm:p-6">
+                        <OwnerProfileTab ownerProfile={owner_profile} />
+                    </div>
+                )}
+
+                {/* ----------------------------------------------------------------- */}
+                {/* TAB: ABOUT US CONTENT */}
+                {/* ----------------------------------------------------------------- */}
+                {activeTab === 'about' && (
+                    <div className="bg-white rounded-2xl shadow-xs border border-slate-200/80 p-5 sm:p-6">
+                        <AboutContentTab aboutContent={about_content} />
+                    </div>
+                )}
+
+                {/* ----------------------------------------------------------------- */}
+                {/* TAB: CAR SEATS CONTENT */}
+                {/* ----------------------------------------------------------------- */}
+                {activeTab === 'car-seats' && (
+                    <div className="bg-white rounded-2xl shadow-xs border border-slate-200/80 p-5 sm:p-6">
+                        <CarSeatContentTab carSeatContent={car_seat_content} />
                     </div>
                 )}
 

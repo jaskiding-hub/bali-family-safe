@@ -147,26 +147,21 @@ export function VehicleSelect({ value, onChange, vehicles = [] }) {
     );
 }
 
-export function ChildSeatsSelector({ childSeatTypes = [], selectedSeats = {}, onSeatChange }) {
-    // Canonical 3 types only - filter dari backend
-    const canonicalNames = ['Infant Capsule', 'Toddler Seat', 'Booster Seat'];
-
+export function ChildSeatsSelector({ carSeatContent = [], selectedSeats = {}, onSeatChange, vehicleCapacity = 6, totalChildren = 0 }) {
+    // Use car_seat_content from DB, atau fallback ke default
     const defaultSeats = [
-        { id: 1, name: 'Infant Capsule', age_range: '0–1 yr', weight_range: '0–13 kg' },
-        { id: 2, name: 'Toddler Seat', age_range: '1–4 yr', weight_range: '9–18 kg' },
-        { id: 3, name: 'Booster Seat', age_range: '4–8 yr', weight_range: '15–36 kg' },
+        { id: 1, tag: 'Age 0-12 Months', title: 'Infant Capsule', description: 'Rear-facing infant seat' },
+        { id: 2, tag: 'Age 1-4 Years', title: 'Toddler Seat', description: 'Forward-facing toddler seat' },
+        { id: 3, tag: 'Age 4-8+ Years', title: 'Booster Seat', description: 'Booster seat for older children' },
     ];
 
-    // Filter childSeatTypes to only canonical 3, or use default
-    let seats = defaultSeats;
-    if (childSeatTypes && childSeatTypes.length > 0) {
-        const filtered = childSeatTypes.filter(s =>
-            canonicalNames.some(canonical => s.name && s.name.includes(canonical.split(' ')[0]))
-        );
-        if (filtered.length >= 3) {
-            seats = filtered.slice(0, 3);
-        }
-    }
+    const seats = carSeatContent.length > 0 ? carSeatContent : defaultSeats;
+
+    // Calculate total selected seats
+    const totalSelectedSeats = Object.values(selectedSeats).reduce((sum, qty) => sum + qty, 0);
+
+    // Max seats = jumlah children (tidak boleh lebih dari jumlah anak)
+    const maxTotalSeats = totalChildren;
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
@@ -176,9 +171,37 @@ export function ChildSeatsSelector({ childSeatTypes = [], selectedSeats = {}, on
                     Free & sanitized
                 </span>
             </label>
+            {totalSelectedSeats >= maxTotalSeats && maxTotalSeats > 0 && (
+                <div style={{
+                    padding: '8px 12px',
+                    background: '#FEF2F2',
+                    border: '1px solid #FEE2E2',
+                    borderRadius: '6px',
+                    fontSize: '12px',
+                    color: '#991B1B',
+                    marginBottom: '8px',
+                }}>
+                    Maximum {maxTotalSeats} child seat{maxTotalSeats !== 1 ? 's' : ''} (based on {maxTotalSeats} {maxTotalSeats === 1 ? 'child' : 'children'} in booking)
+                </div>
+            )}
+            {totalChildren === 0 && (
+                <div style={{
+                    padding: '8px 12px',
+                    background: '#F8FAFC',
+                    border: '1px solid #E2E8F0',
+                    borderRadius: '6px',
+                    fontSize: '12px',
+                    color: '#64748B',
+                    marginBottom: '8px',
+                }}>
+                    Please add children to enable child seat selection
+                </div>
+            )}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
                 {seats.map((seat) => {
                     const qty = selectedSeats[seat.id] || 0;
+                    const canIncrease = totalSelectedSeats < maxTotalSeats;
+
                     return (
                         <div
                             key={seat.id}
@@ -195,40 +218,46 @@ export function ChildSeatsSelector({ childSeatTypes = [], selectedSeats = {}, on
                         >
                             <div style={{ flex: 1, minWidth: 0, paddingRight: '12px' }}>
                                 <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', color: '#1E293B', marginBottom: '2px' }}>
-                                    {seat.name}
+                                    {seat.title}
                                 </div>
                                 <div style={{ fontSize: '12px', color: '#64748B' }}>
-                                    {seat.age_range}
+                                    {seat.tag}
                                 </div>
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                 <button
                                     type="button"
                                     onClick={() => onSeatChange(seat.id, Math.max(0, qty - 1))}
+                                    disabled={qty === 0}
                                     style={{
                                         width: '28px',
                                         height: '28px',
                                         borderRadius: '6px',
                                         border: '1px solid #CBD5E1',
-                                        background: '#FFFFFF',
-                                        cursor: 'pointer',
+                                        background: qty === 0 ? '#F1F5F9' : '#FFFFFF',
+                                        cursor: qty === 0 ? 'not-allowed' : 'pointer',
                                         display: 'flex',
                                         alignItems: 'center',
                                         justifyContent: 'center',
                                         fontSize: '16px',
                                         fontWeight: 500,
-                                        color: '#64748B',
+                                        color: qty === 0 ? '#CBD5E1' : '#64748B',
                                         transition: 'all 0.2s',
+                                        opacity: qty === 0 ? 0.5 : 1,
                                     }}
                                     onMouseEnter={(e) => {
-                                        e.currentTarget.style.background = '#3B82F6';
-                                        e.currentTarget.style.borderColor = '#3B82F6';
-                                        e.currentTarget.style.color = '#FFFFFF';
+                                        if (qty > 0) {
+                                            e.currentTarget.style.background = '#3B82F6';
+                                            e.currentTarget.style.borderColor = '#3B82F6';
+                                            e.currentTarget.style.color = '#FFFFFF';
+                                        }
                                     }}
                                     onMouseLeave={(e) => {
-                                        e.currentTarget.style.background = '#FFFFFF';
-                                        e.currentTarget.style.borderColor = '#CBD5E1';
-                                        e.currentTarget.style.color = '#64748B';
+                                        if (qty > 0) {
+                                            e.currentTarget.style.background = '#FFFFFF';
+                                            e.currentTarget.style.borderColor = '#CBD5E1';
+                                            e.currentTarget.style.color = '#64748B';
+                                        }
                                     }}
                                 >
                                     −
@@ -238,31 +267,37 @@ export function ChildSeatsSelector({ childSeatTypes = [], selectedSeats = {}, on
                                 </span>
                                 <button
                                     type="button"
-                                    onClick={() => onSeatChange(seat.id, Math.min(3, qty + 1))}
+                                    onClick={() => canIncrease && onSeatChange(seat.id, qty + 1)}
+                                    disabled={!canIncrease}
                                     style={{
                                         width: '28px',
                                         height: '28px',
                                         borderRadius: '6px',
                                         border: '1px solid #CBD5E1',
-                                        background: '#FFFFFF',
-                                        cursor: 'pointer',
+                                        background: !canIncrease ? '#F1F5F9' : '#FFFFFF',
+                                        cursor: !canIncrease ? 'not-allowed' : 'pointer',
                                         display: 'flex',
                                         alignItems: 'center',
                                         justifyContent: 'center',
                                         fontSize: '16px',
                                         fontWeight: 500,
-                                        color: '#64748B',
+                                        color: !canIncrease ? '#CBD5E1' : '#64748B',
                                         transition: 'all 0.2s',
+                                        opacity: !canIncrease ? 0.5 : 1,
                                     }}
                                     onMouseEnter={(e) => {
-                                        e.currentTarget.style.background = '#3B82F6';
-                                        e.currentTarget.style.borderColor = '#3B82F6';
-                                        e.currentTarget.style.color = '#FFFFFF';
+                                        if (canIncrease) {
+                                            e.currentTarget.style.background = '#3B82F6';
+                                            e.currentTarget.style.borderColor = '#3B82F6';
+                                            e.currentTarget.style.color = '#FFFFFF';
+                                        }
                                     }}
                                     onMouseLeave={(e) => {
-                                        e.currentTarget.style.background = '#FFFFFF';
-                                        e.currentTarget.style.borderColor = '#CBD5E1';
-                                        e.currentTarget.style.color = '#64748B';
+                                        if (canIncrease) {
+                                            e.currentTarget.style.background = '#FFFFFF';
+                                            e.currentTarget.style.borderColor = '#CBD5E1';
+                                            e.currentTarget.style.color = '#64748B';
+                                        }
                                     }}
                                 >
                                     +

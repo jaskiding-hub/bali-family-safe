@@ -18,6 +18,10 @@ function ServiceModal({ service, onClose }) {
     if (!service) return null;
     const d = service.details;
 
+    // Debug: Log data untuk memastikan includes ada
+    console.log('Service details:', d);
+    console.log('Includes array:', d.includes);
+
     const scrollToBooking = () => {
         onClose();
         setTimeout(() => {
@@ -40,14 +44,9 @@ function ServiceModal({ service, onClose }) {
                         <div className="w-10 h-10 bg-sky-100/80 text-sky-700 rounded-xl flex items-center justify-center shrink-0">
                             {service.icon}
                         </div>
-                        <div>
-                            <h3 className="font-bold text-slate-900 text-base sm:text-lg leading-snug m-0">
-                                {d.heading}
-                            </h3>
-                            <span className="text-xs font-semibold text-sky-800 bg-sky-50 px-2 py-0.5 rounded-full border border-sky-100 inline-block mt-0.5">
-                                {d.price}
-                            </span>
-                        </div>
+                        <h3 className="font-bold text-slate-900 text-base sm:text-lg leading-snug m-0">
+                            {d.heading}
+                        </h3>
                     </div>
                     <button
                         type="button"
@@ -61,51 +60,48 @@ function ServiceModal({ service, onClose }) {
                 </div>
 
                 {/* Body */}
-                <div className="p-4 sm:p-5 space-y-3.5 text-xs sm:text-sm">
-                    {/* Short Description */}
-                    <p className="text-slate-600 text-xs sm:text-sm leading-relaxed m-0">
-                        {d.description}
-                    </p>
-
-                    {/* What's Included 2-column compact grid */}
-                    <div className="space-y-1.5">
-                        <h4 className="font-bold text-slate-400 text-[11px] uppercase tracking-wider m-0">
-                            What's Included
-                        </h4>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 bg-slate-50/80 p-2.5 rounded-xl border border-slate-100">
-                            {d.includes.slice(0, 6).map((item, i) => (
-                                <div key={i} className="flex items-start gap-1.5 text-xs text-slate-700">
-                                    <svg className="w-4 h-4 text-sky-600 shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                    </svg>
-                                    <span className="leading-tight">{item}</span>
-                                </div>
-                            ))}
-                        </div>
+                <div className="p-5 sm:p-6">
+                    {/* Description */}
+                    <div className="mb-8">
+                        <p className="text-slate-700 text-sm leading-relaxed m-0 break-words whitespace-normal">
+                            {d.description}
+                        </p>
                     </div>
 
-                    {/* Meta Info Row */}
-                    <div className="grid grid-cols-2 gap-2 text-xs bg-sky-50/60 p-2.5 rounded-xl border border-sky-100/60">
-                        <div>
-                            <span className="text-slate-400 text-[11px] block">Vehicles</span>
-                            <span className="font-semibold text-slate-900 truncate block">{d.vehicles}</span>
-                        </div>
-                        <div>
-                            <span className="text-slate-400 text-[11px] block">Capacity</span>
-                            <span className="font-semibold text-slate-900 truncate block">{d.capacity}</span>
+                    {/* What's Included */}
+                    <div className="mb-6">
+                        <h4 className="font-bold text-slate-800 text-sm mb-4 m-0">
+                            What's Included
+                        </h4>
+                        <div className="space-y-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                            {d.includes && d.includes.length > 0 ? (
+                                d.includes.slice(0, 8).map((item, i) => {
+                                    console.log(`Item ${i}:`, item);
+                                    return (
+                                        <div key={i} className="flex items-start gap-3">
+                                            <svg className="w-5 h-5 text-green-600 shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                            </svg>
+                                            <span className="text-slate-800 text-sm leading-relaxed break-words" style={{ flex: 1, wordBreak: 'break-word' }}>
+                                                {item || 'Feature item'}
+                                            </span>
+                                        </div>
+                                    );
+                                })
+                            ) : (
+                                <p className="text-slate-500 text-sm">No features available</p>
+                            )}
                         </div>
                     </div>
 
                     {/* Action button */}
-                    <div className="pt-1">
-                        <button
-                            type="button"
-                            onClick={scrollToBooking}
-                            className="w-full py-2.5 bg-sky-900 hover:bg-sky-950 text-white font-bold rounded-xl shadow-md active:scale-[0.98] transition-all cursor-pointer text-xs sm:text-sm text-center"
-                        >
-                            Book This Service Now
-                        </button>
-                    </div>
+                    <button
+                        type="button"
+                        onClick={scrollToBooking}
+                        className="w-full py-3 bg-sky-900 hover:bg-sky-950 text-white font-bold rounded-xl shadow-md active:scale-[0.98] transition-all cursor-pointer text-sm"
+                    >
+                        Book This Service Now
+                    </button>
                 </div>
             </div>
         </div>,
@@ -185,119 +181,114 @@ export default function ServicesSection({ services = [] }) {
                     </p>
                 </div>
 
-                {/* Cards */}
-                {displayServices.length > 0 ? (
-                    <div className="bfs-row" style={{
-                        display: 'flex',
-                        flexDirection: 'row',
-                        justifyContent: 'center',
-                        gap: '32px',
-                        maxWidth: '1072px',
-                        marginLeft: 'auto',
-                        marginRight: 'auto',
-                        width: '100%',
-                        flexWrap: 'wrap',
-                    }}>
-                        {displayServices.map((srv, i) => (
-                            <div
-                                key={i}
-                                className="card-hover-fluid group"
-                                style={{
-                                    flex: '1 1 0',
-                                    maxWidth: '336px',
-                                    minWidth: '280px',
-                                    background: '#FFFFFF',
-                                    border: '1px solid rgba(189,200,209,0.25)',
-                                    boxShadow: '0px 1px 3px rgba(0,0,0,0.05)',
-                                    borderRadius: '16px',
-                                    padding: '32px',
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    justifyContent: 'space-between',
-                                    minHeight: '390px',
-                                }}
-                            >
-                                {/* Top: icon + title + desc */}
-                                <div>
-                                    <div
-                                        className="transition-transform duration-300 ease-out group-hover:scale-110"
-                                        style={{
-                                            width: '56px',
-                                            height: '56px',
-                                            background: 'rgba(0, 174, 239, 0.15)',
-                                            borderRadius: '9999px',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            marginBottom: '24px',
-                                        }}
-                                    >
-                                        {srv.icon}
-                                    </div>
-
-                                    <h3 style={{
-                                        fontFamily: 'Inter, sans-serif',
-                                        fontWeight: 600,
-                                        fontSize: '24px',
-                                        lineHeight: '32px',
-                                        color: '#191C1D',
-                                        margin: 0,
-                                        marginBottom: '12px',
-                                    }}>
-                                        {srv.title}
-                                    </h3>
-
-                                    <p style={{
-                                        fontFamily: 'Inter, sans-serif',
-                                        fontWeight: 400,
-                                        fontSize: '16px',
-                                        lineHeight: '24px',
-                                        color: '#3E4850',
-                                        margin: 0,
-                                    }}>
-                                        {srv.shortDesc}
-                                    </p>
-                                </div>
-
-                                {/* View Details button */}
-                                <button
-                                    type="button"
-                                    onClick={() => setSelectedService(srv)}
-                                    className="btn-hover-fluid"
+                {/* 3 Cards */}
+                <div className="bfs-row" style={{
+                    display: 'flex',
+                    flexDirection: 'row',
+                    justifyContent: 'center',
+                    gap: '32px',
+                    maxWidth: '1072px',
+                    marginLeft: 'auto',
+                    marginRight: 'auto',
+                    width: '100%',
+                }}>
+                    {displayServices.map((srv, i) => (
+                        <div
+                            key={i}
+                            className="card-hover-fluid group"
+                            style={{
+                                flex: '1 1 0',
+                                maxWidth: '336px',
+                                background: '#FFFFFF',
+                                border: '1px solid rgba(189,200,209,0.25)',
+                                boxShadow: '0px 1px 3px rgba(0,0,0,0.05)',
+                                borderRadius: '16px',
+                                padding: '32px',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                justifyContent: 'space-between',
+                                minHeight: '390px',
+                            }}
+                        >
+                            {/* Top: icon + title + desc */}
+                            <div>
+                                <div
+                                    className="transition-transform duration-300 ease-out group-hover:scale-110"
                                     style={{
-                                        width: '100%',
-                                        height: '48px',
-                                        border: '2px solid #00AEEF',
-                                        borderRadius: '12px',
-                                        background: 'transparent',
-                                        fontFamily: 'Inter, sans-serif',
-                                        fontWeight: 600,
-                                        fontSize: '14px',
-                                        lineHeight: '20px',
-                                        letterSpacing: '0.14px',
-                                        color: '#00658D',
-                                        cursor: 'pointer',
-                                        transition: 'all 0.25s ease',
-                                    }}
-                                    onMouseEnter={e => {
-                                        e.currentTarget.style.background = '#00AEEF';
-                                        e.currentTarget.style.color = '#FFFFFF';
-                                    }}
-                                    onMouseLeave={e => {
-                                        e.currentTarget.style.background = 'transparent';
-                                        e.currentTarget.style.color = '#00658D';
+                                        width: '56px',
+                                        height: '56px',
+                                        background: 'rgba(0, 174, 239, 0.15)',
+                                        borderRadius: '9999px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        marginBottom: '24px',
                                     }}
                                 >
-                                    View Details
-                                </button>
+                                    {srv.icon}
+                                </div>
+
+                                <h3 style={{
+                                    fontFamily: 'Inter, sans-serif',
+                                    fontWeight: 600,
+                                    fontSize: '24px',
+                                    lineHeight: '32px',
+                                    color: '#191C1D',
+                                    margin: 0,
+                                    marginBottom: '12px',
+                                }}>
+                                    {srv.title}
+                                </h3>
+
+                                <p style={{
+                                    fontFamily: 'Inter, sans-serif',
+                                    fontWeight: 400,
+                                    fontSize: '16px',
+                                    lineHeight: '24px',
+                                    color: '#3E4850',
+                                    margin: 0,
+                                    wordWrap: 'break-word',
+                                    overflowWrap: 'break-word',
+                                    hyphens: 'auto',
+                                }}>
+                                    {srv.shortDesc}
+                                </p>
                             </div>
-                        ))}
-                    </div>
-                ) : (
-                    <div style={{ textAlign: 'center', padding: '48px 16px', color: '#6E7881', fontSize: '14px' }}>
-                        Belum ada layanan yang ditampilkan.
-                    </div>
-                )}
+
+                            {/* View Details button */}
+                            <button
+                                type="button"
+                                onClick={() => setSelectedService(srv)}
+                                className="btn-hover-fluid"
+                                style={{
+                                    width: '100%',
+                                    height: '48px',
+                                    border: '2px solid #00AEEF',
+                                    borderRadius: '12px',
+                                    background: 'transparent',
+                                    fontFamily: 'Inter, sans-serif',
+                                    fontWeight: 600,
+                                    fontSize: '14px',
+                                    lineHeight: '20px',
+                                    letterSpacing: '0.14px',
+                                    color: '#00658D',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.25s ease',
+                                }}
+                                onMouseEnter={e => {
+                                    e.currentTarget.style.background = '#00AEEF';
+                                    e.currentTarget.style.color = '#FFFFFF';
+                                }}
+                                onMouseLeave={e => {
+                                    e.currentTarget.style.background = 'transparent';
+                                    e.currentTarget.style.color = '#00658D';
+                                }}
+                            >
+                                View Details
+                            </button>
+                        </div>
+                    ))}
+                </div>
             </div>
 
             {/* Service Detail Modal */}

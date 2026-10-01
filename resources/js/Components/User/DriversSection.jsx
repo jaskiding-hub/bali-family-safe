@@ -10,8 +10,8 @@ const SAFETY_FEATURES = [
     'Child-Safe Driving',
 ];
 
-export default function DriversSection({ teamMembers = [] }) {
-    const founder = teamMembers.find((m) => m.is_founder) || null;
+export default function DriversSection({ teamMembers = [], ownerProfile = null }) {
+    const founder = ownerProfile || teamMembers.find((m) => m.is_founder) || null;
     const regularMembers = teamMembers.filter((m) => !m.is_founder);
 
     const displayTeam = regularMembers.map((m) => {
@@ -26,46 +26,61 @@ export default function DriversSection({ teamMembers = [] }) {
         };
     });
 
+    // Hide entire section only if no founder AND no team members
+    if (!founder && regularMembers.length === 0) {
+        return null;
+    }
+
     return (
         <div id="drivers" style={{ width: '100%', background: '#F8F9FA' }}>
 
-            {/* ── FOUNDER SECTION (Rendered only if founder exists in DB) ── */}
+            {/* ── FOUNDER SECTION ── (only show if founder exists) */}
             {founder && (
                 <div className="bfs-founder relative py-12 sm:py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-[#F9FAFB] to-white overflow-hidden">
                     <div className="relative max-w-4xl mx-auto bg-white rounded-2xl sm:rounded-3xl border border-slate-200/70 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden">
                         <div className="flex flex-col md:flex-row items-stretch">
 
-                            {/* Founder Portrait — matches the text height exactly */}
+                            {/* Founder Portrait */}
                             <div className="w-full md:w-[320px] lg:w-[350px] shrink-0 bg-slate-100 relative overflow-hidden">
-                                <img
-                                    src={founder.photo_url || "/images/wayan-suparta.jpg"}
-                                    alt={`${founder.name} - Founder of Bali Family Safe Tours`}
-                                    className="w-full h-full object-cover object-top min-h-[300px] md:min-h-0"
-                                />
+                                {founder.photo_url ? (
+                                    <img
+                                        src={founder.photo_url}
+                                        alt={`${founder.name} - Bali Family Safe Tours`}
+                                        className="w-full h-full object-cover object-top min-h-[300px] md:min-h-0"
+                                    />
+                                ) : (
+                                    <div className="w-full h-full flex items-center justify-center min-h-[300px] bg-slate-200">
+                                        <div className="text-6xl font-bold text-slate-400">
+                                            {founder.name.split(' ').map(n => n[0]).join('').substring(0, 2)}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
 
                             {/* Founder Story & Message */}
                             <div className="flex-1 p-6 sm:p-8 lg:p-10 flex flex-col justify-center">
-                                {/* Subtle Tag */}
+                                {/* Tag */}
                                 <div className="inline-flex items-center gap-1.5 self-start px-3 py-1 rounded-full bg-sky-50 border border-sky-100 text-[#00658D] text-xs font-semibold tracking-wider uppercase mb-3.5">
                                     <Sparkle size={13} weight="fill" className="text-[#00658D]" />
                                     FOUNDER'S MESSAGE
                                 </div>
 
-                                {/* Main quote heading */}
-                                <h2 className="text-xl sm:text-2xl lg:text-[25px] font-bold text-slate-900 tracking-tight leading-snug mb-3">
-                                    "We don't just drive; we take care of your family like our own."
-                                </h2>
+                                {/* Quote */}
+                                {founder.quote && (
+                                    <h2 className="text-xl sm:text-2xl lg:text-[25px] font-bold text-slate-900 tracking-tight leading-snug mb-3">
+                                        "{founder.quote}"
+                                    </h2>
+                                )}
 
-                                {/* Message body */}
+                                {/* Bio */}
                                 <p className="text-slate-600 text-sm sm:text-base leading-relaxed font-normal mb-5">
-                                    {founder.bio || "Behind Bali Family Safe Tours is a simple commitment: every parent traveling with little ones deserves complete peace of mind. We take the stress out of island travel—providing vetted family drivers, certified child seats, and genuine Balinese care so you can focus on making memories."}
+                                    {founder.bio || "Behind Bali Family Safe Tours is a simple commitment: every parent traveling with little ones deserves complete peace of mind."}
                                 </p>
 
-                                {/* Founder Info (clean, elegant, no noisy labels) */}
+                                {/* Founder Info */}
                                 <div className="pt-4 border-t border-slate-100 flex items-center gap-3">
                                     <div className="w-10 h-10 rounded-full bg-[#00658D]/10 text-[#00658D] flex items-center justify-center font-bold text-sm shrink-0">
-                                        {(founder.name || 'Wayan Suparta').split(' ').map(n => n[0]).join('').substring(0, 2)}
+                                        {founder.name.split(' ').map(n => n[0]).join('').substring(0, 2)}
                                     </div>
                                     <div>
                                         <div className="text-base font-bold text-slate-900 leading-tight">

@@ -1,8 +1,10 @@
 <?php
 
+use App\Http\Controllers\Admin\AboutContentController;
 use App\Http\Controllers\Admin\AirportController;
 use App\Http\Controllers\Admin\BookingController;
 use App\Http\Controllers\Admin\CalendarController;
+use App\Http\Controllers\Admin\CarSeatContentController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DriverController;
 use App\Http\Controllers\Admin\FaqController;
@@ -11,6 +13,7 @@ use App\Http\Controllers\Admin\GalleryController;
 use App\Http\Controllers\Admin\HotelController;
 use App\Http\Controllers\Admin\HotelTransferPriceListController;
 use App\Http\Controllers\Admin\MasterDataController;
+use App\Http\Controllers\Admin\OwnerProfileController;
 use App\Http\Controllers\Admin\PackageController;
 use App\Http\Controllers\Admin\ServiceController;
 use App\Http\Controllers\Admin\SiteFeatureController;
@@ -44,6 +47,9 @@ Route::middleware('auth:admin')->prefix('admin')->name('admin.')->group(function
     Route::get('/website-content', [WebsiteContentController::class, 'index'])->name('website-content');
     Route::resource('services', ServiceController::class)->except(['index','create','show','edit']);
     Route::resource('team-members', TeamMemberController::class)->except(['index','create','show','edit']);
+    Route::resource('owner-profile', OwnerProfileController::class)->except(['index','create','show','edit']);
+    Route::resource('about-content', AboutContentController::class)->except(['index','create','show','edit']);
+    Route::resource('car-seat-content', CarSeatContentController::class)->except(['index','create','show','edit']);
     Route::post('/testimonials/{testimonial}/toggle-approval', [TestimonialController::class, 'toggleApproval'])->name('testimonials.toggle-approval');
     Route::resource('testimonials', TestimonialController::class)->except(['index','create','show','edit']);
     Route::resource('gallery', GalleryController::class)->except(['index','create','show','edit']);

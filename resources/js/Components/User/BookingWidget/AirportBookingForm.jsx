@@ -24,7 +24,7 @@ const IconCalendar = () => <svg width="16" height="18" viewBox="0 0 24 24" fill=
 const IconClock = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z"/></svg>;
 const IconNote = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>;
 
-export default function AirportBookingForm({ vehicles = [], childSeatTypes = [], siteSettings = null }) {
+export default function AirportBookingForm({ vehicles = [], childSeatTypes = [], carSeatContent = [], siteSettings = null }) {
     const { flash = {} } = usePage().props;
     const [direction, setDirection] = useState('Pick-Up'); // 'Pick-Up' or 'Drop-Off'
     const [zones, setZones] = useState([]);
@@ -715,23 +715,37 @@ export default function AirportBookingForm({ vehicles = [], childSeatTypes = [],
             {/* 5. Child Seats Selection */}
             <div style={{ padding: '16px 32px 0' }}>
                 <ChildSeatsSelector
-                    childSeatTypes={childSeatTypes}
+                    carSeatContent={carSeatContent}
                     selectedSeats={selectedSeats}
                     onSeatChange={handleSeatChange}
+                    vehicleCapacity={selectedVehicle?.passenger_capacity || 6}
+                    totalChildren={parseInt(data.children, 10) || 0}
                 />
             </div>
 
             {/* 6. Special Requests */}
             <div style={{ padding: '16px 32px 0' }}>
-                <FieldWithIcon label="Special Instructions & Requests" optional={true}>
-                    <textarea
-                        rows="2"
-                        placeholder="Flight delay details, pram size, driver meeting instructions..."
-                        style={textareaStyle}
-                        value={data.notes}
-                        onChange={(e) => setData('notes', e.target.value)}
-                    />
-                </FieldWithIcon>
+                <label style={{
+                    fontFamily: 'Inter, sans-serif',
+                    fontWeight: 500,
+                    fontSize: '14px',
+                    lineHeight: '20px',
+                    color: '#475569',
+                    marginBottom: '8px',
+                    display: 'block',
+                }}>
+                    Special Instructions & Requests
+                    <span style={{ fontSize: '13px', fontWeight: 400, color: '#94A3B8', marginLeft: '6px' }}>
+                        (optional)
+                    </span>
+                </label>
+                <textarea
+                    rows="2"
+                    placeholder="Flight delay details, pram size, driver meeting instructions"
+                    style={{...textareaStyle, textAlign: 'left'}}
+                    value={data.notes}
+                    onChange={(e) => setData('notes', e.target.value)}
+                />
             </div>
 
             {/* 7. Footer with Live Estimate & Submit Buttons */}

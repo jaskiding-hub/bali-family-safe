@@ -8,6 +8,7 @@ use App\Models\CarSeatContent;
 use App\Models\ChildSeatType;
 use App\Models\Faq;
 use App\Models\GalleryImage;
+use App\Models\OwnerProfile;
 use App\Models\Package;
 use App\Models\Service;
 use App\Models\SiteFeature;
@@ -214,6 +215,10 @@ class HomeController extends Controller
             ->orderBy('display_order', 'asc')
             ->get();
 
+        $ownerProfile = OwnerProfile::where('is_active', true)
+            ->orderBy('id', 'desc')
+            ->first();
+
         $vehicleUnits = VehicleUnit::orderBy('passenger_capacity', 'asc')->get()->map(function ($unit) {
             return [
                 'id' => $unit->id,
@@ -237,6 +242,7 @@ class HomeController extends Controller
             'child_seat_types' => $childSeatTypes,
             'about_content' => $aboutContent,
             'car_seat_content' => $carSeatContent,
+            'owner_profile' => $ownerProfile,
         ]);
     }
 

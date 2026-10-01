@@ -22,7 +22,7 @@ const IconClock = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="cu
 const IconTourMap = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M20.5 3l-.16.03L15 5.1 9 3 3.36 4.9c-.21.07-.36.25-.36.48V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.64-1.9c.21-.07.36-.25.36-.48V3.5c0-.28-.22-.5-.5-.5zM15 19l-6-2.11V5l6 2.11V19z"/></svg>;
 const IconNote = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>;
 
-export default function DayTourForm({ packages = [], vehicles = [], childSeatTypes = [], siteSettings = null }) {
+export default function DayTourForm({ packages = [], vehicles = [], childSeatTypes = [], carSeatContent = [], siteSettings = null }) {
     const { flash = {} } = usePage().props;
     const [selectedSeats, setSelectedSeats] = useState({});
     const [estimatedFee, setEstimatedFee] = useState(null);
@@ -312,7 +312,7 @@ export default function DayTourForm({ packages = [], vehicles = [], childSeatTyp
                         <input
                             type="text"
                             required
-                            placeholder="e.g. Jessica Davis"
+                            placeholder="Jessica Davis"
                             style={{
                                 ...inputStyle,
                                 borderColor: errors.guest_name ? '#F43F5E' : '#CBD5E1',
@@ -331,7 +331,7 @@ export default function DayTourForm({ packages = [], vehicles = [], childSeatTyp
                         <input
                             type="tel"
                             required
-                            placeholder="e.g. +61 412 345 678"
+                            placeholder="+61 412 345 678"
                             style={{
                                 ...inputStyle,
                                 borderColor: errors.whatsapp_number ? '#F43F5E' : '#CBD5E1',
@@ -392,23 +392,37 @@ export default function DayTourForm({ packages = [], vehicles = [], childSeatTyp
             {/* 4. Child Seats Selection */}
             <div style={{ padding: '16px 32px 0' }}>
                 <ChildSeatsSelector
-                    childSeatTypes={childSeatTypes}
+                    carSeatContent={carSeatContent}
                     selectedSeats={selectedSeats}
                     onSeatChange={handleSeatChange}
+                    vehicleCapacity={selectedVehicle?.passenger_capacity || 6}
+                    totalChildren={parseInt(data.children, 10) || 0}
                 />
             </div>
 
             {/* 5. Custom Stops / Hotel Info */}
             <div style={{ padding: '16px 32px 0' }}>
-                <FieldWithIcon label="Pick-Up Hotel & Custom Stops" icon={<IconLocation />} optional={true}>
-                    <textarea
-                        rows="2"
-                        placeholder="e.g. Pick-up at Ayana Resort Jimbaran. We would love to stop at Tegenungan waterfall and a kid-friendly cafe..."
-                        style={textareaStyle}
-                        value={data.notes}
-                        onChange={(e) => setData('notes', e.target.value)}
-                    />
-                </FieldWithIcon>
+                <label style={{
+                    fontFamily: 'Inter, sans-serif',
+                    fontWeight: 500,
+                    fontSize: '14px',
+                    lineHeight: '20px',
+                    color: '#475569',
+                    marginBottom: '8px',
+                    display: 'block',
+                }}>
+                    Pick-Up Hotel & Custom Stops
+                    <span style={{ fontSize: '13px', fontWeight: 400, color: '#94A3B8', marginLeft: '6px' }}>
+                        (optional)
+                    </span>
+                </label>
+                <textarea
+                    rows="2"
+                    placeholder="Pick-up at Ayana Resort Jimbaran. We would love to stop at Tegenungan waterfall and a kid-friendly cafe"
+                    style={{...textareaStyle, textAlign: 'left'}}
+                    value={data.notes}
+                    onChange={(e) => setData('notes', e.target.value)}
+                />
             </div>
 
             {/* 6. Footer */}
