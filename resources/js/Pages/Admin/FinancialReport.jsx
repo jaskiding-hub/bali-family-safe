@@ -22,21 +22,36 @@ export default function FinancialReport({
         date_range_label = '',
     } = stats;
 
+    const getCurrentMonth = () => {
+        const d = new Date();
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        return `${y}-${m}`;
+    };
+
+    const initialMonth = (filters.period === 'all_time' || filters.year)
+        ? (filters.month || '')
+        : (filters.month || getCurrentMonth());
+
     const [periodDropdownOpen, setPeriodDropdownOpen] = useState(false);
     const [selectedBooking, setSelectedBooking] = useState(null);
     const [showBreakdownModal, setShowBreakdownModal] = useState(false);
     const [searchQuery, setSearchQuery] = useState(filters.search || '');
-    const [selectedMonth, setSelectedMonth] = useState(filters.month || '');
+    const [selectedMonth, setSelectedMonth] = useState(initialMonth);
     const [selectedYear, setSelectedYear] = useState(filters.year || '');
 
     const periodDropdownRef = useRef(null);
 
     // Sync state when filters prop changes from server response
     useEffect(() => {
-        setSelectedMonth(filters.month || '');
+        if (filters.period === 'all_time' || filters.year) {
+            setSelectedMonth(filters.month || '');
+        } else {
+            setSelectedMonth(filters.month || getCurrentMonth());
+        }
         setSelectedYear(filters.year || '');
         setSearchQuery(filters.search || '');
-    }, [filters.month, filters.year, filters.search]);
+    }, [filters.month, filters.year, filters.search, filters.period]);
 
     // Close dropdown on click outside
     useEffect(() => {
@@ -664,8 +679,83 @@ export default function FinancialReport({
                         </form>
                     </div>
 
-                    {/* Table View with Balanced Spacing & Widths (Gambar 3 perfected) */}
-                    <div className="overflow-x-auto">
+                    {/* Mobile Card List View (No horizontal sliding on mobile) */}
+                    <div className="block sm:hidden divide-y divide-slate-100">
+                        {bookings.data.length > 0 ? (
+                            bookings.data.map((booking) => (
+                                <div key={booking.id} className="p-4 space-y-3 hover:bg-slate-50/60 transition-colors">
+                                    {/* Top Row: Date & Status */}
+                                    <div className="flex items-center justify-between gap-2">
+                                        <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
+                                            <svg className="w-3.5 h-3.5 text-slate-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                <rect width="18" height="18" x="3" y="4" rx="2" ry="2" />
+                                                <line x1="16" x2="16" y1="2" y2="6" />
+                                                <line x1="8" y1="2" y2="6" />
+                                                <line x1="3" x2="21" y1="10" y2="10" />
+                                            </svg>
+                                            <span className="font-semibold text-slate-700">{booking.booking_date_formatted || 'Oct 24, 2023'}</span>
+                                            {booking.pickup_time && <span>• {booking.pickup_time}</span>}
+                                        </div>
+                                        <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${
+                                            booking.status === 'Completed'
+                                                ? 'bg-[#E6F4EA] text-[#137333] border border-emerald-200/50'
+                                                : booking.status === 'On Going'
+                                                ? 'bg-sky-50 text-sky-700 border border-sky-200/50'
+                                                : booking.status === 'Cancelled'
+                                                ? 'bg-rose-50 text-rose-700 border border-rose-200/50'
+                                                : 'bg-amber-50 text-amber-700 border border-amber-200/50'
+                                        }`}>
+                                            <span className={`w-1.5 h-1.5 rounded-full ${booking.status === 'Completed' ? 'bg-[#137333]' : 'bg-current'}`}></span>
+                                            {booking.status}
+                                        </span>
+                                    </div>
+
+                                    {/* Middle Row: Guest Name & Code & Service */}
+                                    <div>
+                                        <div className="font-bold text-slate-900 text-sm">
+                                            {booking.guest_name}
+                                        </div>
+                                        <div className="flex items-center gap-2 mt-1">
+                                            <span className="text-[10px] font-mono text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">
+                                                {booking.booking_code || ('#' + booking.id)}
+                                            </span>
+                                            <span className="text-xs text-slate-600 line-clamp-1">
+                                                {booking.trip_title}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    {/* Bottom Row: Total Fee & View Details */}
+                                    <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
+                                        <div>
+                                            <span className="text-[10px] uppercase font-semibold text-slate-400 block tracking-wider">Total Fee</span>
+                                            <span className="font-bold text-slate-900 text-sm tabular-nums">
+                                                {booking.total_fee_formatted}
+                                            </span>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => openDetailModal(booking)}
+                                            className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#00658D] bg-sky-50 hover:bg-sky-100 border border-sky-200/60 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
+                                        >
+                                            <span>View Details</span>
+                                            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                                <polyline points="9 18 15 12 9 6" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <div className="py-12 px-4 text-center text-slate-400">
+                                <p className="text-sm font-semibold text-slate-700">No booking records found</p>
+                                <p className="text-xs text-slate-400 mt-1">Try changing the period filter or clear your search term.</p>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Desktop Table View (Hidden on mobile) */}
+                    <div className="hidden sm:block overflow-x-auto">
                         <table className="w-full text-left border-collapse table-fixed min-w-[720px]">
                             <thead>
                                 <tr className="bg-[#EFF4FA] border-b border-[#DEE3E8] text-[#3E4850] text-xs font-semibold uppercase tracking-[0.7px]">

@@ -11,6 +11,10 @@ class AdminAuthController extends Controller
 {
     public function showLogin()
     {
+        if (Auth::guard('admin')->check()) {
+            return redirect()->route('admin.dashboard');
+        }
+
         return Inertia::render('Auth/AdminLogin');
     }
 
@@ -21,7 +25,7 @@ class AdminAuthController extends Controller
             'password' => ['required'],
         ]);
 
-        if (Auth::guard('admin')->attempt($credentials, $request->boolean('remember'))) {
+        if (Auth::guard('admin')->attempt($credentials)) {
             $request->session()->regenerate();
             return redirect()->intended(route('admin.dashboard'));
         }

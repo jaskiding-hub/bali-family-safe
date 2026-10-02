@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 
 const NAV_LINKS = [
@@ -18,10 +18,11 @@ export default function Navbar({ siteSettings = null }) {
     const [scrolled, setScrolled] = useState(false);
     const [mobileOpen, setMobileOpen] = useState(false);
     const [mounted, setMounted] = useState(false);
+    const [activeSection, setActiveSection] = useState('#hero');
+    const isClickScrolling = useRef(false);
 
     // Get WhatsApp number from settings or fallback
     const waNumber = (siteSettings?.whatsapp_number || '6281234567890').replace(/[^0-9]/g, '');
-    const [activeSection, setActiveSection] = useState('#hero');
 
     useEffect(() => {
         setMounted(true);
@@ -30,29 +31,51 @@ export default function Navbar({ siteSettings = null }) {
         return () => window.removeEventListener('scroll', onScroll);
     }, []);
 
-    // Track active section with IntersectionObserver
+    // Accurate Scroll-Spy for mobile and desktop
     useEffect(() => {
-        const observer = new IntersectionObserver(
-            (entries) => {
-                entries.forEach((entry) => {
-                    if (entry.isIntersecting) {
-                        const sectionId = `#${entry.target.id}`;
-                        setActiveSection(sectionId);
-                    }
-                });
-            },
-            {
-                rootMargin: '-20% 0px -60% 0px',
-                threshold: [0, 0.1, 0.5],
+        const handleScrollSpy = () => {
+            if (isClickScrolling.current) return;
+
+            const scrollY = window.scrollY;
+            if (scrollY < 100) {
+                setActiveSection('#hero');
+                return;
             }
-        );
 
-        NAV_LINKS.forEach((link) => {
-            const el = document.querySelector(link.href);
-            if (el) observer.observe(el);
-        });
+            // If scrolled near page bottom, activate the last nav link
+            if (window.innerHeight + scrollY >= document.documentElement.scrollHeight - 100) {
+                setActiveSection(NAV_LINKS[NAV_LINKS.length - 1].href);
+                return;
+            }
 
-        return () => observer.disconnect();
+            const headerOffset = window.innerWidth <= 768 ? 90 : 110;
+            const checkpoint = scrollY + headerOffset;
+
+            // Search backwards from last to first section to find currently active section
+            for (let i = NAV_LINKS.length - 1; i >= 0; i--) {
+                const link = NAV_LINKS[i];
+                let el = document.querySelector(link.href);
+                if (!el && link.href === '#drivers') {
+                    el = document.querySelector('#team') || document.querySelector('#our-team');
+                }
+                if (!el && link.href === '#tours') {
+                    el = document.querySelector('#day-tours') || document.querySelector('#packages');
+                }
+
+                if (el) {
+                    const top = el.getBoundingClientRect().top + scrollY;
+                    if (checkpoint >= top - 20) {
+                        setActiveSection(link.href);
+                        break;
+                    }
+                }
+            }
+        };
+
+        window.addEventListener('scroll', handleScrollSpy, { passive: true });
+        handleScrollSpy();
+
+        return () => window.removeEventListener('scroll', handleScrollSpy);
     }, []);
 
     useEffect(() => {
@@ -79,10 +102,16 @@ export default function Navbar({ siteSettings = null }) {
             return;
         }
 
+        isClickScrolling.current = true;
+        setActiveSection(href);
+
         setTimeout(() => {
             if (href === '#hero' || href === '#home') {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
                 setActiveSection('#hero');
+                setTimeout(() => {
+                    isClickScrolling.current = false;
+                }, 800);
                 return;
             }
 
@@ -95,7 +124,7 @@ export default function Navbar({ siteSettings = null }) {
             }
 
             if (el) {
-                const navHeight = 75;
+                const navHeight = window.innerWidth <= 768 ? 80 : 85;
                 const rect = el.getBoundingClientRect();
                 const offsetTop = rect.top + window.pageYOffset - navHeight;
                 window.scrollTo({
@@ -106,7 +135,11 @@ export default function Navbar({ siteSettings = null }) {
             } else if (href.startsWith('#')) {
                 window.location.href = '/' + href;
             }
-        }, 80);
+
+            setTimeout(() => {
+                isClickScrolling.current = false;
+            }, 800);
+        }, 60);
     };
 
     return (
@@ -279,24 +312,31 @@ export default function Navbar({ siteSettings = null }) {
                                     key={i}
                                     href={link.href}
                                     onClick={(e) => scrollTo(e, link.href)}
+                                    className={`group flex items-center justify-between px-4 py-3 rounded-xl font-semibold text-base sm:text-lg transition-all duration-150 cursor-pointer ${
+                                        isActive
+                                            ? 'text-[#00658D] bg-[#00AEEF]/15 font-bold shadow-xs border-l-4 border-[#00AEEF]'
+                                            : 'text-slate-700 hover:text-[#00658D] hover:bg-slate-100/90 active:bg-slate-200/70 border-l-4 border-transparent'
+                                    }`}
                                     style={{
                                         fontFamily: 'Inter, sans-serif',
-                                        fontWeight: 600,
-                                        fontSize: '18px',
-                                        lineHeight: '26px',
-                                        color: isActive ? '#00658D' : '#1E293B',
-                                        background: isActive ? 'rgba(0, 101, 141, 0.06)' : 'transparent',
                                         textDecoration: 'none',
-                                        padding: '12px 16px',
-                                        borderRadius: '12px',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'space-between',
-                                        transition: 'background 0.15s, color 0.15s',
                                     }}
                                 >
                                     <span>{link.label}</span>
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={isActive ? '#00658D' : '#94A3B8'} strokeWidth="2.5" strokeLinecap="round">
+                                    <svg
+                                        width="16"
+                                        height="16"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="2.5"
+                                        strokeLinecap="round"
+                                        className={`transition-all duration-200 ${
+                                            isActive
+                                                ? 'text-[#00658D] translate-x-1'
+                                                : 'text-slate-400 group-hover:text-[#00658D] group-hover:translate-x-1'
+                                        }`}
+                                    >
                                         <polyline points="9 18 15 12 9 6"></polyline>
                                     </svg>
                                 </a>

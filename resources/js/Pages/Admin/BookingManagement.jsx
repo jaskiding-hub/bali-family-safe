@@ -1959,68 +1959,34 @@ CATATAN / NOTES:`,
 
                 {/* 2. PANEL RECENT BOOKINGS */}
                 <div className="space-y-3">
-                    {/* Search & Filter Controls */}
-                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
-                        {/* Filter Tabs */}
-                        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none shrink-0">
-                            {[
-                                { id: 'all', label: 'All Bookings', count: stats.all_bookings ?? 0 },
-                                { id: 'airport', label: 'Airport', count: stats.airport ?? ((stats.airport_pickup ?? 0) + (stats.airport_dropoff ?? 0)) },
-                                { id: 'day_tour', label: 'Day Tour', count: stats.day_tour ?? 0 },
-                                { id: 'hotel_transfer', label: 'Hotel Transfer', count: stats.hotel_transfer ?? 0 },
-                            ].map((tab) => {
-                                const active = filterType === tab.id;
-                                return (
-                                    <button
-                                        key={tab.id}
-                                        type="button"
-                                        onClick={() => setFilterType(tab.id)}
-                                        className={`px-3 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer min-h-[42px] ${
-                                            active
-                                                ? 'bg-[#00AEEF] text-white shadow-xs'
-                                                : 'bg-white border border-slate-200/80 text-slate-600 hover:bg-slate-50'
-                                        }`}
-                                    >
-                                        <span>{tab.label}</span>
-                                        <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
-                                            active ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'
-                                        }`}>
-                                            {tab.count}
-                                        </span>
-                                    </button>
-                                );
-                            })}
+                    {/* Search Booking */}
+                    <form onSubmit={handleBookingSearch} className="relative w-full">
+                        <input
+                            type="text"
+                            value={bookingSearch}
+                            onChange={(e) => setBookingSearch(e.target.value)}
+                            placeholder="Search booking real-time by code or guest name..."
+                            className="w-full pl-10 pr-10 py-3 bg-white border border-slate-200/90 rounded-xl text-base sm:text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all shadow-xs min-h-[44px]"
+                        />
+                        <div className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <circle cx="11" cy="11" r="8" />
+                                <line x1="21" x2="16.65" y1="21" y2="16.65" />
+                            </svg>
                         </div>
-
-                        {/* Search Booking */}
-                        <form onSubmit={handleBookingSearch} className="relative flex-1">
-                            <input
-                                type="text"
-                                value={bookingSearch}
-                                onChange={(e) => setBookingSearch(e.target.value)}
-                                placeholder="Search booking real-time by code or guest name..."
-                                className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200/90 rounded-xl text-base sm:text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all shadow-xs min-h-[42px]"
-                            />
-                            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-                                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <circle cx="11" cy="11" r="8" />
-                                    <line x1="21" x2="16.65" y1="21" y2="16.65" />
+                        {bookingSearch && (
+                            <button
+                                type="button"
+                                onClick={() => setBookingSearch('')}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1 rounded-md"
+                            >
+                                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                    <line x1="18" y1="6" x2="6" y2="18" />
+                                    <line x1="6" y1="6" x2="18" y2="18" />
                                 </svg>
-                            </div>
-                            {bookingSearch && (
-                                <button
-                                    type="button"
-                                    onClick={() => setBookingSearch('')}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1 rounded-md"
-                                >
-                                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                                        <line x1="18" y1="6" x2="6" y2="18" />
-                                        <line x1="6" y1="6" x2="18" y2="18" />
-                                    </svg>
-                                </button>
-                            )}
-                        </form>
-                    </div>
+                            </button>
+                        )}
+                    </form>
 
                     {/* Bookings Card Container */}
                     <div className="bg-white border border-slate-200/80 shadow-xs rounded-2xl overflow-hidden">

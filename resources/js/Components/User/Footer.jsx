@@ -27,8 +27,17 @@ const AREAS = [
 
 export default function Footer({ siteSettings = null }) {
     const scrollTo = (e, href) => {
-        e.preventDefault();
-        document.querySelector(href)?.scrollIntoView({ behavior: 'smooth' });
+        if (e) e.preventDefault();
+        let el = document.querySelector(href);
+        if (!el && href === '#drivers') el = document.querySelector('#team') || document.querySelector('#our-team');
+        if (!el && href === '#tours') el = document.querySelector('#day-tours') || document.querySelector('#packages');
+        if (el) {
+            const navHeight = window.innerWidth <= 768 ? 80 : 85;
+            const offsetTop = el.getBoundingClientRect().top + window.pageYOffset - navHeight;
+            window.scrollTo({ top: Math.max(0, offsetTop), behavior: 'smooth' });
+        } else if (href.startsWith('#')) {
+            window.location.href = '/' + href;
+        }
     };
 
     const waRaw = siteSettings?.whatsapp_number || '+62 812-3456-7890';

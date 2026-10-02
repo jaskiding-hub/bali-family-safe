@@ -11,6 +11,10 @@ class DriverAuthController extends Controller
 {
     public function showLogin()
     {
+        if (Auth::guard('driver')->check()) {
+            return redirect()->route('driver.home');
+        }
+
         return Inertia::render('Auth/DriverLogin');
     }
 
@@ -30,7 +34,7 @@ class DriverAuthController extends Controller
             'password' => $password,
         ];
 
-        if (Auth::guard('driver')->attempt($credentials, $request->boolean('remember'))) {
+        if (Auth::guard('driver')->attempt($credentials)) {
             $request->session()->regenerate();
             return redirect()->intended(route('driver.home'));
         }

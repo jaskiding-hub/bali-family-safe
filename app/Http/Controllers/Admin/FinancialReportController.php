@@ -17,10 +17,16 @@ class FinancialReportController extends Controller
 {
     public function index(Request $request): Response
     {
-        $period = $request->input('period', 'this_month');
+        $period = $request->input('period');
         $customMonth = $request->input('month'); // YYYY-MM if provided
         $customYear = $request->input('year'); // YYYY if provided
         $now = Carbon::now();
+
+        // If no filter or period is provided (or period is this_month), default to current month YYYY-MM
+        if (!$customMonth && !$customYear && $period !== 'all_time') {
+            $customMonth = $now->format('Y-m');
+            $period = 'this_month';
+        }
 
         $startDate = null;
         $endDate = null;

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Head, useForm, usePage } from '@inertiajs/react';
 
 export default function AdminLogin() {
@@ -6,8 +6,14 @@ export default function AdminLogin() {
     const { data, setData, post, processing, errors } = useForm({
         email: '',
         password: '',
-        remember: false,
     });
+
+    // Clear any previous remember email from storage
+    useEffect(() => {
+        try {
+            localStorage.removeItem('bfs_admin_remember_email');
+        } catch (e) {}
+    }, []);
 
     const [showPassword, setShowPassword] = useState(false);
 
@@ -104,20 +110,6 @@ export default function AdminLogin() {
                             {errors.password && (
                                 <p className="mt-1.5 text-sm text-red-600">{errors.password}</p>
                             )}
-                        </div>
-
-                        {/* Remember Me */}
-                        <div className="flex items-center">
-                            <input
-                                type="checkbox"
-                                id="remember"
-                                checked={data.remember}
-                                onChange={(e) => setData('remember', e.target.checked)}
-                                className="w-4 h-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
-                            />
-                            <label htmlFor="remember" className="ml-2 text-sm text-slate-600">
-                                Remember me
-                            </label>
                         </div>
 
                         {/* Submit Button */}
