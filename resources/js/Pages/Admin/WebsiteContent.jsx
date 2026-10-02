@@ -530,7 +530,7 @@ export default function WebsiteContent({
     return (
         <AdminLayout title="Website Content CMS">
             <Head title="Website Content CMS" />
-            <div className="space-y-6 max-w-[1320px] pb-16">
+            <div className="space-y-6 w-full min-w-0 max-w-[1320px] pb-16">
                 {/* Flash Messages */}
                 {flash?.success && (
                     <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-2xl flex items-center gap-3 text-sm font-semibold animate-in fade-in duration-200 shadow-xs">
@@ -552,7 +552,7 @@ export default function WebsiteContent({
                 )}
 
                 {/* Header & Tabs */}
-                <div className="bg-white rounded-2xl shadow-xs border border-slate-200/80 p-4 sm:p-6">
+                <div className="bg-white rounded-2xl shadow-xs border border-slate-200/80 p-4 sm:p-6 overflow-hidden">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-100">
                         <div>
                             <div className="flex items-center gap-2">
@@ -572,7 +572,7 @@ export default function WebsiteContent({
                     </div>
 
                     {/* CMS Navigation Tabs */}
-                    <div className="flex items-center gap-2 pt-4 overflow-x-auto no-scrollbar">
+                    <div className="flex items-center gap-2 pt-4 overflow-x-auto no-scrollbar max-w-full">
                         {[
                             { id: 'services', label: 'Services', count: services.length },
                             { id: 'team', label: 'Our Team', count: team_members.length },
@@ -628,9 +628,9 @@ export default function WebsiteContent({
                                     addServiceForm.reset();
                                     setShowAddServiceModal(true);
                                 }}
-                                className="inline-flex items-center gap-2 bg-[#00AEEF] hover:bg-[#009cd7] text-white px-4 py-2 rounded-xl text-xs sm:text-sm font-bold shadow-xs transition-colors cursor-pointer"
+                                className="inline-flex items-center justify-center gap-2 bg-[#00AEEF] hover:bg-[#009cd7] text-white px-4 py-2.5 sm:py-2 rounded-xl text-xs sm:text-sm font-bold shadow-xs transition-colors cursor-pointer shrink-0"
                             >
-                                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                                     <line x1="12" y1="5" x2="12" y2="19" />
                                     <line x1="5" y1="12" x2="19" y2="12" />
                                 </svg>
@@ -643,81 +643,151 @@ export default function WebsiteContent({
                                 Belum ada data layanan. Klik "Tambah Layanan" untuk mulai membuat.
                             </div>
                         ) : (
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left text-sm text-slate-700">
-                                    <thead className="bg-slate-50 text-slate-500 font-semibold text-xs uppercase tracking-wider border-b border-slate-100">
-                                        <tr>
-                                            <th className="px-4 py-3 rounded-l-xl">Layanan</th>
-                                            <th className="px-4 py-3">Kategori</th>
-                                            <th className="px-4 py-3">Deskripsi</th>
-                                            <th className="px-4 py-3">Fitur Termasuk</th>
-                                            <th className="px-4 py-3 text-right rounded-r-xl">Aksi</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-slate-100">
-                                        {services.map((srv) => (
-                                            <tr key={srv.id} className="hover:bg-slate-50/60 transition-colors">
-                                                <td className="px-4 py-3.5 font-medium text-slate-900 flex items-center gap-3">
-                                                    {srv.image_url ? (
-                                                        <img src={srv.image_url} alt={srv.name} className="w-10 h-10 rounded-xl object-cover border border-slate-200" />
-                                                    ) : (
-                                                        <div className="w-10 h-10 rounded-xl bg-sky-50 text-[#00AEEF] flex items-center justify-center font-bold text-xs">
-                                                            {srv.name.substring(0, 2).toUpperCase()}
-                                                        </div>
+                            <>
+                                {/* Mobile Card View */}
+                                <div className="block sm:hidden space-y-3">
+                                    {services.map((srv) => (
+                                        <div key={srv.id} className="p-4 rounded-xl border border-slate-200 bg-slate-50/40 space-y-3">
+                                            <div className="flex items-start gap-3">
+                                                {srv.image_url ? (
+                                                    <img src={srv.image_url} alt={srv.name} className="w-12 h-12 rounded-xl object-cover border border-slate-200 shrink-0" />
+                                                ) : (
+                                                    <div className="w-12 h-12 rounded-xl bg-sky-50 text-[#00AEEF] flex items-center justify-center font-bold text-xs shrink-0 border border-sky-100">
+                                                        {srv.name.substring(0, 2).toUpperCase()}
+                                                    </div>
+                                                )}
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center justify-between gap-2">
+                                                        <div className="font-bold text-slate-900 text-sm truncate">{srv.name}</div>
+                                                        <span className="inline-block px-2 py-0.5 bg-slate-100 text-slate-700 rounded-md text-[10px] font-semibold shrink-0">
+                                                            {srv.category || 'Umum'}
+                                                        </span>
+                                                    </div>
+                                                    <div className="text-xs text-slate-400 truncate">{srv.slug}</div>
+                                                </div>
+                                            </div>
+
+                                            {srv.short_description && (
+                                                <p className="text-xs text-slate-600 line-clamp-2">
+                                                    {srv.short_description}
+                                                </p>
+                                            )}
+
+                                            {(srv.features || []).length > 0 && (
+                                                <div className="flex flex-wrap gap-1 pt-1">
+                                                    {(srv.features || []).slice(0, 3).map((f) => (
+                                                        <span key={f.id} className="px-2 py-0.5 bg-sky-50 text-[#00AEEF] text-[10px] rounded-md font-medium">
+                                                            {f.feature_text}
+                                                        </span>
+                                                    ))}
+                                                    {(srv.features || []).length > 3 && (
+                                                        <span className="text-[10px] text-slate-400 font-semibold self-center">
+                                                            +{srv.features.length - 3} lainnya
+                                                        </span>
                                                     )}
-                                                    <div>
-                                                        <div className="font-bold text-slate-900">{srv.name}</div>
-                                                        <div className="text-xs text-slate-400">{srv.slug}</div>
-                                                    </div>
-                                                </td>
-                                                <td className="px-4 py-3.5">
-                                                    <span className="inline-block px-2.5 py-1 bg-slate-100 text-slate-700 rounded-lg text-xs font-semibold">
-                                                        {srv.category || 'Umum'}
-                                                    </span>
-                                                </td>
-                                                <td className="px-4 py-3.5 max-w-xs text-xs text-slate-500 truncate">
-                                                    {srv.short_description || '-'}
-                                                </td>
-                                                <td className="px-4 py-3.5">
-                                                    <div className="flex flex-wrap gap-1 max-w-xs">
-                                                        {(srv.features || []).slice(0, 3).map((f) => (
-                                                            <span key={f.id} className="px-2 py-0.5 bg-sky-50 text-[#00AEEF] text-[11px] rounded-md font-medium">
-                                                                {f.feature_text}
-                                                            </span>
-                                                        ))}
-                                                        {(srv.features || []).length > 3 && (
-                                                            <span className="text-[11px] text-slate-400 font-semibold">
-                                                                +{srv.features.length - 3} lainnya
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                </td>
-                                                <td className="px-4 py-3.5 text-right whitespace-nowrap">
-                                                    <div className="inline-flex items-center gap-2">
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => openEditServiceModal(srv)}
-                                                            className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
-                                                        >
-                                                            Edit
-                                                        </button>
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => {
-                                                                setSelectedService(srv);
-                                                                setShowDeleteServiceModal(true);
-                                                            }}
-                                                            className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
-                                                        >
-                                                            Hapus
-                                                        </button>
-                                                    </div>
-                                                </td>
+                                                </div>
+                                            )}
+
+                                            <div className="pt-2 border-t border-slate-200/60 flex items-center justify-end gap-2">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => openEditServiceModal(srv)}
+                                                    className="flex-1 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold text-center transition-colors cursor-pointer"
+                                                >
+                                                    Edit
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setSelectedService(srv);
+                                                        setShowDeleteServiceModal(true);
+                                                    }}
+                                                    className="flex-1 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-xs font-semibold text-center transition-colors cursor-pointer"
+                                                >
+                                                    Hapus
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Desktop Table View */}
+                                <div className="hidden sm:block overflow-x-auto">
+                                    <table className="w-full text-left text-sm text-slate-700">
+                                        <thead className="bg-slate-50 text-slate-500 font-semibold text-xs uppercase tracking-wider border-b border-slate-100">
+                                            <tr>
+                                                <th className="px-4 py-3 rounded-l-xl">Layanan</th>
+                                                <th className="px-4 py-3">Kategori</th>
+                                                <th className="px-4 py-3">Deskripsi</th>
+                                                <th className="px-4 py-3">Fitur Termasuk</th>
+                                                <th className="px-4 py-3 text-right rounded-r-xl">Aksi</th>
                                             </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-100">
+                                            {services.map((srv) => (
+                                                <tr key={srv.id} className="hover:bg-slate-50/60 transition-colors">
+                                                    <td className="px-4 py-3.5 font-medium text-slate-900 flex items-center gap-3">
+                                                        {srv.image_url ? (
+                                                            <img src={srv.image_url} alt={srv.name} className="w-10 h-10 rounded-xl object-cover border border-slate-200" />
+                                                        ) : (
+                                                            <div className="w-10 h-10 rounded-xl bg-sky-50 text-[#00AEEF] flex items-center justify-center font-bold text-xs">
+                                                                {srv.name.substring(0, 2).toUpperCase()}
+                                                            </div>
+                                                        )}
+                                                        <div>
+                                                            <div className="font-bold text-slate-900">{srv.name}</div>
+                                                            <div className="text-xs text-slate-400">{srv.slug}</div>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-4 py-3.5">
+                                                        <span className="inline-block px-2.5 py-1 bg-slate-100 text-slate-700 rounded-lg text-xs font-semibold">
+                                                            {srv.category || 'Umum'}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-4 py-3.5 max-w-xs text-xs text-slate-500 truncate">
+                                                        {srv.short_description || '-'}
+                                                    </td>
+                                                    <td className="px-4 py-3.5">
+                                                        <div className="flex flex-wrap gap-1 max-w-xs">
+                                                            {(srv.features || []).slice(0, 3).map((f) => (
+                                                                <span key={f.id} className="px-2 py-0.5 bg-sky-50 text-[#00AEEF] text-[11px] rounded-md font-medium">
+                                                                    {f.feature_text}
+                                                                </span>
+                                                            ))}
+                                                            {(srv.features || []).length > 3 && (
+                                                                <span className="text-[11px] text-slate-400 font-semibold">
+                                                                    +{srv.features.length - 3} lainnya
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-4 py-3.5 text-right whitespace-nowrap">
+                                                        <div className="inline-flex items-center gap-2">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => openEditServiceModal(srv)}
+                                                                className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
+                                                            >
+                                                                Edit
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    setSelectedService(srv);
+                                                                    setShowDeleteServiceModal(true);
+                                                                }}
+                                                                className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
+                                                            >
+                                                                Hapus
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </>
                         )}
                     </div>
                 )}
@@ -739,9 +809,9 @@ export default function WebsiteContent({
                                     addTeamForm.reset();
                                     setShowAddTeamModal(true);
                                 }}
-                                className="inline-flex items-center gap-2 bg-[#00AEEF] hover:bg-[#009cd7] text-white px-4 py-2 rounded-xl text-xs sm:text-sm font-bold shadow-xs transition-colors cursor-pointer"
+                                className="inline-flex items-center justify-center gap-2 bg-[#00AEEF] hover:bg-[#009cd7] text-white px-4 py-2.5 sm:py-2 rounded-xl text-xs sm:text-sm font-bold shadow-xs transition-colors cursor-pointer shrink-0"
                             >
-                                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                                     <line x1="12" y1="5" x2="12" y2="19" />
                                     <line x1="5" y1="12" x2="19" y2="12" />
                                 </svg>
@@ -754,85 +824,151 @@ export default function WebsiteContent({
                                 Belum ada anggota tim. Klik "Tambah Anggota Tim" untuk menambahkan profil.
                             </div>
                         ) : (
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left text-sm text-slate-700">
-                                    <thead className="bg-slate-50 text-slate-500 font-semibold text-xs uppercase tracking-wider border-b border-slate-100">
-                                        <tr>
-                                            <th className="px-4 py-3 rounded-l-xl">Anggota</th>
-                                            <th className="px-4 py-3">Peran / Jabatan</th>
-                                            <th className="px-4 py-3">Pengalaman & Bahasa</th>
-                                            <th className="px-4 py-3">Role / Kategori</th>
-                                            <th className="px-4 py-3 text-right rounded-r-xl">Aksi</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-slate-100">
-                                        {team_members.map((member) => (
-                                            <tr key={member.id} className="hover:bg-slate-50/60 transition-colors">
-                                                <td className="px-4 py-3.5 font-medium text-slate-900 flex items-center gap-3">
-                                                    {member.photo_url ? (
-                                                        <img src={member.photo_url} alt={member.name} className="w-10 h-10 rounded-full object-cover border border-slate-200" />
-                                                    ) : (
-                                                        <div className="w-10 h-10 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center font-bold text-xs">
-                                                            {member.name.substring(0, 2).toUpperCase()}
-                                                        </div>
-                                                    )}
-                                                    <div>
-                                                        <div className="font-bold text-slate-900 flex items-center gap-1.5">
-                                                            <span>{member.name}</span>
-                                                            {Boolean(member.is_founder) && (
-                                                                <span className="px-1.5 py-0.5 bg-amber-50 text-amber-600 border border-amber-200 rounded text-[10px] font-bold">
-                                                                    Founder
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                        <div className="text-xs text-slate-400">{member.specialty_route || 'All Bali Routes'}</div>
+                            <>
+                                {/* Mobile Card View */}
+                                <div className="block sm:hidden space-y-3">
+                                    {team_members.map((member) => (
+                                        <div key={member.id} className="p-4 rounded-xl border border-slate-200 bg-slate-50/40 space-y-3">
+                                            <div className="flex items-start gap-3">
+                                                {member.photo_url ? (
+                                                    <img src={member.photo_url} alt={member.name} className="w-12 h-12 rounded-full object-cover border border-slate-200 shrink-0" />
+                                                ) : (
+                                                    <div className="w-12 h-12 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center font-bold text-xs shrink-0">
+                                                        {member.name.substring(0, 2).toUpperCase()}
                                                     </div>
-                                                </td>
-                                                <td className="px-4 py-3.5">
-                                                    <span className="inline-block px-2.5 py-1 bg-sky-50 text-[#00AEEF] rounded-lg text-xs font-semibold">
-                                                        {member.role_title}
-                                                    </span>
-                                                </td>
-                                                <td className="px-4 py-3.5 text-xs text-slate-600">
-                                                    <div>{member.years_experience || '-'} pengalaman</div>
-                                                    <div className="text-slate-400 text-[11px]">{member.languages || 'English'}</div>
-                                                </td>
-                                                <td className="px-4 py-3.5">
-                                                    <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-lg border ${
-                                                        member.role === 'Driver' ? 'text-blue-700 bg-blue-50 border-blue-200' :
-                                                        member.role === 'Admin' ? 'text-purple-700 bg-purple-50 border-purple-200' :
-                                                        member.role === 'Customer Support' ? 'text-emerald-700 bg-emerald-50 border-emerald-200' :
-                                                        'text-slate-700 bg-slate-50 border-slate-200'
-                                                    }`}>
-                                                        {member.role || 'Staff'}
-                                                    </span>
-                                                </td>
-                                                <td className="px-4 py-3.5 text-right whitespace-nowrap">
-                                                    <div className="inline-flex items-center gap-2">
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => openEditTeamModal(member)}
-                                                            className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
-                                                        >
-                                                            Edit
-                                                        </button>
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => {
-                                                                setSelectedTeamMember(member);
-                                                                setShowDeleteTeamModal(true);
-                                                            }}
-                                                            className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
-                                                        >
-                                                            Hapus
-                                                        </button>
+                                                )}
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                                        <span className="font-bold text-slate-900 text-sm">{member.name}</span>
+                                                        {Boolean(member.is_founder) && (
+                                                            <span className="px-1.5 py-0.5 bg-amber-50 text-amber-600 border border-amber-200 rounded text-[10px] font-bold">
+                                                                Founder
+                                                            </span>
+                                                        )}
                                                     </div>
-                                                </td>
+                                                    <div className="text-xs text-[#00AEEF] font-semibold mt-0.5">{member.role_title}</div>
+                                                    <div className="text-[11px] text-slate-400 truncate">{member.specialty_route || 'All Bali Routes'}</div>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex items-center justify-between gap-2 text-xs text-slate-600 bg-white p-2.5 rounded-lg border border-slate-100">
+                                                <div>
+                                                    <span className="font-medium text-slate-800">{member.years_experience || '-'}</span> exp &bull; <span className="text-slate-500">{member.languages || 'English'}</span>
+                                                </div>
+                                                <span className={`inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-md border shrink-0 ${
+                                                    member.role === 'Driver' ? 'text-blue-700 bg-blue-50 border-blue-200' :
+                                                    member.role === 'Admin' ? 'text-purple-700 bg-purple-50 border-purple-200' :
+                                                    member.role === 'Customer Support' ? 'text-emerald-700 bg-emerald-50 border-emerald-200' :
+                                                    'text-slate-700 bg-slate-50 border-slate-200'
+                                                }`}>
+                                                    {member.role || 'Staff'}
+                                                </span>
+                                            </div>
+
+                                            <div className="pt-2 border-t border-slate-200/60 flex items-center justify-end gap-2">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => openEditTeamModal(member)}
+                                                    className="flex-1 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold text-center transition-colors cursor-pointer"
+                                                >
+                                                    Edit
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setSelectedTeamMember(member);
+                                                        setShowDeleteTeamModal(true);
+                                                    }}
+                                                    className="flex-1 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-xs font-semibold text-center transition-colors cursor-pointer"
+                                                >
+                                                    Hapus
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Desktop Table View */}
+                                <div className="hidden sm:block overflow-x-auto">
+                                    <table className="w-full text-left text-sm text-slate-700">
+                                        <thead className="bg-slate-50 text-slate-500 font-semibold text-xs uppercase tracking-wider border-b border-slate-100">
+                                            <tr>
+                                                <th className="px-4 py-3 rounded-l-xl">Anggota</th>
+                                                <th className="px-4 py-3">Peran / Jabatan</th>
+                                                <th className="px-4 py-3">Pengalaman & Bahasa</th>
+                                                <th className="px-4 py-3">Role / Kategori</th>
+                                                <th className="px-4 py-3 text-right rounded-r-xl">Aksi</th>
                                             </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-100">
+                                            {team_members.map((member) => (
+                                                <tr key={member.id} className="hover:bg-slate-50/60 transition-colors">
+                                                    <td className="px-4 py-3.5 font-medium text-slate-900 flex items-center gap-3">
+                                                        {member.photo_url ? (
+                                                            <img src={member.photo_url} alt={member.name} className="w-10 h-10 rounded-full object-cover border border-slate-200" />
+                                                        ) : (
+                                                            <div className="w-10 h-10 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center font-bold text-xs">
+                                                                {member.name.substring(0, 2).toUpperCase()}
+                                                            </div>
+                                                        )}
+                                                        <div>
+                                                            <div className="font-bold text-slate-900 flex items-center gap-1.5">
+                                                                <span>{member.name}</span>
+                                                                {Boolean(member.is_founder) && (
+                                                                    <span className="px-1.5 py-0.5 bg-amber-50 text-amber-600 border border-amber-200 rounded text-[10px] font-bold">
+                                                                        Founder
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                            <div className="text-xs text-slate-400">{member.specialty_route || 'All Bali Routes'}</div>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-4 py-3.5">
+                                                        <span className="inline-block px-2.5 py-1 bg-sky-50 text-[#00AEEF] rounded-lg text-xs font-semibold">
+                                                            {member.role_title}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-4 py-3.5 text-xs text-slate-600">
+                                                        <div>{member.years_experience || '-'} pengalaman</div>
+                                                        <div className="text-slate-400 text-[11px]">{member.languages || 'English'}</div>
+                                                    </td>
+                                                    <td className="px-4 py-3.5">
+                                                        <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-lg border ${
+                                                            member.role === 'Driver' ? 'text-blue-700 bg-blue-50 border-blue-200' :
+                                                            member.role === 'Admin' ? 'text-purple-700 bg-purple-50 border-purple-200' :
+                                                            member.role === 'Customer Support' ? 'text-emerald-700 bg-emerald-50 border-emerald-200' :
+                                                            'text-slate-700 bg-slate-50 border-slate-200'
+                                                        }`}>
+                                                            {member.role || 'Staff'}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-4 py-3.5 text-right whitespace-nowrap">
+                                                        <div className="inline-flex items-center gap-2">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => openEditTeamModal(member)}
+                                                                className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
+                                                            >
+                                                                Edit
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    setSelectedTeamMember(member);
+                                                                    setShowDeleteTeamModal(true);
+                                                                }}
+                                                                className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
+                                                            >
+                                                                Hapus
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </>
                         )}
                     </div>
                 )}
@@ -880,9 +1016,9 @@ export default function WebsiteContent({
                                     addTestimonialForm.reset();
                                     setShowAddTestimonialModal(true);
                                 }}
-                                className="inline-flex items-center gap-2 bg-[#00AEEF] hover:bg-[#009cd7] text-white px-4 py-2 rounded-xl text-xs sm:text-sm font-bold shadow-xs transition-colors cursor-pointer"
+                                className="inline-flex items-center justify-center gap-2 bg-[#00AEEF] hover:bg-[#009cd7] text-white px-4 py-2.5 sm:py-2 rounded-xl text-xs sm:text-sm font-bold shadow-xs transition-colors cursor-pointer shrink-0"
                             >
-                                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                                     <line x1="12" y1="5" x2="12" y2="19" />
                                     <line x1="5" y1="12" x2="19" y2="12" />
                                 </svg>
@@ -895,76 +1031,139 @@ export default function WebsiteContent({
                                 Belum ada testimoni. Klik "Tambah Testimoni" untuk menambahkan ulasan.
                             </div>
                         ) : (
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left text-sm text-slate-700">
-                                    <thead className="bg-slate-50 text-slate-500 font-semibold text-xs uppercase tracking-wider border-b border-slate-100">
-                                        <tr>
-                                            <th className="px-4 py-3 rounded-l-xl">Pelanggan</th>
-                                            <th className="px-4 py-3">Rating</th>
-                                            <th className="px-4 py-3">Kutipan Review</th>
-                                            <th className="px-4 py-3">Status Tampil</th>
-                                            <th className="px-4 py-3 text-right rounded-r-xl">Aksi</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-slate-100">
-                                        {testimonials.map((item) => (
-                                            <tr key={item.id} className="hover:bg-slate-50/60 transition-colors">
-                                                <td className="px-4 py-3.5">
-                                                    <div className="font-bold text-slate-900">{item.customer_name}</div>
-                                                    <div className="text-xs text-slate-400">{item.customer_origin || 'Tourist'}</div>
-                                                </td>
-                                                <td className="px-4 py-3.5">
-                                                    <div className="flex items-center gap-1 text-amber-500">
-                                                        {[...Array(item.rating || 5)].map((_, i) => (
-                                                            <svg key={i} className="w-4 h-4 fill-amber-400 text-amber-400" viewBox="0 0 24 24">
-                                                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                                                            </svg>
-                                                        ))}
-                                                    </div>
-                                                </td>
-                                                <td className="px-4 py-3.5 max-w-sm text-xs text-slate-600 italic">
-                                                    "{item.quote}"
-                                                </td>
-                                                <td className="px-4 py-3.5">
+                            <>
+                                {/* Mobile Card View */}
+                                <div className="block sm:hidden space-y-3">
+                                    {testimonials.map((item) => (
+                                        <div key={item.id} className="p-4 rounded-xl border border-slate-200 bg-slate-50/40 space-y-3">
+                                            <div className="flex items-start justify-between gap-2">
+                                                <div className="min-w-0">
+                                                    <div className="font-bold text-slate-900 text-sm truncate">{item.customer_name}</div>
+                                                    <div className="text-xs text-slate-400 truncate">{item.customer_origin || 'Tourist'}</div>
+                                                </div>
+                                                <div className="flex items-center gap-0.5 text-amber-500 shrink-0">
+                                                    {[...Array(item.rating || 5)].map((_, i) => (
+                                                        <svg key={i} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" viewBox="0 0 24 24">
+                                                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                                                        </svg>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            <p className="text-xs text-slate-600 italic bg-white p-2.5 rounded-lg border border-slate-100 leading-relaxed">
+                                                "{item.quote}"
+                                            </p>
+
+                                            <div className="pt-2 border-t border-slate-200/60 flex items-center justify-between gap-2">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleToggleApproval(item)}
+                                                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold transition-colors cursor-pointer ${
+                                                        item.is_approved
+                                                            ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200'
+                                                            : 'bg-slate-100 text-slate-500 hover:bg-slate-200 border border-slate-200'
+                                                    }`}
+                                                >
+                                                    <span className={`w-2 h-2 rounded-full ${item.is_approved ? 'bg-emerald-500' : 'bg-slate-400'}`} />
+                                                    <span>{item.is_approved ? 'Disetujui' : 'Tersembunyi'}</span>
+                                                </button>
+
+                                                <div className="flex items-center gap-2">
                                                     <button
                                                         type="button"
-                                                        onClick={() => handleToggleApproval(item)}
-                                                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold transition-colors cursor-pointer ${
-                                                            item.is_approved
-                                                                ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200'
-                                                                : 'bg-slate-100 text-slate-500 hover:bg-slate-200 border border-slate-200'
-                                                        }`}
+                                                        onClick={() => openEditTestimonialModal(item)}
+                                                        className="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
                                                     >
-                                                        <span className={`w-2 h-2 rounded-full ${item.is_approved ? 'bg-emerald-500' : 'bg-slate-400'}`} />
-                                                        <span>{item.is_approved ? 'Disetujui' : 'Tersembunyi'}</span>
+                                                        Edit
                                                     </button>
-                                                </td>
-                                                <td className="px-4 py-3.5 text-right whitespace-nowrap">
-                                                    <div className="inline-flex items-center gap-2">
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => openEditTestimonialModal(item)}
-                                                            className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
-                                                        >
-                                                            Edit
-                                                        </button>
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => {
-                                                                setSelectedTestimonial(item);
-                                                                setShowDeleteTestimonialModal(true);
-                                                            }}
-                                                            className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
-                                                        >
-                                                            Hapus
-                                                        </button>
-                                                    </div>
-                                                </td>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setSelectedTestimonial(item);
+                                                            setShowDeleteTestimonialModal(true);
+                                                        }}
+                                                        className="px-3 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
+                                                    >
+                                                        Hapus
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Desktop Table View */}
+                                <div className="hidden sm:block overflow-x-auto">
+                                    <table className="w-full text-left text-sm text-slate-700">
+                                        <thead className="bg-slate-50 text-slate-500 font-semibold text-xs uppercase tracking-wider border-b border-slate-100">
+                                            <tr>
+                                                <th className="px-4 py-3 rounded-l-xl">Pelanggan</th>
+                                                <th className="px-4 py-3">Rating</th>
+                                                <th className="px-4 py-3">Kutipan Review</th>
+                                                <th className="px-4 py-3">Status Tampil</th>
+                                                <th className="px-4 py-3 text-right rounded-r-xl">Aksi</th>
                                             </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-100">
+                                            {testimonials.map((item) => (
+                                                <tr key={item.id} className="hover:bg-slate-50/60 transition-colors">
+                                                    <td className="px-4 py-3.5">
+                                                        <div className="font-bold text-slate-900">{item.customer_name}</div>
+                                                        <div className="text-xs text-slate-400">{item.customer_origin || 'Tourist'}</div>
+                                                    </td>
+                                                    <td className="px-4 py-3.5">
+                                                        <div className="flex items-center gap-1 text-amber-500">
+                                                            {[...Array(item.rating || 5)].map((_, i) => (
+                                                                <svg key={i} className="w-4 h-4 fill-amber-400 text-amber-400" viewBox="0 0 24 24">
+                                                                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                                                                </svg>
+                                                            ))}
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-4 py-3.5 max-w-sm text-xs text-slate-600 italic">
+                                                        "{item.quote}"
+                                                    </td>
+                                                    <td className="px-4 py-3.5">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleToggleApproval(item)}
+                                                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold transition-colors cursor-pointer ${
+                                                                item.is_approved
+                                                                    ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200'
+                                                                    : 'bg-slate-100 text-slate-500 hover:bg-slate-200 border border-slate-200'
+                                                            }`}
+                                                        >
+                                                            <span className={`w-2 h-2 rounded-full ${item.is_approved ? 'bg-emerald-500' : 'bg-slate-400'}`} />
+                                                            <span>{item.is_approved ? 'Disetujui' : 'Tersembunyi'}</span>
+                                                        </button>
+                                                    </td>
+                                                    <td className="px-4 py-3.5 text-right whitespace-nowrap">
+                                                        <div className="inline-flex items-center gap-2">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => openEditTestimonialModal(item)}
+                                                                className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
+                                                            >
+                                                                Edit
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    setSelectedTestimonial(item);
+                                                                    setShowDeleteTestimonialModal(true);
+                                                                }}
+                                                                className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
+                                                            >
+                                                                Hapus
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </>
                         )}
                     </div>
                 )}
@@ -986,13 +1185,13 @@ export default function WebsiteContent({
                                     addGalleryForm.reset();
                                     setShowAddGalleryModal(true);
                                 }}
-                                className="inline-flex items-center gap-2 bg-[#00AEEF] hover:bg-[#009cd7] text-white px-4 py-2 rounded-xl text-xs sm:text-sm font-bold shadow-xs transition-colors cursor-pointer"
+                                className="inline-flex items-center justify-center gap-2 bg-[#00AEEF] hover:bg-[#009cd7] text-white px-4 py-2.5 sm:py-2 rounded-xl text-xs sm:text-sm font-bold shadow-xs transition-colors cursor-pointer shrink-0"
                             >
-                                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                                     <line x1="12" y1="5" x2="12" y2="19" />
                                     <line x1="5" y1="12" x2="19" y2="12" />
                                 </svg>
-                                <span>Unggah Foto Galeri</span>
+                                <span>Tambah Foto Galeri</span>
                             </button>
                         </div>
 
@@ -1001,7 +1200,7 @@ export default function WebsiteContent({
                                 Belum ada foto di galeri. Klik tombol di atas untuk mengunggah foto.
                             </div>
                         ) : (
-                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                            <div className="grid grid-cols-1 min-[420px]:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
                                 {gallery.map((item) => (
                                     <div key={item.id} className="group relative rounded-2xl overflow-hidden border border-slate-200 bg-slate-50 flex flex-col">
                                         <div className="aspect-4/3 overflow-hidden bg-slate-100">
@@ -1024,7 +1223,7 @@ export default function WebsiteContent({
                                                 <button
                                                     type="button"
                                                     onClick={() => openEditGalleryModal(item)}
-                                                    className="px-2.5 py-1 text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-200/60 rounded-lg transition-colors cursor-pointer"
+                                                    className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
                                                 >
                                                     Edit
                                                 </button>
@@ -1034,7 +1233,7 @@ export default function WebsiteContent({
                                                         setSelectedGalleryItem(item);
                                                         setShowDeleteGalleryModal(true);
                                                     }}
-                                                    className="px-2.5 py-1 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                                                    className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
                                                 >
                                                     Hapus
                                                 </button>
@@ -1063,9 +1262,9 @@ export default function WebsiteContent({
                                     addFaqForm.reset();
                                     setShowAddFaqModal(true);
                                 }}
-                                className="inline-flex items-center gap-2 bg-[#00AEEF] hover:bg-[#009cd7] text-white px-4 py-2 rounded-xl text-xs sm:text-sm font-bold shadow-xs transition-colors cursor-pointer"
+                                className="inline-flex items-center justify-center gap-2 bg-[#00AEEF] hover:bg-[#009cd7] text-white px-4 py-2.5 sm:py-2 rounded-xl text-xs sm:text-sm font-bold shadow-xs transition-colors cursor-pointer shrink-0"
                             >
-                                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                                     <line x1="12" y1="5" x2="12" y2="19" />
                                     <line x1="5" y1="12" x2="19" y2="12" />
                                 </svg>
@@ -1080,8 +1279,8 @@ export default function WebsiteContent({
                         ) : (
                             <div className="space-y-3">
                                 {faqs.map((faq, idx) => (
-                                    <div key={faq.id} className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 transition-colors flex items-start justify-between gap-4">
-                                        <div className="space-y-1">
+                                    <div key={faq.id} className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 transition-colors flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                                        <div className="space-y-1 flex-1 min-w-0">
                                             <div className="flex items-center gap-2">
                                                 <span className="w-5 h-5 rounded-full bg-sky-100 text-[#00AEEF] text-[11px] font-bold flex items-center justify-center shrink-0">
                                                     {idx + 1}
@@ -1090,11 +1289,11 @@ export default function WebsiteContent({
                                             </div>
                                             <p className="text-xs text-slate-600 pl-7 whitespace-pre-line leading-relaxed">{faq.answer}</p>
                                         </div>
-                                        <div className="inline-flex items-center gap-2 shrink-0">
+                                        <div className="inline-flex items-center justify-end gap-2 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-200/60">
                                             <button
                                                 type="button"
                                                 onClick={() => openEditFaqModal(faq)}
-                                                className="px-3 py-1.5 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
+                                                className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
                                             >
                                                 Edit
                                             </button>
@@ -1132,9 +1331,9 @@ export default function WebsiteContent({
                                     addFeatureForm.reset();
                                     setShowAddFeatureModal(true);
                                 }}
-                                className="inline-flex items-center gap-2 bg-[#00AEEF] hover:bg-[#009cd7] text-white px-4 py-2 rounded-xl text-xs sm:text-sm font-bold shadow-xs transition-colors cursor-pointer"
+                                className="inline-flex items-center justify-center gap-2 bg-[#00AEEF] hover:bg-[#009cd7] text-white px-4 py-2.5 sm:py-2 rounded-xl text-xs sm:text-sm font-bold shadow-xs transition-colors cursor-pointer shrink-0"
                             >
-                                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                                     <line x1="12" y1="5" x2="12" y2="19" />
                                     <line x1="5" y1="12" x2="19" y2="12" />
                                 </svg>
@@ -1166,7 +1365,7 @@ export default function WebsiteContent({
                                             <button
                                                 type="button"
                                                 onClick={() => openEditFeatureModal(feat)}
-                                                className="px-2.5 py-1 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
+                                                className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
                                             >
                                                 Edit
                                             </button>
@@ -1176,7 +1375,7 @@ export default function WebsiteContent({
                                                     setSelectedFeature(feat);
                                                     setShowDeleteFeatureModal(true);
                                                 }}
-                                                className="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
+                                                className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
                                             >
                                                 Hapus
                                             </button>
