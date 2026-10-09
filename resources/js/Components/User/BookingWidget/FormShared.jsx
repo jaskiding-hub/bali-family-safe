@@ -326,26 +326,35 @@ export function BookingFooter({ onWhatsApp, onBook, estimatedFee, loadingEstimat
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
-                    padding: '14px 18px',
-                    background: '#FFFFFF',
-                    border: '1px solid #E2E8F0',
-                    borderRadius: '8px',
+                    padding: '20px 24px',
+                    background: 'linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%)',
+                    border: '2px solid #3B82F6',
+                    borderRadius: '12px',
+                    boxShadow: '0 4px 16px rgba(59, 130, 246, 0.15)',
                 }}>
-                    <span style={{ fontSize: '14px', fontWeight: 500, color: '#475569' }}>
-                        Estimated fare
+                    <span style={{ fontSize: '16px', fontWeight: 600, color: '#1E40AF', letterSpacing: '0.01em' }}>
+                        Estimated Total
                     </span>
                     {loadingEstimate ? (
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                <circle cx="12" cy="12" r="10" strokeWidth="4" className="opacity-25" stroke="#CBD5E1" />
+                            <svg className="animate-spin" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <circle cx="12" cy="12" r="10" strokeWidth="4" className="opacity-25" stroke="#93C5FD" />
                                 <path fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" className="opacity-75" />
                             </svg>
-                            <span style={{ fontSize: '14px', fontWeight: 500, color: '#94A3B8' }}>
+                            <span style={{ fontSize: '15px', fontWeight: 600, color: '#60A5FA' }}>
                                 Calculating...
                             </span>
                         </div>
                     ) : (
-                        <span style={{ fontSize: '18px', fontWeight: 600, color: '#1E293B' }}>
+                        <span style={{
+                            fontSize: '26px',
+                            fontWeight: 700,
+                            background: 'linear-gradient(135deg, #1E40AF 0%, #3B82F6 100%)',
+                            WebkitBackgroundClip: 'text',
+                            WebkitTextFillColor: 'transparent',
+                            backgroundClip: 'text',
+                            letterSpacing: '-0.02em'
+                        }}>
                             Rp {Number(estimatedFee).toLocaleString('id-ID')}
                         </span>
                     )}

@@ -78,6 +78,7 @@ export default function DayTourForm({ packages = [], vehicles = [], childSeatTyp
         vehicle_unit_id: defaultVehicle?.id || '',
         pickup_hotel_id: null,
         dropoff_hotel_id: null,
+        pickup_location: '',
         booking_date: '',
         pickup_time: '08:30',
         adults: 2,
@@ -148,9 +149,7 @@ export default function DayTourForm({ packages = [], vehicles = [], childSeatTyp
                     setEstimatedFee(res.data.total_fee);
                 })
                 .catch(() => {
-                    // Fallback to package price if estimate has constraint (e.g. minibus only for full day)
-                    const p = packages.find((pkg) => String(pkg.id) === String(data.package_id));
-                    setEstimatedFee(p?.regular_price || p?.price || 800000);
+                    setEstimatedFee(0);
                 })
                 .finally(() => {
                     setLoadingEstimate(false);
@@ -194,6 +193,7 @@ export default function DayTourForm({ packages = [], vehicles = [], childSeatTyp
 - Guest Name: ${data.guest_name}
 - WhatsApp: ${data.whatsapp_number}
 - Tour Date: ${data.booking_date} at ${data.pickup_time}
+- Pick Up Point: ${data.pickup_location}
 - Vehicle: ${vehObj?.name || 'Not specified'}
 - Child Seats: ${seatsText}
 - Estimated Price: ${estimatedFee ? `Rp ${Number(estimatedFee).toLocaleString('id-ID')}` : 'To be confirmed'}
@@ -247,23 +247,23 @@ export default function DayTourForm({ packages = [], vehicles = [], childSeatTyp
                 <div style={{ gridColumn: 'span 2' }}>
                     <VehicleSelect
                         vehicles={vehicles}
-                        value={data.vehicle_id}
-                        onChange={(e) => setData('vehicle_id', parseInt(e.target.value, 10))}
+                        value={data.vehicle_unit_id}
+                        onChange={(e) => setData('vehicle_unit_id', parseInt(e.target.value, 10))}
                     />
-                    {errors.vehicle_id && (
-                        <span style={{ fontSize: '11px', color: '#F43F5E' }}>{errors.vehicle_id}</span>
+                    {errors.vehicle_unit_id && (
+                        <span style={{ fontSize: '11px', color: '#F43F5E' }}>{errors.vehicle_unit_id}</span>
                     )}
                 </div>
             </div>
 
-            {/* 2. Row 2: Date, Time, Notes */}
+            {/* 2. Row 2: Date, Time, Pickup Location */}
             <div className="bfs-form-row" style={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(4, 1fr)',
                 gap: '16px',
                 padding: '16px 32px 0',
             }}>
-                <div style={{ gridColumn: 'span 2' }}>
+                <div>
                     <FieldWithIcon label="Tour Date *" icon={<IconCalendar />}>
                         <input
                             type="date"
@@ -281,7 +281,7 @@ export default function DayTourForm({ packages = [], vehicles = [], childSeatTyp
                     )}
                 </div>
 
-                <div style={{ gridColumn: 'span 2' }}>
+                <div>
                     <FieldWithIcon label="Departure Time *" icon={<IconClock />}>
                         <input
                             type="time"
@@ -296,6 +296,25 @@ export default function DayTourForm({ packages = [], vehicles = [], childSeatTyp
                     </FieldWithIcon>
                     {errors.pickup_time && (
                         <span style={{ fontSize: '11px', color: '#F43F5E' }}>{errors.pickup_time}</span>
+                    )}
+                </div>
+
+                <div style={{ gridColumn: 'span 2' }}>
+                    <FieldWithIcon label="Pick Up Point *" icon={<IconLocation />}>
+                        <input
+                            type="text"
+                            required
+                            placeholder="e.g., Ayana Resort Jimbaran, The Westin Ubud"
+                            style={{
+                                ...inputStyle,
+                                borderColor: errors.pickup_location ? '#F43F5E' : '#CBD5E1',
+                            }}
+                            value={data.pickup_location}
+                            onChange={(e) => setData('pickup_location', e.target.value)}
+                        />
+                    </FieldWithIcon>
+                    {errors.pickup_location && (
+                        <span style={{ fontSize: '11px', color: '#F43F5E' }}>{errors.pickup_location}</span>
                     )}
                 </div>
             </div>
@@ -400,7 +419,7 @@ export default function DayTourForm({ packages = [], vehicles = [], childSeatTyp
                 />
             </div>
 
-            {/* 5. Custom Stops / Hotel Info */}
+            {/* 5. Custom Stops / Additional Notes */}
             <div style={{ padding: '16px 32px 0' }}>
                 <label style={{
                     fontFamily: 'Inter, sans-serif',
@@ -411,14 +430,14 @@ export default function DayTourForm({ packages = [], vehicles = [], childSeatTyp
                     marginBottom: '8px',
                     display: 'block',
                 }}>
-                    Pick-Up Hotel & Custom Stops
+                    Custom Stops & Additional Requests
                     <span style={{ fontSize: '13px', fontWeight: 400, color: '#94A3B8', marginLeft: '6px' }}>
                         (optional)
                     </span>
                 </label>
                 <textarea
                     rows="2"
-                    placeholder="Pick-up at Ayana Resort Jimbaran. We would love to stop at Tegenungan waterfall and a kid-friendly cafe"
+                    placeholder="e.g., Stop at Tegenungan waterfall, need baby stroller, dietary restrictions for lunch"
                     style={{...textareaStyle, textAlign: 'left'}}
                     value={data.notes}
                     onChange={(e) => setData('notes', e.target.value)}
