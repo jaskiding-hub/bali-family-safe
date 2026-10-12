@@ -27,24 +27,64 @@ export default function History({
 }) {
     const { openProfile } = useDriverProfile();
     const [searchTerm, setSearchTerm] = useState(filters.search || '');
-    const [selectedMonth, setSelectedMonth] = useState(filters.month || '');
+    const [selectedYear, setSelectedYear] = useState(filters.year || '');
+    const [selectedMonthOnly, setSelectedMonthOnly] = useState(filters.month || '');
 
-    const handleSearchSubmit = (e) => {
-        e.preventDefault();
-        router.get(
-            '/driver/history',
-            {
-                search: searchTerm || undefined,
-                month: selectedMonth || undefined,
-            },
-            { preserveState: true, replace: true }
-        );
-    };
+    // Generate year options (last 3 years to current)
+    const currentYear = new Date().getFullYear();
+    const yearOptions = Array.from({ length: 4 }, (_, i) => currentYear - i);
+
+    const monthOptions = [
+        { value: '01', label: 'Januari' },
+        { value: '02', label: 'Februari' },
+        { value: '03', label: 'Maret' },
+        { value: '04', label: 'April' },
+        { value: '05', label: 'Mei' },
+        { value: '06', label: 'Juni' },
+        { value: '07', label: 'Juli' },
+        { value: '08', label: 'Agustus' },
+        { value: '09', label: 'September' },
+        { value: '10', label: 'Oktober' },
+        { value: '11', label: 'November' },
+        { value: '12', label: 'Desember' },
+    ];
+
+    // Auto-search on type (debounced)
+    const isFirstSearchRender = React.useRef(true);
+    React.useEffect(() => {
+        if (isFirstSearchRender.current) {
+            isFirstSearchRender.current = false;
+            return;
+        }
+
+        const timer = setTimeout(() => {
+            router.get(
+                '/driver/history',
+                {
+                    search: searchTerm || undefined,
+                    year: selectedYear || undefined,
+                    month: selectedMonthOnly || undefined,
+                },
+                { preserveState: true, replace: true }
+            );
+        }, 300);
+
+        return () => clearTimeout(timer);
+    }, [searchTerm, selectedYear, selectedMonthOnly]);
 
     const handleResetFilter = () => {
         setSearchTerm('');
-        setSelectedMonth('');
+        setSelectedYear('');
+        setSelectedMonthOnly('');
         router.get('/driver/history', {}, { preserveState: true, replace: true });
+    };
+
+    const handleYearChange = (e) => {
+        setSelectedYear(e.target.value);
+    };
+
+    const handleMonthOnlyChange = (e) => {
+        setSelectedMonthOnly(e.target.value);
     };
 
     const trips = completedTrips?.data || [];
@@ -53,39 +93,45 @@ export default function History({
         <DriverLayout>
             <Head title="Riwayat Trip - Driver Bali Family Safe" />
 
-            <div className="flex-1 w-full max-w-xl md:max-w-2xl mx-auto px-4 sm:px-6 pt-5 pb-24 flex flex-col gap-5">
-                {/* Top Bar Header */}
-                <header className="flex items-center justify-between">
-                    <div>
-                        <span className="text-[11px] font-bold text-sky-700 tracking-wider uppercase">Bali Family Safe Tours</span>
-                        <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Riwayat Trip</h1>
-                    </div>
+            {/* Top App Bar Header (sama seperti Home dan Schedule) */}
+            <header className="w-full bg-[#3E5E95] border-b border-white/10 shadow-sm sticky top-0 z-30">
+                <div className="max-w-6xl mx-auto h-[64px] px-4 sm:px-8 lg:px-12 flex items-center justify-between">
                     <button
                         type="button"
                         onClick={openProfile}
-                        className="btn-open-driver-profile flex items-center gap-2 p-1.5 rounded-2xl hover:bg-slate-100 transition cursor-pointer"
-                        title="Buka Profil Driver"
+                        className="btn-open-driver-profile flex items-center gap-3 group text-left cursor-pointer focus:outline-none"
                     >
-                        <div className="w-10 h-10 rounded-xl overflow-hidden border-2 border-white shadow-sm bg-sky-100">
-                            {driver?.profile_photo_url ? (
-                                <img
-                                    src={driver.profile_photo_url}
-                                    alt={driver.full_name || 'Driver'}
-                                    className="w-full h-full object-cover"
-                                />
-                            ) : (
-                                <div className="w-full h-full flex items-center justify-center font-bold text-sky-800 text-sm">
-                                    {(driver?.full_name || 'D').charAt(0)}
-                                </div>
-                            )}
-                        </div>
+                        <img
+                            src={driver?.profile_photo_url || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80'}
+                            alt="Driver Profile"
+                            className="w-[40px] h-[40px] border-2 border-white rounded-full object-cover shadow-sm transition-transform duration-200 group-hover:scale-105 active:scale-95 shrink-0"
+                        />
+                        <h1 className="text-white text-lg font-bold group-hover:text-sky-200 transition-colors">Driver Portal</h1>
                     </button>
-                </header>
+                    <button
+                        type="button"
+                        onClick={openProfile}
+                        className="btn-open-driver-profile p-2 rounded-full text-white/80 hover:text-white hover:bg-white/10 transition cursor-pointer"
+                        title="View Profile"
+                    >
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                        </svg>
+                    </button>
+                </div>
+            </header>
 
+            {/* Main Content */}
+            <div className="max-w-6xl mx-auto px-4 sm:px-8 lg:px-12 w-full py-5 pb-28 sm:pb-32 flex flex-col gap-5">
+                {/* Screen Title */}
+                <div>
+                    <h2 className="text-[#171C20] text-2xl font-bold tracking-tight">Riwayat Trip</h2>
+                    <p className="text-slate-500 text-sm mt-0.5">Perjalanan yang telah selesai</p>
+                </div>
                 {/* Stat Counters */}
                 <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-2xs flex flex-col justify-between">
-                        <div className="flex items-center justify-between">
+                    <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-2xs">
+                        <div className="flex items-center justify-between mb-2">
                             <span className="text-xs font-semibold text-slate-500">Total Selesai</span>
                             <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
                                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
@@ -93,16 +139,14 @@ export default function History({
                                 </svg>
                             </div>
                         </div>
-                        <div className="mt-2">
-                            <span className="text-2xl sm:text-3xl font-extrabold text-slate-900 tabular-nums">
-                                {stats.total_completed ?? completedTrips.total ?? 0}
-                            </span>
-                            <span className="text-[11px] text-slate-400 block mt-0.5">Trips completed</span>
+                        <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 tabular-nums">
+                            {stats.total_completed ?? completedTrips.total ?? 0}
                         </div>
+                        <span className="text-[11px] text-slate-400 block mt-0.5">Trips completed</span>
                     </div>
 
-                    <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-2xs flex flex-col justify-between">
-                        <div className="flex items-center justify-between">
+                    <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-2xs">
+                        <div className="flex items-center justify-between mb-2">
                             <span className="text-xs font-semibold text-slate-500">Bulan Ini</span>
                             <div className="w-7 h-7 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center">
                                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
@@ -110,169 +154,247 @@ export default function History({
                                 </svg>
                             </div>
                         </div>
-                        <div className="mt-2">
-                            <span className="text-2xl sm:text-3xl font-extrabold text-slate-900 tabular-nums">
-                                {stats.this_month_completed ?? 0}
-                            </span>
-                            <span className="text-[11px] text-slate-400 block mt-0.5">Trips this month</span>
+                        <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 tabular-nums">
+                            {stats.this_month_completed ?? 0}
+                        </div>
+                        <span className="text-[11px] text-slate-400 block mt-0.5">Trips this month</span>
+                    </div>
+                </div>
+
+                {/* Filter Bar */}
+                <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-2xs">
+                    <div className="flex flex-col gap-3">
+                        {/* Search */}
+                        <div>
+                            <label className="block text-xs font-semibold text-slate-600 mb-1.5">Cari Trip</label>
+                            <div className="relative">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                    </svg>
+                                </span>
+                                <input
+                                    type="text"
+                                    placeholder="Ketik kode booking atau nama tamu..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    className="w-full pl-9 pr-3 py-2.5 text-sm rounded-xl bg-slate-50 border border-slate-200 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#00AEEF]/20 focus:border-[#00AEEF] transition"
+                                />
+                            </div>
+                            <p className="text-[11px] text-slate-400 mt-1">Pencarian otomatis saat mengetik</p>
+                        </div>
+
+                        {/* Month Filter */}
+                        <div>
+                            <label className="block text-xs font-semibold text-slate-600 mb-1.5">Filter Bulan</label>
+                            <div className="flex items-center gap-2">
+                                <div className="relative flex-1">
+                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                            <rect width="18" height="18" x="3" y="4" rx="2" />
+                                            <line x1="16" x2="16" y1="2" y2="6" />
+                                            <line x1="8" x2="8" y1="2" y2="6" />
+                                            <line x1="3" x2="21" y1="10" y2="10" />
+                                        </svg>
+                                    </span>
+                                    <select
+                                        value={selectedYear}
+                                        onChange={handleYearChange}
+                                        className="w-full pl-9 pr-3 py-2.5 text-sm rounded-xl bg-slate-50 border border-slate-200 text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#00AEEF]/20 focus:border-[#00AEEF] transition appearance-none cursor-pointer"
+                                    >
+                                        <option value="">Tahun</option>
+                                        {yearOptions.map(year => (
+                                            <option key={year} value={year}>{year}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="relative flex-1">
+                                    <select
+                                        value={selectedMonthOnly}
+                                        onChange={handleMonthOnlyChange}
+                                        className="w-full px-3 py-2.5 text-sm rounded-xl bg-slate-50 border border-slate-200 text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#00AEEF]/20 focus:border-[#00AEEF] transition appearance-none cursor-pointer"
+                                    >
+                                        <option value="">Bulan</option>
+                                        {monthOptions.map(month => (
+                                            <option key={month.value} value={month.value}>{month.label}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                {(searchTerm || selectedYear || selectedMonthOnly) && (
+                                    <button
+                                        type="button"
+                                        onClick={handleResetFilter}
+                                        className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-sm rounded-xl transition cursor-pointer shrink-0 flex items-center gap-1.5"
+                                    >
+                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                        Reset
+                                    </button>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Filter & Search Bar */}
-                <form onSubmit={handleSearchSubmit} className="bg-white rounded-2xl p-3 border border-slate-200/80 shadow-2xs flex flex-col sm:flex-row items-center gap-2">
-                    <div className="relative flex-1 w-full">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                            </svg>
-                        </span>
-                        <input
-                            type="text"
-                            placeholder="Cari kode booking atau nama tamu..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-9 pr-3 py-2 text-xs rounded-xl bg-slate-50 border border-slate-200 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#00AEEF]/20 focus:border-[#00AEEF] transition"
-                        />
-                    </div>
-
-                    <div className="flex items-center gap-2 w-full sm:w-auto">
-                        <input
-                            type="month"
-                            value={selectedMonth}
-                            onChange={(e) => setSelectedMonth(e.target.value)}
-                            className="py-2 px-3 text-xs rounded-xl bg-slate-50 border border-slate-200 text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#00AEEF]/20 focus:border-[#00AEEF] transition"
-                            title="Filter bulan"
-                        />
-                        <button
-                            type="submit"
-                            className="px-4 py-2 bg-[#00AEEF] hover:bg-[#009cd7] text-[#003E58] font-bold text-xs rounded-xl transition cursor-pointer shrink-0"
-                        >
-                            Filter
-                        </button>
-                        {(searchTerm || selectedMonth) && (
-                            <button
-                                type="button"
-                                onClick={handleResetFilter}
-                                className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 font-semibold text-xs rounded-xl transition cursor-pointer shrink-0"
-                                title="Reset filter"
-                            >
-                                Reset
-                            </button>
-                        )}
-                    </div>
-                </form>
-
-                {/* Trip Cards List */}
+                {/* Trip Table */}
                 {trips.length > 0 ? (
-                    <div className="flex flex-col gap-3.5">
-                        {trips.map((trip) => {
-                            const isDayTour = trip.booking_type === 'Day Tour' || trip.trip_type?.toLowerCase().includes('day tour');
+                    <div className="bg-white rounded-2xl shadow-2xs border border-slate-200/80 overflow-hidden">
+                        {/* Desktop Table */}
+                        <div className="hidden md:block overflow-x-auto">
+                            <table className="w-full text-left">
+                                <thead className="bg-slate-50 border-b border-slate-200 text-slate-700 text-[11px] font-bold uppercase tracking-wider">
+                                    <tr>
+                                        <th className="py-3 px-4">Tanggal</th>
+                                        <th className="py-3 px-4">Tamu & Trip</th>
+                                        <th className="py-3 px-4">Lokasi</th>
+                                        <th className="py-3 px-4">Status</th>
+                                        <th className="py-3 px-4 text-right">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-100 text-sm">
+                                    {trips.map((trip) => {
+                                        const isDayTour = trip.booking_type === 'Day Tour' || trip.trip_type?.toLowerCase().includes('day tour');
+                                        return (
+                                            <tr key={trip.id} className="hover:bg-slate-50/60 transition">
+                                                <td className="py-3 px-4 whitespace-nowrap">
+                                                    <div className="font-semibold text-slate-800 text-xs">
+                                                        {formatDisplayDate(trip.trip_date)}
+                                                    </div>
+                                                    <div className="text-[11px] text-slate-400 mt-0.5">
+                                                        {trip.trip_time}
+                                                    </div>
+                                                </td>
+                                                <td className="py-3 px-4">
+                                                    <div className="font-bold text-slate-900 text-sm">{trip.guest_name}</div>
+                                                    <div className="flex items-center gap-2 mt-0.5">
+                                                        <span className="text-[10px] font-mono text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">
+                                                            {trip.booking_code}
+                                                        </span>
+                                                        <span className="text-xs text-slate-600">
+                                                            {trip.trip_type}
+                                                        </span>
+                                                    </div>
+                                                </td>
+                                                <td className="py-3 px-4">
+                                                    <div className="text-xs text-slate-700 max-w-xs">
+                                                        {isDayTour ? (
+                                                            <span className="font-medium">{trip.pickup_location}</span>
+                                                        ) : (
+                                                            <div className="space-y-1">
+                                                                <div className="flex items-center gap-1.5">
+                                                                    <div className="w-1.5 h-1.5 rounded-full bg-sky-500 shrink-0"></div>
+                                                                    <span className="truncate">{trip.pickup_location}</span>
+                                                                </div>
+                                                                <div className="flex items-center gap-1.5">
+                                                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></div>
+                                                                    <span className="truncate">{trip.dropoff_location}</span>
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                                <td className="py-3 px-4">
+                                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/80">
+                                                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                                        </svg>
+                                                        Completed
+                                                    </span>
+                                                </td>
+                                                <td className="py-3 px-4 text-right">
+                                                    <Link
+                                                        href={`/driver/trips/${trip.id}?from=history`}
+                                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#00AEEF] hover:bg-[#009cd7] text-white font-semibold text-xs transition cursor-pointer"
+                                                    >
+                                                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                            <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                                        </svg>
+                                                        Detail
+                                                    </Link>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
 
-                            return (
-                                <div
-                                    key={trip.id}
-                                    className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden transition duration-200 hover:border-slate-300"
-                                >
-                                    {/* Card Header: Booking Code & Status */}
-                                    <div className="p-4 sm:p-5 pb-3 border-b border-slate-100 flex items-center justify-between">
-                                        <div className="flex items-center gap-2">
-                                            <span className="font-mono text-xs font-bold text-slate-900 bg-slate-100 px-2 py-0.5 rounded-lg border border-slate-200">
-                                                {trip.booking_code}
-                                            </span>
-                                            <span className="text-[11px] font-semibold text-slate-500">
-                                                {formatDisplayDate(trip.trip_date)} • {trip.trip_time}
+                        {/* Mobile/Tablet Card List */}
+                        <div className="block md:hidden divide-y divide-slate-100">
+                            {trips.map((trip) => {
+                                const isDayTour = trip.booking_type === 'Day Tour' || trip.trip_type?.toLowerCase().includes('day tour');
+                                return (
+                                    <div key={trip.id} className="p-4 space-y-3">
+                                        <div className="flex items-start justify-between gap-3">
+                                            <div className="flex-1 min-w-0">
+                                                <div className="font-bold text-slate-900 text-sm">{trip.guest_name}</div>
+                                                <div className="flex items-center gap-2 mt-1">
+                                                    <span className="text-[10px] font-mono text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">
+                                                        {trip.booking_code}
+                                                    </span>
+                                                    <span className="text-xs text-slate-600 truncate">{trip.trip_type}</span>
+                                                </div>
+                                            </div>
+                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">
+                                                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                                </svg>
+                                                Done
                                             </span>
                                         </div>
 
-                                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/80">
-                                            <svg className="w-3 h-3 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                        <div className="text-xs text-slate-500 flex items-center gap-1.5">
+                                            <svg className="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                                <rect width="18" height="18" x="3" y="4" rx="2" />
+                                                <line x1="16" x2="16" y1="2" y2="6" />
+                                                <line x1="8" x2="8" y1="2" y2="6" />
+                                                <line x1="3" x2="21" y1="10" y2="10" />
                                             </svg>
-                                            Completed
-                                        </span>
-                                    </div>
-
-                                    {/* Card Content */}
-                                    <div className="p-4 sm:p-5 pt-3 space-y-3">
-                                        {/* Guest & Trip Type */}
-                                        <div className="flex items-center justify-between">
-                                            <div>
-                                                <h3 className="text-base font-bold text-slate-900 leading-snug">
-                                                    {trip.guest_name}
-                                                </h3>
-                                                <div className="text-xs text-slate-500 mt-0.5 flex items-center gap-2">
-                                                    <span>{trip.pax_description || `${trip.pax} Pax`}</span>
-                                                    <span>•</span>
-                                                    <span>{trip.vehicle_type}</span>
-                                                </div>
-                                            </div>
-
-                                            <span className="px-2.5 py-1 rounded-lg text-[10px] font-extrabold uppercase tracking-wider bg-sky-50 text-[#00658D] border border-sky-100">
-                                                {trip.trip_type}
-                                            </span>
+                                            <span className="font-medium">{formatDisplayDate(trip.trip_date)}</span>
+                                            <span>•</span>
+                                            <span>{trip.trip_time}</span>
                                         </div>
 
-                                        {/* Route Timeline (Khusus Day Tour tidak menampilkan Drop-off) */}
-                                        {isDayTour ? (
-                                            <div className="bg-slate-50 rounded-xl p-3 border border-slate-200/70 flex items-center gap-3">
-                                                <div className="w-2.5 h-2.5 rounded-full border-2 border-sky-500 bg-white shrink-0"></div>
-                                                <div className="min-w-0">
-                                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Pick-up Point</span>
-                                                    <span className="text-xs sm:text-sm font-bold text-slate-800 truncate block mt-0.5">{trip.pickup_location}</span>
+                                        <div className="bg-slate-50 rounded-xl p-3 border border-slate-200/70 text-xs">
+                                            {isDayTour ? (
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-2 h-2 rounded-full bg-sky-500 shrink-0"></div>
+                                                    <span className="font-medium text-slate-700">{trip.pickup_location}</span>
                                                 </div>
-                                            </div>
-                                        ) : (
-                                            <div className="bg-slate-50 rounded-xl p-3 border border-slate-200/70 flex items-stretch gap-3">
-                                                <div className="flex flex-col items-center w-2.5 shrink-0 py-0.5">
-                                                    <div className="w-2 h-2 rounded-full border-2 border-sky-500 bg-white shrink-0"></div>
-                                                    <div className="w-[1.5px] grow my-1 bg-slate-200"></div>
-                                                    <div className="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></div>
-                                                </div>
-                                                <div className="flex flex-col justify-between grow gap-1.5 min-w-0 text-xs">
-                                                    <div className="min-w-0">
-                                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Pick-up</span>
-                                                        <span className="font-bold text-slate-800 truncate block">{trip.pickup_location}</span>
+                                            ) : (
+                                                <div className="space-y-2">
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="w-2 h-2 rounded-full bg-sky-500 shrink-0"></div>
+                                                        <span className="text-slate-700">{trip.pickup_location}</span>
                                                     </div>
-                                                    <div className="min-w-0">
-                                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Drop-off / Route</span>
-                                                        <span className="font-bold text-slate-800 truncate block">{trip.dropoff_location}</span>
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></div>
+                                                        <span className="text-slate-700">{trip.dropoff_location}</span>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        )}
-
-                                        {/* Action Buttons Footer */}
-                                        <div className="flex items-center gap-2 pt-1">
-                                            <Link
-                                                href={`/driver/trips/${trip.id}?from=history`}
-                                                className="flex-1 h-10 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition active:scale-[0.985] cursor-pointer"
-                                            >
-                                                <span>Detail Perjalanan</span>
-                                                <svg className="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                                                </svg>
-                                            </Link>
-
-                                            <Link
-                                                href={`/driver/trips/${trip.id}/expense`}
-                                                className="px-3.5 h-10 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold text-xs flex items-center justify-center gap-1.5 transition active:scale-[0.985] cursor-pointer"
-                                                title="Biaya operasional / Reimburse"
-                                            >
-                                                <svg className="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                </svg>
-                                                <span>Biaya ({trip.expenses?.length || 0})</span>
-                                            </Link>
+                                            )}
                                         </div>
-                                    </div>
-                                </div>
-                            );
-                        })}
 
-                        {/* Pagination Links if applicable */}
+                                        <Link
+                                            href={`/driver/trips/${trip.id}?from=history`}
+                                            className="flex items-center justify-center gap-1.5 w-full py-2.5 rounded-xl bg-[#00AEEF] hover:bg-[#009cd7] text-white font-bold text-xs transition cursor-pointer"
+                                        >
+                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                            </svg>
+                                            Lihat Detail Trip
+                                        </Link>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        {/* Pagination */}
                         {completedTrips?.links && completedTrips.links.length > 3 && (
-                            <div className="flex items-center justify-center gap-1 pt-4">
+                            <div className="flex items-center justify-center gap-1 p-4 border-t border-slate-100 bg-slate-50/50">
                                 {completedTrips.links.map((link, idx) => {
                                     if (!link.url) {
                                         return (
@@ -290,7 +412,7 @@ export default function History({
                                             dangerouslySetInnerHTML={{ __html: link.label }}
                                             className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition ${
                                                 link.active
-                                                    ? 'bg-[#00AEEF] text-[#003E58]'
+                                                    ? 'bg-[#00AEEF] text-white shadow-xs'
                                                     : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
                                             }`}
                                         />
@@ -301,7 +423,7 @@ export default function History({
                     </div>
                 ) : (
                     /* Empty State */
-                    <div className="bg-white rounded-3xl p-8 sm:p-12 text-center border border-slate-100 shadow-sm flex flex-col items-center gap-4 my-4">
+                    <div className="bg-white rounded-3xl p-8 sm:p-12 text-center border border-slate-100 shadow-sm flex flex-col items-center gap-4">
                         <div className="w-16 h-16 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-400 shadow-2xs">
                             <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -310,16 +432,16 @@ export default function History({
                         <div>
                             <h3 className="text-base sm:text-lg font-bold text-slate-900">Belum Ada Riwayat Perjalanan</h3>
                             <p className="text-xs sm:text-sm text-slate-500 max-w-xs mx-auto mt-1 leading-relaxed">
-                                {searchTerm || selectedMonth
+                                {searchTerm || selectedYear || selectedMonthOnly
                                     ? 'Tidak ditemukan trip yang cocok dengan kata kunci atau filter bulan yang dipilih.'
                                     : 'Perjalanan yang telah diselesaikan (Completed) akan otomatis tercatat dan tersimpan di halaman ini.'}
                             </p>
                         </div>
-                        {(searchTerm || selectedMonth) && (
+                        {(searchTerm || selectedYear || selectedMonthOnly) && (
                             <button
                                 type="button"
                                 onClick={handleResetFilter}
-                                className="px-4 py-2 bg-[#00AEEF] hover:bg-[#009cd7] text-[#003E58] font-bold text-xs rounded-xl transition cursor-pointer"
+                                className="px-4 py-2 bg-[#00AEEF] hover:bg-[#009cd7] text-white font-bold text-xs rounded-xl transition cursor-pointer"
                             >
                                 Reset Filter
                             </button>

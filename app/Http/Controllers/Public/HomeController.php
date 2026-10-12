@@ -78,14 +78,13 @@ class HomeController extends Controller
 
         // Group vehicles by category for user booking selection (3 kategori saja)
         $vehiclesByCategory = Vehicle::with('features')
-            ->orderBy('daily_rate', 'asc')
+            ->orderBy('passenger_capacity', 'asc')
             ->get()
             ->groupBy(fn($v) => $v->category instanceof \BackedEnum ? $v->category->value : (string) $v->category);
 
         // Return 1 representative vehicle per category for dropdown
         $vehiclesForBooking = $vehiclesByCategory->map(function ($group) {
             $representative = $group->first(); // Ambil 1 mobil per kategori
-            $dailyRate = (float) $representative->daily_rate;
             $category = $representative->category instanceof \BackedEnum ? $representative->category->value : (string) $representative->category;
 
             return [
@@ -94,9 +93,6 @@ class HomeController extends Controller
                 'title' => $category,
                 'category' => $category,
                 'model' => $representative->model,
-                'daily_rate' => $dailyRate,
-                'daily_rate_formatted' => 'Rp ' . number_format($dailyRate, 0, ',', '.'),
-                'price' => 'From Rp ' . number_format($dailyRate, 0, ',', '.') . ' / day',
                 'passenger_capacity' => (int) $representative->passenger_capacity,
                 'capacity' => '1–' . $representative->passenger_capacity . ' Passengers',
                 'luggage_capacity' => (int) $representative->luggage_capacity,
@@ -109,18 +105,13 @@ class HomeController extends Controller
         })->values(); // Reset keys jadi [0,1,2]
 
         // Vehicles for showcase/fleet section (tetap tampil semua)
-        $vehicles = Vehicle::with('features')->orderBy('daily_rate', 'asc')->get()->map(function (Vehicle $v) {
-            $dailyRate = (float) $v->daily_rate;
-
+        $vehicles = Vehicle::with('features')->orderBy('passenger_capacity', 'asc')->get()->map(function (Vehicle $v) {
             return [
                 'id' => $v->id,
                 'name' => $v->name,
                 'title' => $v->name,
                 'category' => $v->category instanceof \BackedEnum ? $v->category->value : (string) $v->category,
                 'model' => $v->model,
-                'daily_rate' => $dailyRate,
-                'daily_rate_formatted' => 'Rp ' . number_format($dailyRate, 0, ',', '.'),
-                'price' => 'From Rp ' . number_format($dailyRate, 0, ',', '.') . ' / day',
                 'passenger_capacity' => (int) $v->passenger_capacity,
                 'capacity' => '1–' . $v->passenger_capacity . ' Passengers',
                 'luggage_capacity' => (int) $v->luggage_capacity,

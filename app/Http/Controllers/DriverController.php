@@ -295,18 +295,32 @@ class DriverController extends Controller
         $driver = Auth::guard('driver')->user() ?? Driver::first();
         $driverId = $driver?->id;
         $search = $request->query('search');
+        $year = $request->query('year');
         $month = $request->query('month');
 
         $query = Booking::with(['vehicle', 'vehicleUnit', 'package', 'pickupHotel', 'dropoffHotel', 'airport', 'tripExpenses', 'childSeats.childSeatType'])
             ->when($driverId, fn($q) => $q->where('driver_id', $driverId))
             ->where('status', BookingStatus::Completed->value);
 
-        if ($month) {
+        // Filter by year and/or month
+        if ($year || $month) {
             try {
-                $m = Carbon::createFromFormat('Y-m', $month);
-                $query->whereBetween('booking_date', [$m->copy()->startOfMonth()->toDateString(), $m->copy()->endOfMonth()->toDateString()]);
+                if ($year && $month) {
+                    // Both year and month
+                    $date = Carbon::createFromDate($year, $month, 1);
+                    $query->whereBetween('booking_date', [
+                        $date->copy()->startOfMonth()->toDateString(),
+                        $date->copy()->endOfMonth()->toDateString()
+                    ]);
+                } elseif ($year) {
+                    // Year only
+                    $query->whereYear('booking_date', $year);
+                } elseif ($month) {
+                    // Month only (across all years)
+                    $query->whereMonth('booking_date', $month);
+                }
             } catch (\Exception $e) {
-                // ignore
+                // ignore invalid dates
             }
         }
 
@@ -344,6 +358,7 @@ class DriverController extends Controller
             'stats' => $stats,
             'filters' => [
                 'search' => $search,
+                'year' => $year,
                 'month' => $month,
             ],
         ]);

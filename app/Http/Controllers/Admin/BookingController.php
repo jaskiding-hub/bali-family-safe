@@ -339,14 +339,17 @@ class BookingController extends Controller
                         'regular_price' => $package->regular_price ? (float) $package->regular_price : $basePackagePrice,
                         'luxury_price' => $package->luxury_price ? (float) $package->luxury_price : $basePackagePrice,
                         'big_van_price' => $package->big_van_price ? (float) $package->big_van_price : $basePackagePrice,
+                        'unit_prices' => $package->unit_prices ?: [],
                     ];
 
                     $vehicles = Vehicle::orderBy('name')->get();
+
+                    // ponytail: Use package unit_prices by vehicle_unit_id, not vehicle daily_rate
                     $carPrice = 0;
-                    if ($vehicleId) {
-                        $veh = Vehicle::find($vehicleId);
-                        $carPrice = (float) ($veh?->daily_rate ?? 0);
+                    if ($vehicleUnitId && isset($package->unit_prices[$vehicleUnitId])) {
+                        $carPrice = (float) $package->unit_prices[$vehicleUnitId];
                     }
+
                     $calculatedPrice = $basePackagePrice + $carPrice;
                 }
             }

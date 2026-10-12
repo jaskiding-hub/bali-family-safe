@@ -707,7 +707,6 @@ export default function MasterData({
         type: 'Pick-Up',
         pickup_unit_prices: {},
         dropoff_unit_prices: {},
-        same_as_pickup: true,
         price_regular: '',
         price_luxury: '',
         unit_prices: {},
@@ -4190,18 +4189,7 @@ export default function MasterData({
                                                 const val = e.target.value;
                                                 const newPickup = { ...(addAirportForm.data.pickup_unit_prices || {}) };
                                                 newPickup[unit.id] = val;
-
-                                                if (addAirportForm.data.same_as_pickup) {
-                                                    const newDropoff = { ...(addAirportForm.data.dropoff_unit_prices || {}) };
-                                                    newDropoff[unit.id] = val;
-                                                    addAirportForm.setData((prev) => ({
-                                                        ...prev,
-                                                        pickup_unit_prices: newPickup,
-                                                        dropoff_unit_prices: newDropoff,
-                                                    }));
-                                                } else {
-                                                    addAirportForm.setData('pickup_unit_prices', newPickup);
-                                                }
+                                                addAirportForm.setData('pickup_unit_prices', newPickup);
                                             }}
                                             className={`${inputBaseClass} pl-7 text-xs font-semibold`}
                                         />
@@ -4228,35 +4216,8 @@ export default function MasterData({
                             </span>
                         </div>
 
-                        {/* Checkbox Samakan dengan Tarif Pick-Up */}
-                        <div className="bg-white border border-slate-200/80 rounded-xl p-3 flex items-center justify-between">
-                            <label className="flex items-center gap-2.5 cursor-pointer">
-                                <input
-                                    type="checkbox"
-                                    checked={addAirportForm.data.same_as_pickup}
-                                    onChange={(e) => {
-                                        const checked = e.target.checked;
-                                        addAirportForm.setData((prev) => ({
-                                            ...prev,
-                                            same_as_pickup: checked,
-                                            dropoff_unit_prices: checked ? { ...(prev.pickup_unit_prices || {}) } : prev.dropoff_unit_prices,
-                                        }));
-                                    }}
-                                    className="w-4 h-4 rounded text-[#00AEEF] focus:ring-[#00AEEF] border-slate-300 cursor-pointer"
-                                />
-                                <span className="text-xs font-semibold text-slate-700 select-none">
-                                    Samakan tarif Drop-Off dengan tarif Pick-Up di atas
-                                </span>
-                            </label>
-                            {addAirportForm.data.same_as_pickup && (
-                                <span className="text-[11px] text-emerald-600 font-semibold hidden sm:inline">
-                                    ✓ Tarif otomatis tersinkron
-                                </span>
-                            )}
-                        </div>
-
                         {/* Drop-off unit prices grid */}
-                        <div className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 pt-1 transition-opacity ${addAirportForm.data.same_as_pickup ? 'opacity-70' : 'opacity-100'}`}>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 pt-1">
                             {vehicle_units && vehicle_units.map((unit) => (
                                 <div key={unit.id} className="bg-white p-2.5 rounded-xl border border-slate-200/80 shadow-2xs">
                                     <label className="block text-[11px] font-semibold text-slate-700 mb-1 truncate">
@@ -4269,7 +4230,6 @@ export default function MasterData({
                                             min="0"
                                             step="5000"
                                             placeholder="350000"
-                                            disabled={addAirportForm.data.same_as_pickup}
                                             value={addAirportForm.data.dropoff_unit_prices?.[unit.id] ?? ''}
                                             onChange={(e) => {
                                                 const val = e.target.value;
@@ -4277,7 +4237,7 @@ export default function MasterData({
                                                 newDropoff[unit.id] = val;
                                                 addAirportForm.setData('dropoff_unit_prices', newDropoff);
                                             }}
-                                            className={`${inputBaseClass} pl-7 text-xs font-semibold ${addAirportForm.data.same_as_pickup ? 'bg-slate-50 cursor-not-allowed text-slate-500' : ''}`}
+                                            className={`${inputBaseClass} pl-7 text-xs font-semibold`}
                                         />
                                     </div>
                                 </div>

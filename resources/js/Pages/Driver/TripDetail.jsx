@@ -61,6 +61,8 @@ export default function TripDetail({ trip, authDriver }) {
         if (backDate) params.set('date', backDate);
         if (backMonth) params.set('month', backMonth);
         backUrl = `/driver/schedule${params.toString() ? '?' + params.toString() : ''}`;
+    } else if (from === 'history') {
+        backUrl = '/driver/history';
     }
 
     const expenseUrlParams = new URLSearchParams();

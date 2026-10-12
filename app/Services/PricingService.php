@@ -216,15 +216,12 @@ class PricingService
 
         $packagePrice = (float) ($package->price ?: ($package->regular_price ?: 0));
 
-        $vehicle = null;
-        if (!empty($p['vehicle_id'])) {
-            $vehicle = Vehicle::find($p['vehicle_id']);
-        }
-        if (!$vehicle) {
-            $vehicle = Vehicle::where('category', $vehicleUnit->category)->first();
+        // ponytail: Use package unit_prices by vehicle_unit_id
+        $carPrice = 0;
+        if (!empty($package->unit_prices) && isset($package->unit_prices[$vehicleUnitId]) && is_numeric($package->unit_prices[$vehicleUnitId])) {
+            $carPrice = (float) $package->unit_prices[$vehicleUnitId];
         }
 
-        $carPrice = (float) ($vehicle?->daily_rate ?? 0);
         $totalPrice = $packagePrice + $carPrice;
 
         return [
