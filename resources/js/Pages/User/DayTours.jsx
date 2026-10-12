@@ -31,7 +31,14 @@ function TourCard({ tour }) {
 
             {/* Image */}
             <Link href={tourLink} className="block" style={{ height: '192px', background: '#EDEEEF', overflow: 'hidden' }}>
-                <img src={tourImg} alt={tourTitle} style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.3s ease' }}
+                <img 
+                    src={tourImg} 
+                    alt={tourTitle} 
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.3s ease' }}
+                    onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=800&q=80';
+                    }}
                     onMouseEnter={(e) => e.target.style.transform = 'scale(1.05)'}
                     onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
                 />

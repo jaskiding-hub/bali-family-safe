@@ -1318,20 +1318,19 @@ CATATAN / NOTES:`,
                                 onChange={(e) => {
                                     const pkgId = e.target.value;
                                     const pkg = packages.find((p) => String(p.id) === String(pkgId));
-                                    const isFull = pkg?.duration_type === 'Full Day';
-                                    const newTier = isFull ? 'Big Van' : (form.data.vehicle_tier === 'Big Van' ? 'Regular' : form.data.vehicle_tier);
-                                    const chosenV = vehicles.find((v) => v.tier === newTier) || vehicles[0];
+                                    const pkgPrice = Number(pkg?.price || pkg?.regular_price || 0);
 
-                                    const price = isFull
-                                        ? (pkg?.big_van_price || pkg?.price || '')
-                                        : (newTier === 'Luxury' ? (pkg?.luxury_price || pkg?.price || '') : (pkg?.regular_price || pkg?.price || ''));
+                                    // Get car price if vehicle_unit_id already selected
+                                    const currentUnit = available_vehicle_units.find((u) => String(u.id) === String(form.data.vehicle_unit_id));
+                                    const matchedVeh = vehicles.find((v) => v.category === currentUnit?.category);
+                                    const carPrice = Number(currentUnit?.daily_rate || matchedVeh?.daily_rate || 0);
+
+                                    const total = pkgPrice + carPrice;
 
                                     form.setData((prev) => ({
                                         ...prev,
                                         package_id: pkgId,
-                                        vehicle_id: chosenV?.id ? String(chosenV.id) : prev.vehicle_id,
-                                        vehicle_tier: newTier,
-                                        total_fee: price ? String(price) : prev.total_fee,
+                                        total_fee: total > 0 ? String(total) : (pkgPrice > 0 ? String(pkgPrice) : prev.total_fee),
                                     }));
                                 }}
                                 required
@@ -1340,7 +1339,7 @@ CATATAN / NOTES:`,
                                 <option value="">-- Pilih Tour Package --</option>
                                 {packages.map((pkg) => (
                                     <option key={pkg.id} value={pkg.id}>
-                                        {pkg.name} ({pkg.duration_type || 'Full Day'})
+                                        {pkg.name} ({pkg.duration_type || 'Full Day'}) {pkg.price || pkg.regular_price ? `- Rp ${Number(pkg.price || pkg.regular_price).toLocaleString('id-ID')}` : ''}
                                     </option>
                                 ))}
                             </select>
@@ -1350,98 +1349,80 @@ CATATAN / NOTES:`,
                         </div>
 
                         {/* 2. Vehicle Selector */}
-                        {isFullDayTour ? (
-                            <div className="sm:col-span-2">
-                                <div className="flex items-center justify-between mb-1.5">
-                                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700">
-                                        Pilih Kategori Kendaraan <span className="text-red-500">*</span>
-                                    </label>
+                        <div className="sm:col-span-2">
+                            <div className="flex items-center justify-between mb-1.5">
+                                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700">
+                                    Pilih Kategori Kendaraan (Armada) <span className="text-red-500">*</span>
+                                </label>
+                                {isFullDayTour && (
                                     <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
                                         Rekomendasi Full Day: Big Van / Minibus
                                     </span>
-                                </div>
-                                <select
-                                    value={form.data.vehicle_unit_id}
-                                    onChange={(e) => {
-                                        const unitId = e.target.value;
-                                        const unit = available_vehicle_units.find((u) => String(u.id) === String(unitId));
-                                        let price = null;
-                                        if (unit && selectedPkg) {
-                                            if (selectedPkg.unit_prices && selectedPkg.unit_prices[unitId] !== undefined && selectedPkg.unit_prices[unitId] !== '') {
-                                                price = Number(selectedPkg.unit_prices[unitId]);
-                                            } else {
-                                                const isBigVan = unit.category.toLowerCase().includes('minibus') || unit.category.toLowerCase().includes('big van');
-                                                const isLuxury = unit.category.toLowerCase().includes('luxury');
-                                                if (isBigVan) price = selectedPkg.big_van_price || selectedPkg.price;
-                                                else if (isLuxury) price = selectedPkg.luxury_price || selectedPkg.price;
-                                                else price = selectedPkg.regular_price || selectedPkg.price;
-                                            }
-                                        }
-                                        form.setData((prev) => ({
-                                            ...prev,
-                                            vehicle_unit_id: unitId,
-                                            total_fee: price ? String(price) : prev.total_fee,
-                                        }));
-                                    }}
-                                    required
-                                    className={selectClass}
-                                >
-                                    <option value="">-- Pilih Kategori Kendaraan --</option>
-                                    {available_vehicle_units.map((unit) => (
-                                        <option key={unit.id} value={unit.id}>
-                                            {unit.category} (Max {unit.passenger_capacity} pax)
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-                        ) : (
-                            <div className="sm:col-span-2">
-                                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                                    Pilih Kategori Kendaraan <span className="text-red-500">*</span>
-                                </label>
-                                <select
-                                    value={form.data.vehicle_unit_id}
-                                    onChange={(e) => {
-                                        const unitId = e.target.value;
-                                        const unit = available_vehicle_units.find((u) => String(u.id) === String(unitId));
-
-                                        let price = null;
-                                        if (unit && selectedPkg) {
-                                            if (selectedPkg.unit_prices && selectedPkg.unit_prices[unitId] !== undefined && selectedPkg.unit_prices[unitId] !== '') {
-                                                price = Number(selectedPkg.unit_prices[unitId]);
-                                            } else {
-                                                const isBigVan = unit.category.toLowerCase().includes('minibus') || unit.category.toLowerCase().includes('big van');
-                                                const isLuxury = unit.category.toLowerCase().includes('luxury');
-
-                                                if (isBigVan) {
-                                                    price = selectedPkg.big_van_price || selectedPkg.price;
-                                                } else if (isLuxury) {
-                                                    price = selectedPkg.luxury_price || selectedPkg.price;
-                                                } else {
-                                                    price = selectedPkg.regular_price || selectedPkg.price;
-                                                }
-                                            }
-                                        }
-
-                                        form.setData((prev) => ({
-                                            ...prev,
-                                            vehicle_unit_id: unitId,
-                                            total_fee: price ? String(price) : prev.total_fee,
-                                        }));
-                                    }}
-                                    required
-                                    className={selectClass}
-                                >
-                                    <option value="">-- Pilih Kategori --</option>
-                                    {available_vehicle_units.map((unit) => (
-                                        <option key={unit.id} value={unit.id}>
-                                            {unit.category} (Max {unit.passenger_capacity} pax)
-                                        </option>
-                                    ))}
-                                </select>
-                                {form.errors.vehicle_unit_id && (
-                                    <p className="text-xs text-red-600 mt-1 font-medium">{form.errors.vehicle_unit_id}</p>
                                 )}
+                            </div>
+                            <select
+                                value={form.data.vehicle_unit_id}
+                                onChange={(e) => {
+                                    const unitId = e.target.value;
+                                    const unit = available_vehicle_units.find((u) => String(u.id) === String(unitId));
+                                    const matchedVeh = vehicles.find((v) => v.category === unit?.category);
+                                    const carPrice = Number(unit?.daily_rate || matchedVeh?.daily_rate || 0);
+
+                                    const pkg = packages.find((p) => String(p.id) === String(form.data.package_id));
+                                    const pkgPrice = Number(pkg?.price || pkg?.regular_price || 0);
+
+                                    const total = pkgPrice + carPrice;
+
+                                    form.setData((prev) => ({
+                                        ...prev,
+                                        vehicle_unit_id: unitId,
+                                        total_fee: total > 0 ? String(total) : prev.total_fee,
+                                    }));
+                                }}
+                                required
+                                className={selectClass}
+                            >
+                                <option value="">-- Pilih Kategori Kendaraan --</option>
+                                {available_vehicle_units.map((unit) => {
+                                    const matchedVeh = vehicles.find((v) => v.category === unit.category);
+                                    const carPrice = Number(unit.daily_rate || matchedVeh?.daily_rate || 0);
+                                    return (
+                                        <option key={unit.id} value={unit.id}>
+                                            {unit.category} (Max {unit.passenger_capacity} pax) {carPrice > 0 ? `- Rp ${carPrice.toLocaleString('id-ID')}` : ''}
+                                        </option>
+                                    );
+                                })}
+                            </select>
+                            {form.errors.vehicle_unit_id && (
+                                <p className="text-xs text-red-600 mt-1 font-medium">{form.errors.vehicle_unit_id}</p>
+                            )}
+                        </div>
+
+                        {/* Rincian Perhitungan Day Tour (Harga Paket + Harga Mobil) */}
+                        {selectedPkg && (
+                            <div className="sm:col-span-2 p-3.5 bg-sky-50 border border-sky-200 rounded-xl text-xs space-y-1.5 shadow-2xs">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-1.5 font-bold text-sky-950">
+                                        <svg className="w-4 h-4 text-[#00AEEF] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                            <circle cx="12" cy="12" r="10" />
+                                            <path d="M12 16v-4" />
+                                            <path d="M12 8h.01" />
+                                        </svg>
+                                        <span>Perhitungan Biaya Day Tour:</span>
+                                    </div>
+                                    <span className="text-[11px] font-semibold text-sky-800 bg-sky-100/90 px-2 py-0.5 rounded-full border border-sky-200">
+                                        Harga Paket Tour + Harga Mobil
+                                    </span>
+                                </div>
+                                <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-slate-700 pt-1 border-t border-sky-200/60">
+                                    <span>Paket <strong>{selectedPkg.name}</strong>: <strong className="text-slate-900">Rp {Number(selectedPkg.price || selectedPkg.regular_price || 0).toLocaleString('id-ID')}</strong></span>
+                                    <span className="text-sky-500 font-bold">+</span>
+                                    <span>Mobil ({available_vehicle_units.find(u => String(u.id) === String(form.data.vehicle_unit_id))?.category || 'Belum dipilih'}): <strong className="text-slate-900">Rp {Number(available_vehicle_units.find(u => String(u.id) === String(form.data.vehicle_unit_id))?.daily_rate || vehicles.find(v => v.category === available_vehicle_units.find(u => String(u.id) === String(form.data.vehicle_unit_id))?.category)?.daily_rate || 0).toLocaleString('id-ID')}</strong></span>
+                                    <span className="text-sky-500 font-bold">=</span>
+                                    <span className="font-extrabold text-emerald-700 bg-white px-2 py-0.5 rounded-md border border-emerald-300">
+                                        Total: Rp {Number(form.data.total_fee || 0).toLocaleString('id-ID')}
+                                    </span>
+                                </div>
                             </div>
                         )}
 

@@ -24,6 +24,7 @@ class PackageController extends Controller
             'description' => ['nullable', 'string'],
             'package_type' => ['required', 'string', 'max:100'],
             'duration_type' => ['required', 'string', 'max:50'],
+            'price' => ['nullable', 'numeric', 'min:0'],
             'regular_price' => ['nullable', 'numeric', 'min:0'],
             'luxury_price' => ['nullable', 'numeric', 'min:0'],
             'big_van_price' => ['nullable', 'numeric', 'min:0'],
@@ -34,6 +35,8 @@ class PackageController extends Controller
             'highlights.*.description' => ['nullable', 'string'],
             'highlights.*.photo' => ['nullable', 'image', 'max:2048'],
         ]);
+
+        $basePrice = isset($validated['price']) && $validated['price'] !== '' ? (float) $validated['price'] : null;
 
         if (isset($validated['unit_prices']) && is_array($validated['unit_prices'])) {
             $filtered = [];
@@ -53,9 +56,10 @@ class PackageController extends Controller
                 $validated['big_van_price'] = end($filtered);
             }
         }
-        $validated['regular_price'] = $validated['regular_price'] ?? 0;
+        $validated['regular_price'] = $validated['regular_price'] ?? ($basePrice ?? 0);
         $validated['luxury_price'] = $validated['luxury_price'] ?? 0;
         $validated['big_van_price'] = $validated['big_van_price'] ?? 0;
+        $validated['price'] = $basePrice ?? (float)$validated['regular_price'];
 
         DB::transaction(function () use ($request, $validated) {
             $slugBase = Str::slug($validated['name']);
@@ -73,6 +77,7 @@ class PackageController extends Controller
                 'description' => $validated['description'] ?? null,
                 'package_type' => $validated['package_type'],
                 'duration_type' => $validated['duration_type'],
+                'price' => $validated['price'],
                 'regular_price' => $validated['regular_price'],
                 'luxury_price' => $validated['luxury_price'],
                 'big_van_price' => $validated['big_van_price'],
@@ -120,6 +125,7 @@ class PackageController extends Controller
             'description' => ['nullable', 'string'],
             'package_type' => ['required', 'string', 'max:100'],
             'duration_type' => ['required', 'string', 'max:50'],
+            'price' => ['nullable', 'numeric', 'min:0'],
             'regular_price' => ['nullable', 'numeric', 'min:0'],
             'luxury_price' => ['nullable', 'numeric', 'min:0'],
             'big_van_price' => ['nullable', 'numeric', 'min:0'],
@@ -130,6 +136,8 @@ class PackageController extends Controller
             'highlights.*.description' => ['nullable', 'string'],
             'highlights.*.photo' => ['nullable', 'image', 'max:2048'],
         ]);
+
+        $basePrice = isset($validated['price']) && $validated['price'] !== '' ? (float) $validated['price'] : null;
 
         if (isset($validated['unit_prices']) && is_array($validated['unit_prices'])) {
             $filtered = [];
@@ -149,9 +157,10 @@ class PackageController extends Controller
                 $validated['big_van_price'] = end($filtered);
             }
         }
-        $validated['regular_price'] = $validated['regular_price'] ?? $package->regular_price;
+        $validated['regular_price'] = $validated['regular_price'] ?? ($basePrice ?? $package->regular_price);
         $validated['luxury_price'] = $validated['luxury_price'] ?? $package->luxury_price;
         $validated['big_van_price'] = $validated['big_van_price'] ?? $package->big_van_price;
+        $validated['price'] = $basePrice ?? (float)($package->price ?? $validated['regular_price']);
 
         DB::transaction(function () use ($request, $package, $validated) {
             $packageData = [
@@ -160,6 +169,7 @@ class PackageController extends Controller
                 'description' => $validated['description'] ?? null,
                 'package_type' => $validated['package_type'],
                 'duration_type' => $validated['duration_type'],
+                'price' => $validated['price'],
                 'regular_price' => $validated['regular_price'],
                 'luxury_price' => $validated['luxury_price'],
                 'big_van_price' => $validated['big_van_price'],

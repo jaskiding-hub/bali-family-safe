@@ -100,6 +100,7 @@ class MasterDataController extends Controller
         $packages = $packagesQuery->get()->map(function (Package $p) {
             $pkgType = $p->package_type instanceof \BackedEnum ? $p->package_type->value : (string) ($p->package_type ?? 'Ubud');
             $durType = $p->duration_type instanceof \BackedEnum ? $p->duration_type->value : (string) ($p->duration_type ?? 'Full Day');
+            $basePrice = (float) ($p->price ?? $p->regular_price);
             $regPrice = (float) $p->regular_price;
             $luxPrice = (float) $p->luxury_price;
             $bigPrice = (float) $p->big_van_price;
@@ -113,6 +114,8 @@ class MasterDataController extends Controller
                 'hero_image' => $p->hero_image,
                 'package_type' => $pkgType,
                 'duration_type' => $durType,
+                'price' => $basePrice,
+                'price_formatted' => 'Rp ' . number_format($basePrice, 0, ',', '.'),
                 'regular_price' => $regPrice,
                 'regular_price_formatted' => 'Rp ' . number_format($regPrice, 0, ',', '.'),
                 'luxury_price' => $luxPrice,

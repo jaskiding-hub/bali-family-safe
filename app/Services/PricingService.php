@@ -214,23 +214,23 @@ class PricingService
             ]);
         }
 
-        $category = $vehicleUnit->category;
-        $isBigVan = stripos($category, 'minibus') !== false || stripos($category, 'big van') !== false;
-        $isLuxury = stripos($category, 'luxury') !== false;
+        $packagePrice = (float) ($package->price ?: ($package->regular_price ?: 0));
 
-        // Determine price: check dynamic unit_prices first, then fallback to category
-        if (!empty($package->unit_prices) && isset($package->unit_prices[$vehicleUnitId]) && is_numeric($package->unit_prices[$vehicleUnitId])) {
-            $price = (float) $package->unit_prices[$vehicleUnitId];
-        } elseif ($isBigVan) {
-            $price = (float) ($package->big_van_price ?: $package->price);
-        } elseif ($isLuxury) {
-            $price = (float) ($package->luxury_price ?: $package->price);
-        } else {
-            $price = (float) ($package->regular_price ?: $package->price);
+        $vehicle = null;
+        if (!empty($p['vehicle_id'])) {
+            $vehicle = Vehicle::find($p['vehicle_id']);
+        }
+        if (!$vehicle) {
+            $vehicle = Vehicle::where('category', $vehicleUnit->category)->first();
         }
 
+        $carPrice = (float) ($vehicle?->daily_rate ?? 0);
+        $totalPrice = $packagePrice + $carPrice;
+
         return [
-            'total_fee' => $price,
+            'total_fee' => $totalPrice,
+            'package_price' => $packagePrice,
+            'car_price' => $carPrice,
             'vehicle_unit_id' => $vehicleUnit->id,
         ];
     }

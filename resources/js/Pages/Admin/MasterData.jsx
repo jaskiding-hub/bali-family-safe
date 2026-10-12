@@ -260,6 +260,7 @@ export default function MasterData({
         description: '',
         package_type: package_types[0] || 'Ubud',
         duration_type: package_duration_types[1] || 'Full Day',
+        price: '',
         regular_price: '',
         luxury_price: '',
         big_van_price: '',
@@ -275,6 +276,7 @@ export default function MasterData({
         description: '',
         package_type: 'Ubud',
         duration_type: 'Full Day',
+        price: '',
         regular_price: '',
         luxury_price: '',
         big_van_price: '',
@@ -350,12 +352,13 @@ export default function MasterData({
             }
         }
 
-        // Check if at least one price is filled
-        const hasPrices = addPackageForm.data.unit_prices &&
-            Object.values(addPackageForm.data.unit_prices).some(price => price && parseFloat(price) > 0);
+        // Check if package price or at least one unit price is filled
+        const hasPrices = (addPackageForm.data.price && parseFloat(addPackageForm.data.price) > 0) ||
+            (addPackageForm.data.unit_prices &&
+            Object.values(addPackageForm.data.unit_prices).some(price => price && parseFloat(price) > 0));
 
         if (!hasPrices) {
-            alert('Minimal satu tarif kendaraan harus diisi.');
+            alert('Harga paket tour atau minimal satu tarif kendaraan harus diisi.');
             return;
         }
 
@@ -385,6 +388,7 @@ export default function MasterData({
             description: pkg.description || '',
             package_type: pkg.package_type || 'Ubud',
             duration_type: pkg.duration_type || 'Full Day',
+            price: pkg.price || pkg.regular_price || '',
             regular_price: pkg.regular_price || '',
             luxury_price: pkg.luxury_price || '',
             big_van_price: pkg.big_van_price || '',
@@ -420,12 +424,13 @@ export default function MasterData({
             }
         }
 
-        // Check if at least one price is filled
-        const hasPrices = editPackageForm.data.unit_prices &&
-            Object.values(editPackageForm.data.unit_prices).some(price => price && parseFloat(price) > 0);
+        // Check if package price or at least one unit price is filled
+        const hasPrices = (editPackageForm.data.price && parseFloat(editPackageForm.data.price) > 0) ||
+            (editPackageForm.data.unit_prices &&
+            Object.values(editPackageForm.data.unit_prices).some(price => price && parseFloat(price) > 0));
 
         if (!hasPrices) {
-            alert('Minimal satu tarif kendaraan harus diisi.');
+            alert('Harga paket tour atau minimal satu tarif kendaraan harus diisi.');
             return;
         }
 
@@ -700,6 +705,9 @@ export default function MasterData({
     const addAirportForm = useForm({
         destinasi: '',
         type: 'Pick-Up',
+        pickup_unit_prices: {},
+        dropoff_unit_prices: {},
+        same_as_pickup: true,
         price_regular: '',
         price_luxury: '',
         unit_prices: {},
@@ -749,11 +757,26 @@ export default function MasterData({
 
     const handleAddAirportSubmit = (e) => {
         e.preventDefault();
+        if (!addAirportForm.data.destinasi?.trim()) {
+            alert('Wilayah destinasi wajib diisi.');
+            return;
+        }
+        const hasPickup = addAirportForm.data.pickup_unit_prices &&
+            Object.values(addAirportForm.data.pickup_unit_prices).some(p => p && parseFloat(p) > 0);
+        if (!hasPickup) {
+            alert('Minimal satu tarif Pick-Up harus diisi.');
+            return;
+        }
+
         addAirportForm.post('/admin/airports', {
             onSuccess: () => {
                 setShowAddAirportModal(false);
                 addAirportForm.reset();
             },
+            onError: (errors) => {
+                const firstErr = Object.values(errors)[0];
+                if (firstErr) alert('Gagal menyimpan tarif destinasi bandara: ' + firstErr);
+            }
         });
     };
 
@@ -1229,23 +1252,27 @@ export default function MasterData({
                                     >
                                         <div>
                                             <div className="relative aspect-16/10 bg-slate-100 overflow-hidden flex items-center justify-center border-b border-slate-100">
-                                                {v.photo_url ? (
+                                                {v.photo_url && (
                                                     <img
                                                         src={v.photo_url}
                                                         alt={v.name}
                                                         className="w-full h-full object-cover"
+                                                        onError={(e) => {
+                                                            e.currentTarget.style.display = 'none';
+                                                            const fb = e.currentTarget.parentElement?.querySelector('.vehicle-img-fallback');
+                                                            if (fb) fb.classList.remove('hidden');
+                                                        }}
                                                     />
-                                                ) : (
-                                                    <div className="flex flex-col items-center justify-center text-slate-400 gap-2 text-center p-4">
-                                                        <svg className="w-8 h-8 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                                                            <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2" />
-                                                            <circle cx="7" cy="17" r="2" />
-                                                            <path d="M9 17h6" />
-                                                            <circle cx="17" cy="17" r="2" />
-                                                        </svg>
-                                                        <span className="text-xs font-medium">Foto belum diunggah</span>
-                                                    </div>
                                                 )}
+                                                <div className={`vehicle-img-fallback flex flex-col items-center justify-center text-slate-400 gap-2 text-center p-4 ${v.photo_url ? 'hidden' : ''}`}>
+                                                    <svg className="w-8 h-8 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                                                        <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2" />
+                                                        <circle cx="7" cy="17" r="2" />
+                                                        <path d="M9 17h6" />
+                                                        <circle cx="17" cy="17" r="2" />
+                                                    </svg>
+                                                    <span className="text-xs font-medium">Foto belum diunggah</span>
+                                                </div>
 
                                                 <div className="absolute top-3 left-3">
                                                     <span className={`px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider ${
@@ -1284,8 +1311,8 @@ export default function MasterData({
                                                         <span className="font-semibold text-slate-800">{v.model}</span>
                                                     </div>
                                                     <div>
-                                                        <span className="text-[10px] text-slate-400 font-semibold uppercase block">Unit Terdaftar</span>
-                                                        <span className="font-semibold text-slate-800">{v.units_count} Unit</span>
+                                                        <span className="text-[10px] text-slate-400 font-semibold uppercase block">Tarif Harian</span>
+                                                        <span className="font-semibold text-slate-800">{v.daily_rate_formatted}</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -1554,24 +1581,28 @@ export default function MasterData({
                                     >
                                         <div>
                                             <div className="relative aspect-16/10 bg-slate-100 overflow-hidden flex items-center justify-center border-b border-slate-100">
-                                                {pkg.hero_image ? (
+                                                {pkg.hero_image && (
                                                     <img
                                                         src={pkg.hero_image}
                                                         alt={pkg.name}
                                                         className="w-full h-full object-cover"
+                                                        onError={(e) => {
+                                                            e.currentTarget.style.display = 'none';
+                                                            const fb = e.currentTarget.parentElement?.querySelector('.package-img-fallback');
+                                                            if (fb) fb.classList.remove('hidden');
+                                                        }}
                                                     />
-                                                ) : (
-                                                    <div className="flex flex-col items-center justify-center text-slate-400 gap-2 text-center p-4">
-                                                        <svg className="w-8 h-8 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                                                            <path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z" />
-                                                            <path d="m3.6 9 16.8 0" />
-                                                            <path d="M3.6 15h16.8" />
-                                                            <path d="M11.5 3a17 17 0 0 0 0 18" />
-                                                            <path d="M12.5 3a17 17 0 0 1 0 18" />
-                                                        </svg>
-                                                        <span className="text-xs font-medium text-slate-400">Foto paket belum diunggah</span>
-                                                    </div>
                                                 )}
+                                                <div className={`package-img-fallback flex flex-col items-center justify-center text-slate-400 gap-2 text-center p-4 ${pkg.hero_image ? 'hidden' : ''}`}>
+                                                    <svg className="w-8 h-8 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                                                        <path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z" />
+                                                        <path d="m3.6 9 16.8 0" />
+                                                        <path d="M3.6 15h16.8" />
+                                                        <path d="M11.5 3a17 17 0 0 0 0 18" />
+                                                        <path d="M12.5 3a17 17 0 0 1 0 18" />
+                                                    </svg>
+                                                    <span className="text-xs font-medium text-slate-400">Foto paket belum diunggah</span>
+                                                </div>
 
                                                 <div className="absolute top-3 left-3 flex flex-wrap items-center gap-1.5">
                                                     <span className="px-2.5 py-1 rounded-lg text-[11px] font-bold uppercase tracking-wider bg-slate-900/90 text-white shadow-xs">
@@ -1600,6 +1631,17 @@ export default function MasterData({
                                                         {pkg.description}
                                                     </p>
                                                 )}
+
+                                                {/* Harga Paket Tour (Base Tour Fee) */}
+                                                <div className="bg-sky-50/80 rounded-xl p-3 border border-sky-200/80 flex items-center justify-between">
+                                                    <div>
+                                                        <span className="text-[10px] text-sky-700 font-bold uppercase tracking-wider block">Harga Paket Tour</span>
+                                                        <span className="text-sm font-extrabold text-sky-950 tabular-nums">{pkg.price_formatted || pkg.regular_price_formatted}</span>
+                                                    </div>
+                                                    <span className="text-[11px] font-semibold text-sky-800 bg-white px-2.5 py-1 rounded-lg border border-sky-200 shadow-2xs">
+                                                        + Harga Mobil
+                                                    </span>
+                                                </div>
 
                                                 {/* Tier Rates Breakdown - Clean Structured List */}
                                                 <div className="bg-slate-50 rounded-xl p-3 border border-slate-200/70 space-y-2">
@@ -2966,6 +3008,31 @@ export default function MasterData({
                         />
                     </div>
 
+                    {/* Harga Paket Tour (Base Day Tour Price) */}
+                    <div className="bg-sky-50/70 border border-sky-200/80 rounded-xl p-3.5 space-y-1.5">
+                        <label className="block text-xs font-bold text-sky-950">
+                            Harga Paket Day Tour <span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-semibold text-xs">Rp</span>
+                            <input
+                                type="number"
+                                min="0"
+                                step="10000"
+                                placeholder="Contoh: 450000"
+                                value={addPackageForm.data.price}
+                                onChange={(e) => addPackageForm.setData('price', e.target.value)}
+                                className={`${inputBaseClass} pl-8 font-semibold text-xs bg-white`}
+                            />
+                        </div>
+                        <p className="text-[11px] text-sky-800 leading-relaxed">
+                            💡 Khusus Day Tour: Total biaya pesanan dihitung otomatis dari <strong>Harga Paket Tour + Harga Mobil</strong> yang dipilih.
+                        </p>
+                        {addPackageForm.errors.price && (
+                            <p className="text-red-500 text-xs mt-1">{addPackageForm.errors.price}</p>
+                        )}
+                    </div>
+
                     {/* Dynamic Pricing per Vehicle Unit */}
                     <div className="space-y-2 pt-1 border-t border-slate-100">
                         <div className="flex items-center justify-between">
@@ -3231,6 +3298,31 @@ export default function MasterData({
                             onChange={(e) => editPackageForm.setData('description', e.target.value)}
                             className={`${inputBaseClass} resize-none`}
                         />
+                    </div>
+
+                    {/* Harga Paket Tour (Base Day Tour Price) */}
+                    <div className="bg-sky-50/70 border border-sky-200/80 rounded-xl p-3.5 space-y-1.5">
+                        <label className="block text-xs font-bold text-sky-950">
+                            Harga Paket Day Tour <span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-semibold text-xs">Rp</span>
+                            <input
+                                type="number"
+                                min="0"
+                                step="10000"
+                                placeholder="Contoh: 450000"
+                                value={editPackageForm.data.price}
+                                onChange={(e) => editPackageForm.setData('price', e.target.value)}
+                                className={`${inputBaseClass} pl-8 font-semibold text-xs bg-white`}
+                            />
+                        </div>
+                        <p className="text-[11px] text-sky-800 leading-relaxed">
+                            💡 Khusus Day Tour: Total biaya pesanan dihitung otomatis dari <strong>Harga Paket Tour + Harga Mobil</strong> yang dipilih.
+                        </p>
+                        {editPackageForm.errors.price && (
+                            <p className="text-red-500 text-xs mt-1">{editPackageForm.errors.price}</p>
+                        )}
                     </div>
 
                     {/* Dynamic Pricing per Vehicle Unit */}
@@ -4017,8 +4109,8 @@ export default function MasterData({
             <Modal
                 show={showAddAirportModal}
                 onClose={() => setShowAddAirportModal(false)}
-                title="Tambah Destinasi Bandara DPS"
-                maxWidth="lg"
+                title="Tambah Destinasi Bandara DPS (Pick-Up & Drop-Off)"
+                maxWidth="2xl"
                 footer={
                     <>
                         <button
@@ -4032,7 +4124,7 @@ export default function MasterData({
                             type="submit"
                             form="add-airport-form"
                             disabled={addAirportForm.processing}
-                            className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-semibold transition disabled:opacity-50 cursor-pointer min-h-[40px]"
+                            className="inline-flex items-center justify-center gap-2 px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-semibold transition disabled:opacity-50 cursor-pointer min-h-[40px]"
                         >
                             {addAirportForm.processing && (
                                 <svg className="w-4 h-4 animate-spin text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -4040,79 +4132,152 @@ export default function MasterData({
                                     <path fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" className="opacity-75" />
                                 </svg>
                             )}
-                            <span>Simpan Destinasi</span>
+                            <span>Simpan Tarif Pick-Up & Drop-Off</span>
                         </button>
                     </>
                 }
             >
                 <form id="add-airport-form" onSubmit={handleAddAirportSubmit} className="space-y-4 text-xs">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                                Wilayah Destinasi <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                                type="text"
-                                required
-                                placeholder="Contoh: Ubud, Seminyak, Nusa Dua"
-                                value={addAirportForm.data.destinasi}
-                                onChange={(e) => addAirportForm.setData('destinasi', e.target.value)}
-                                className={inputBaseClass}
-                            />
-                        </div>
-
-                        <div>
-                            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                                Tipe Transfer <span className="text-red-500">*</span>
-                            </label>
-                            <select
-                                value={addAirportForm.data.type}
-                                onChange={(e) => addAirportForm.setData('type', e.target.value)}
-                                className={selectBaseClass}
-                            >
-                                <option value="Pick-Up">Pick-Up (Jemput di Bandara)</option>
-                                <option value="Drop-Off">Drop-Off (Antar ke Bandara)</option>
-                            </select>
-                        </div>
+                    <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                            Wilayah Destinasi <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            required
+                            placeholder="Contoh: Ubud, Seminyak, Canggu, Nusa Dua, Uluwatu"
+                            value={addAirportForm.data.destinasi}
+                            onChange={(e) => addAirportForm.setData('destinasi', e.target.value)}
+                            className={inputBaseClass}
+                        />
+                        <p className="text-[11px] text-slate-400 mt-1">
+                            Sistem akan otomatis membuat 2 tarif sekaligus (Pick-Up dan Drop-Off) untuk wilayah destinasi ini.
+                        </p>
                     </div>
 
-                    {/* Dynamic Pricing per Vehicle Unit */}
-                    <div className="space-y-2 pt-1 border-t border-slate-100">
+                    {/* DUAL FORM SECTION 1: PICK-UP FORM */}
+                    <div className="border border-sky-100 bg-sky-50/40 rounded-2xl p-4 space-y-3">
                         <div className="flex items-center justify-between">
-                            <label className="block text-xs font-semibold text-slate-700">
-                                Tarif per Kategori Unit Kendaraan <span className="text-red-500">*</span>
-                            </label>
-                            <span className="text-[11px] text-slate-400">
-                                Otomatis menyesuaikan unit di master data
+                            <div className="flex items-center gap-2">
+                                <span className="w-6 h-6 rounded-lg bg-sky-600 text-white flex items-center justify-center font-bold text-xs shadow-xs">
+                                    1
+                                </span>
+                                <div>
+                                    <h4 className="font-bold text-slate-900 text-xs">Form Tarif Pick-Up (Jemput di Bandara DPS)</h4>
+                                    <p className="text-[11px] text-slate-500">Dari Bandara I Gusti Ngurah Rai menuju destinasi</p>
+                                </div>
+                            </div>
+                            <span className="px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase bg-sky-100 text-sky-700">
+                                Pick-Up
                             </span>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-50 p-3.5 rounded-xl border border-slate-200/80">
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 pt-1">
                             {vehicle_units && vehicle_units.map((unit) => (
-                                <div key={unit.id}>
+                                <div key={unit.id} className="bg-white p-2.5 rounded-xl border border-slate-200/80 shadow-2xs">
                                     <label className="block text-[11px] font-semibold text-slate-700 mb-1 truncate">
-                                        {unit.category} (Max {unit.passenger_capacity} pax)
+                                        {unit.category} ({unit.passenger_capacity} pax)
                                     </label>
                                     <div className="relative">
-                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-semibold text-xs">Rp</span>
+                                        <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 font-semibold text-[11px]">Rp</span>
                                         <input
                                             type="number"
                                             min="0"
                                             step="5000"
                                             placeholder="350000"
-                                            value={addAirportForm.data.unit_prices?.[unit.id] ?? ''}
+                                            value={addAirportForm.data.pickup_unit_prices?.[unit.id] ?? ''}
                                             onChange={(e) => {
                                                 const val = e.target.value;
-                                                const newPrices = { ...(addAirportForm.data.unit_prices || {}) };
-                                                newPrices[unit.id] = val;
-                                                const isLux = unit.category.toLowerCase().includes('luxury');
-                                                addAirportForm.setData((prev) => ({
-                                                    ...prev,
-                                                    unit_prices: newPrices,
-                                                    price_regular: !isLux ? val || prev.price_regular : prev.price_regular,
-                                                    price_luxury: isLux ? val : prev.price_luxury,
-                                                }));
+                                                const newPickup = { ...(addAirportForm.data.pickup_unit_prices || {}) };
+                                                newPickup[unit.id] = val;
+
+                                                if (addAirportForm.data.same_as_pickup) {
+                                                    const newDropoff = { ...(addAirportForm.data.dropoff_unit_prices || {}) };
+                                                    newDropoff[unit.id] = val;
+                                                    addAirportForm.setData((prev) => ({
+                                                        ...prev,
+                                                        pickup_unit_prices: newPickup,
+                                                        dropoff_unit_prices: newDropoff,
+                                                    }));
+                                                } else {
+                                                    addAirportForm.setData('pickup_unit_prices', newPickup);
+                                                }
                                             }}
-                                            className={`${inputBaseClass} pl-8 font-semibold text-xs`}
+                                            className={`${inputBaseClass} pl-7 text-xs font-semibold`}
+                                        />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* DUAL FORM SECTION 2: DROP-OFF FORM */}
+                    <div className="border border-emerald-100 bg-emerald-50/40 rounded-2xl p-4 space-y-3">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <span className="w-6 h-6 rounded-lg bg-emerald-600 text-white flex items-center justify-center font-bold text-xs shadow-xs">
+                                    2
+                                </span>
+                                <div>
+                                    <h4 className="font-bold text-slate-900 text-xs">Form Tarif Drop-Off (Antar ke Bandara DPS)</h4>
+                                    <p className="text-[11px] text-slate-500">Dari destinasi menuju Bandara I Gusti Ngurah Rai</p>
+                                </div>
+                            </div>
+                            <span className="px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase bg-emerald-100 text-emerald-700">
+                                Drop-Off
+                            </span>
+                        </div>
+
+                        {/* Checkbox Samakan dengan Tarif Pick-Up */}
+                        <div className="bg-white border border-slate-200/80 rounded-xl p-3 flex items-center justify-between">
+                            <label className="flex items-center gap-2.5 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={addAirportForm.data.same_as_pickup}
+                                    onChange={(e) => {
+                                        const checked = e.target.checked;
+                                        addAirportForm.setData((prev) => ({
+                                            ...prev,
+                                            same_as_pickup: checked,
+                                            dropoff_unit_prices: checked ? { ...(prev.pickup_unit_prices || {}) } : prev.dropoff_unit_prices,
+                                        }));
+                                    }}
+                                    className="w-4 h-4 rounded text-[#00AEEF] focus:ring-[#00AEEF] border-slate-300 cursor-pointer"
+                                />
+                                <span className="text-xs font-semibold text-slate-700 select-none">
+                                    Samakan tarif Drop-Off dengan tarif Pick-Up di atas
+                                </span>
+                            </label>
+                            {addAirportForm.data.same_as_pickup && (
+                                <span className="text-[11px] text-emerald-600 font-semibold hidden sm:inline">
+                                    ✓ Tarif otomatis tersinkron
+                                </span>
+                            )}
+                        </div>
+
+                        {/* Drop-off unit prices grid */}
+                        <div className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 pt-1 transition-opacity ${addAirportForm.data.same_as_pickup ? 'opacity-70' : 'opacity-100'}`}>
+                            {vehicle_units && vehicle_units.map((unit) => (
+                                <div key={unit.id} className="bg-white p-2.5 rounded-xl border border-slate-200/80 shadow-2xs">
+                                    <label className="block text-[11px] font-semibold text-slate-700 mb-1 truncate">
+                                        {unit.category} ({unit.passenger_capacity} pax)
+                                    </label>
+                                    <div className="relative">
+                                        <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 font-semibold text-[11px]">Rp</span>
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            step="5000"
+                                            placeholder="350000"
+                                            disabled={addAirportForm.data.same_as_pickup}
+                                            value={addAirportForm.data.dropoff_unit_prices?.[unit.id] ?? ''}
+                                            onChange={(e) => {
+                                                const val = e.target.value;
+                                                const newDropoff = { ...(addAirportForm.data.dropoff_unit_prices || {}) };
+                                                newDropoff[unit.id] = val;
+                                                addAirportForm.setData('dropoff_unit_prices', newDropoff);
+                                            }}
+                                            className={`${inputBaseClass} pl-7 text-xs font-semibold ${addAirportForm.data.same_as_pickup ? 'bg-slate-50 cursor-not-allowed text-slate-500' : ''}`}
                                         />
                                     </div>
                                 </div>

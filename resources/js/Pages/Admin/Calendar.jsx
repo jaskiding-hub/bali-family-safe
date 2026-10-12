@@ -20,6 +20,82 @@ const MONTHS = [
 
 const YEARS = [2024, 2025, 2026, 2027, 2028, 2029, 2030];
 
+export const getStatusTheme = (statusStr) => {
+    const s = (statusStr || '').toLowerCase();
+    switch (s) {
+        case 'pending':
+            return {
+                label: 'Pending',
+                borderClass: 'border-l-4 border-l-amber-400',
+                badgeClass: 'bg-amber-100 text-amber-900 border border-amber-300 font-semibold',
+                pillClass: 'bg-amber-50 text-amber-800 border border-amber-300 shadow-2xs',
+                cellClass: 'bg-amber-100 text-amber-950 border border-amber-300 font-semibold',
+                textColor: 'text-amber-700',
+                dotColor: 'bg-amber-400',
+            };
+        case 'confirmed':
+            return {
+                label: 'Confirmed',
+                borderClass: 'border-l-4 border-l-blue-500',
+                badgeClass: 'bg-blue-500 text-white font-medium',
+                pillClass: 'bg-blue-50 text-blue-700 border border-blue-200/80 shadow-2xs',
+                cellClass: 'bg-blue-500 text-white font-medium',
+                textColor: 'text-blue-700',
+                dotColor: 'bg-blue-500',
+            };
+        case 'assigned':
+            return {
+                label: 'Assigned',
+                borderClass: 'border-l-4 border-l-indigo-500',
+                badgeClass: 'bg-indigo-500 text-white font-medium',
+                pillClass: 'bg-indigo-50 text-indigo-700 border border-indigo-200/80 shadow-2xs',
+                cellClass: 'bg-indigo-500 text-white font-medium',
+                textColor: 'text-indigo-700',
+                dotColor: 'bg-indigo-500',
+            };
+        case 'on going':
+            return {
+                label: 'On Going',
+                borderClass: 'border-l-4 border-l-[#00AEEF]',
+                badgeClass: 'bg-[#00AEEF] text-white font-medium',
+                pillClass: 'bg-sky-50 text-sky-700 border border-sky-200/80 shadow-2xs',
+                cellClass: 'bg-[#00AEEF] text-white font-medium',
+                textColor: 'text-sky-700',
+                dotColor: 'bg-[#00AEEF]',
+            };
+        case 'completed':
+            return {
+                label: 'Completed',
+                borderClass: 'border-l-4 border-l-emerald-500',
+                badgeClass: 'bg-emerald-500 text-white font-medium',
+                pillClass: 'bg-emerald-50 text-emerald-700 border border-emerald-200/80 shadow-2xs',
+                cellClass: 'bg-emerald-500 text-white font-medium',
+                textColor: 'text-emerald-700',
+                dotColor: 'bg-emerald-500',
+            };
+        case 'cancelled':
+            return {
+                label: 'Cancelled',
+                borderClass: 'border-l-4 border-l-rose-500',
+                badgeClass: 'bg-rose-500 text-white font-medium',
+                pillClass: 'bg-rose-50 text-rose-700 border border-rose-200/80 shadow-2xs',
+                cellClass: 'bg-rose-500 text-white font-medium',
+                textColor: 'text-rose-700',
+                dotColor: 'bg-rose-500',
+            };
+        default:
+            return {
+                label: statusStr || 'Assigned',
+                borderClass: 'border-l-4 border-l-indigo-500',
+                badgeClass: 'bg-indigo-500 text-white font-medium',
+                pillClass: 'bg-indigo-50 text-indigo-700 border border-indigo-200/80 shadow-2xs',
+                cellClass: 'bg-indigo-500 text-white font-medium',
+                textColor: 'text-indigo-700',
+                dotColor: 'bg-indigo-500',
+            };
+    }
+};
+
 export default function Calendar({
     current_year = 2026,
     current_month = 8,
@@ -350,22 +426,15 @@ export default function Calendar({
                                         {/* Event Badges inside Cell */}
                                         <div className="space-y-1 overflow-hidden">
                                             {dayEvents.slice(0, 2).map((ev) => {
-                                                const status = ev.status ? ev.status.toLowerCase() : '';
-                                                let badgeStyle = 'bg-sky-500 text-white font-medium';
-
-                                                if (status === 'pending') {
-                                                    badgeStyle = 'bg-amber-100 text-amber-900 border border-amber-200/80 font-medium';
-                                                } else if (status === 'completed') {
-                                                    badgeStyle = 'bg-emerald-500 text-white font-medium';
-                                                }
+                                                const theme = getStatusTheme(ev.status);
 
                                                 return (
                                                     <div
                                                         key={ev.id}
-                                                        className={`px-1.5 py-0.5 rounded text-[11px] truncate shadow-2xs ${badgeStyle}`}
-                                                        title={`${ev.time_formatted} - ${ev.guest_name} (${ev.booking_type})`}
+                                                        className={`px-1.5 py-0.5 rounded text-[11px] truncate shadow-2xs ${theme.cellClass}`}
+                                                        title={`${ev.time_formatted} - ${ev.guest_name} (${ev.booking_type}) - ${theme.label}`}
                                                     >
-                                                        {status === 'pending'
+                                                        {theme.label === 'Pending'
                                                             ? 'Pending'
                                                             : `${ev.time_formatted} ${ev.guest_name.split(' ')[0]}`}
                                                     </div>
@@ -494,16 +563,12 @@ export default function Calendar({
                     {selectedEvents.length > 0 ? (
                         <div className="hidden lg:grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
                             {selectedEvents.map((booking) => {
-                                const isCompleted = booking.status?.toLowerCase() === 'completed';
+                                const theme = getStatusTheme(booking.status);
 
                                 return (
                                     <div
                                         key={booking.id}
-                                        className={`bg-white rounded-2xl shadow-xs border border-slate-200/80 p-5 flex flex-col justify-between gap-4 transition-all hover:shadow-md ${
-                                            isCompleted
-                                                ? 'border-l-4 border-l-emerald-500'
-                                                : 'border-l-4 border-l-[#00AEEF]'
-                                        }`}
+                                        className={`bg-white rounded-2xl shadow-xs border border-slate-200/80 p-5 flex flex-col justify-between gap-4 transition-all hover:shadow-md ${theme.borderClass}`}
                                     >
                                         {/* Card Top: Type & Destination + Status Badge */}
                                         <div className="flex items-start justify-between gap-2">
@@ -517,21 +582,10 @@ export default function Calendar({
                                             </div>
 
                                             {/* Status Badge Pill */}
-                                            {isCompleted ? (
-                                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/60 shadow-2xs shrink-0">
-                                                    <svg className="w-3 h-3 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                                                        <polyline points="20 6 9 17 4 12" />
-                                                    </svg>
-                                                    <span>Completed</span>
-                                                </span>
-                                            ) : (
-                                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-sky-50 text-sky-700 border border-sky-200/60 shadow-2xs shrink-0">
-                                                    <svg className="w-3.5 h-3.5 text-[#00AEEF]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                                        <path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z" />
-                                                    </svg>
-                                                    <span>{booking.badge_text}</span>
-                                                </span>
-                                            )}
+                                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold shadow-2xs shrink-0 ${theme.pillClass}`}>
+                                                <span className={`w-2 h-2 rounded-full ${theme.dotColor}`}></span>
+                                                <span>{theme.label}</span>
+                                            </span>
                                         </div>
 
                                         {/* Card Body: 2x2 Detail Grid */}
@@ -612,25 +666,13 @@ export default function Calendar({
                     <div className="block lg:hidden space-y-3 pt-3">
                         {selectedEvents.length > 0 ? (
                             selectedEvents.map((booking) => {
-                                const status = booking.status ? booking.status.toLowerCase() : '';
-                                let statusBadge = (
-                                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[#00AEEF] text-white shadow-2xs">
-                                        On going
+                                const theme = getStatusTheme(booking.status);
+                                const statusBadge = (
+                                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold shrink-0 ${theme.pillClass}`}>
+                                        <span className={`w-1.5 h-1.5 rounded-full ${theme.dotColor}`}></span>
+                                        <span>{theme.label}</span>
                                     </span>
                                 );
-                                if (status === 'pending') {
-                                    statusBadge = (
-                                        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200/60">
-                                            Pending
-                                        </span>
-                                    );
-                                } else if (status === 'completed') {
-                                    statusBadge = (
-                                        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/60">
-                                            Completed
-                                        </span>
-                                    );
-                                }
 
                                 const timeParts = (booking.time_ampm || '09:00 AM').split(' ');
                                 const timeDigits = timeParts[0] || '09:00';
@@ -753,19 +795,15 @@ export default function Calendar({
                                     </label>
                                     <div className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-base sm:text-sm text-slate-800 shadow-2xs flex items-center justify-between min-h-[42px]">
                                         <span className="font-semibold">{selectedTrip.status}</span>
-                                        {selectedTrip.status?.toLowerCase() === 'completed' ? (
-                                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                                Completed
-                                            </span>
-                                        ) : selectedTrip.status?.toLowerCase() === 'pending' ? (
-                                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">
-                                                Pending
-                                            </span>
-                                        ) : (
-                                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-sky-50 text-sky-700 border border-sky-200">
-                                                {selectedTrip.badge_text || 'On Going'}
-                                            </span>
-                                        )}
+                                        {(() => {
+                                            const theme = getStatusTheme(selectedTrip.status);
+                                            return (
+                                                <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold ${theme.pillClass}`}>
+                                                    <span className={`w-2 h-2 rounded-full ${theme.dotColor}`}></span>
+                                                    <span>{theme.label}</span>
+                                                </span>
+                                            );
+                                        })()}
                                     </div>
                                 </div>
 

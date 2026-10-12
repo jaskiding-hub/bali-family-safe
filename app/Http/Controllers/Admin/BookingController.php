@@ -163,10 +163,13 @@ class BookingController extends Controller
             ->get()
             ->map(function (VehicleUnit $u) {
                 $cat = $u->category instanceof \BackedEnum ? $u->category->value : (string) $u->category;
+                $matchedVeh = Vehicle::where('category', $u->category)->first();
+                $carRate = (float) ($matchedVeh?->daily_rate ?? 0);
                 return [
                     'id' => $u->id,
                     'category' => $cat,
                     'passenger_capacity' => $u->passenger_capacity,
+                    'daily_rate' => $carRate,
                     'label' => "{$cat} (Max {$u->passenger_capacity} penumpang)",
                 ];
             });
@@ -186,6 +189,7 @@ class BookingController extends Controller
                 'name' => $v->name,
                 'category' => $cat,
                 'tier' => $tier,
+                'daily_rate' => (float) $v->daily_rate,
                 'label' => "{$v->name} ({$tier})",
             ];
         });
@@ -326,23 +330,24 @@ class BookingController extends Controller
                 $package = Package::find($packageId);
                 if ($package) {
                     $durationType = $package->duration_type instanceof \BackedEnum ? $package->duration_type->value : (string) ($package->duration_type ?? 'Full Day');
+                    $basePackagePrice = (float) ($package->price ?: ($package->regular_price ?: 0));
                     $packageData = [
                         'id' => $package->id,
                         'name' => $package->name,
                         'duration_type' => $durationType,
-                        'regular_price' => $package->regular_price ? (float) $package->regular_price : (float) $package->price,
-                        'luxury_price' => $package->luxury_price ? (float) $package->luxury_price : (float) $package->price,
-                        'big_van_price' => $package->big_van_price ? (float) $package->big_van_price : (float) $package->price,
+                        'price' => $basePackagePrice,
+                        'regular_price' => $package->regular_price ? (float) $package->regular_price : $basePackagePrice,
+                        'luxury_price' => $package->luxury_price ? (float) $package->luxury_price : $basePackagePrice,
+                        'big_van_price' => $package->big_van_price ? (float) $package->big_van_price : $basePackagePrice,
                     ];
 
-                    if ($durationType === 'Full Day') {
-                        $vehicles = Vehicle::where('category', VehicleCategory::FamilyMinibus->value)->orderBy('name')->get();
-                        $calculatedPrice = $packageData['big_van_price'];
-                    } else {
-                        $category = $tier === 'Luxury' ? VehicleCategory::LuxuryTouringVan->value : VehicleCategory::RegularFamilySUV->value;
-                        $vehicles = Vehicle::where('category', $category)->orderBy('name')->get();
-                        $calculatedPrice = $tier === 'Luxury' ? $packageData['luxury_price'] : $packageData['regular_price'];
+                    $vehicles = Vehicle::orderBy('name')->get();
+                    $carPrice = 0;
+                    if ($vehicleId) {
+                        $veh = Vehicle::find($vehicleId);
+                        $carPrice = (float) ($veh?->daily_rate ?? 0);
                     }
+                    $calculatedPrice = $basePackagePrice + $carPrice;
                 }
             }
         }

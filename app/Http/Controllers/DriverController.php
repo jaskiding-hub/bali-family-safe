@@ -289,4 +289,63 @@ class DriverController extends Controller
             'authDriver' => $authDriver,
         ]);
     }
+
+    public function history(Request $request)
+    {
+        $driver = Auth::guard('driver')->user() ?? Driver::first();
+        $driverId = $driver?->id;
+        $search = $request->query('search');
+        $month = $request->query('month');
+
+        $query = Booking::with(['vehicle', 'vehicleUnit', 'package', 'pickupHotel', 'dropoffHotel', 'airport', 'tripExpenses', 'childSeats.childSeatType'])
+            ->when($driverId, fn($q) => $q->where('driver_id', $driverId))
+            ->where('status', BookingStatus::Completed->value);
+
+        if ($month) {
+            try {
+                $m = Carbon::createFromFormat('Y-m', $month);
+                $query->whereBetween('booking_date', [$m->copy()->startOfMonth()->toDateString(), $m->copy()->endOfMonth()->toDateString()]);
+            } catch (\Exception $e) {
+                // ignore
+            }
+        }
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('booking_code', 'like', "%{$search}%")
+                  ->orWhere('guest_name', 'like', "%{$search}%");
+            });
+        }
+
+        $completedBookings = $query->orderBy('booking_date', 'desc')
+            ->orderBy('pickup_time', 'desc')
+            ->paginate(15)
+            ->withQueryString();
+
+        $stats = [
+            'total_completed' => Booking::when($driverId, fn($q) => $q->where('driver_id', $driverId))
+                ->where('status', BookingStatus::Completed->value)
+                ->count(),
+            'this_month_completed' => Booking::when($driverId, fn($q) => $q->where('driver_id', $driverId))
+                ->where('status', BookingStatus::Completed->value)
+                ->whereBetween('booking_date', [Carbon::now()->startOfMonth()->toDateString(), Carbon::now()->endOfMonth()->toDateString()])
+                ->count(),
+        ];
+
+        return Inertia::render('Driver/History', [
+            'driver' => $driver,
+            'completedTrips' => [
+                'data' => collect($completedBookings->items())->map(fn($b) => $this->transformBookingForDriver($b)),
+                'links' => $completedBookings->linkCollection()->toArray(),
+                'total' => $completedBookings->total(),
+                'current_page' => $completedBookings->currentPage(),
+                'last_page' => $completedBookings->lastPage(),
+            ],
+            'stats' => $stats,
+            'filters' => [
+                'search' => $search,
+                'month' => $month,
+            ],
+        ]);
+    }
 }

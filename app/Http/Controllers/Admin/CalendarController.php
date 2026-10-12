@@ -92,19 +92,18 @@ class CalendarController extends Controller
                 $statusStr = BookingStatus::Completed->value;
             }
 
-            // Badge info
-            $badgeType = 'arriving';
-            $badgeText = 'Arriving';
-            if ($statusStr === BookingStatus::Completed->value) {
-                $badgeType = 'success';
-                $badgeText = 'Completed';
-            } elseif ($statusStr === BookingStatus::Pending->value) {
-                $badgeType = 'pending';
-                $badgeText = 'Pending Approval';
-            } elseif ($directionStr === TransferDirection::DropOff->value) {
-                $badgeType = 'departing';
-                $badgeText = 'Departing';
-            }
+            // Badge text & type reflect actual booking status (e.g. Assigned, Pending, Confirmed)
+            $badgeText = $statusStr;
+            $statusLower = strtolower($statusStr);
+            $badgeType = match ($statusLower) {
+                'completed' => 'success',
+                'pending' => 'pending',
+                'assigned' => 'assigned',
+                'confirmed' => 'confirmed',
+                'on going' => 'ongoing',
+                'cancelled' => 'cancelled',
+                default => 'default',
+            };
 
             // Short summary for month grid badge
             $shortTitle = "{$timeFormatted} - " . ($booking->guest_name ?: 'Booking');

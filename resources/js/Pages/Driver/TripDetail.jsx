@@ -329,18 +329,16 @@ export default function TripDetail({ trip, authDriver }) {
                         <h2 className="text-[#171C20] text-2xl sm:text-3xl font-bold mt-0.5 tracking-tight">{trip.trip_time}</h2>
                     </div>
 
-                    {/* Route Timeline Component */}
-                    <div className="flex items-stretch gap-3.5 my-1">
-                        {/* Kolom Kiri: Indikator Titik & Garis */}
-                        <div className="flex flex-col items-center w-4 shrink-0 py-1">
-                            <div className="w-3.5 h-3.5 rounded-full border-2 border-[#00AEEF] bg-white shadow-xs shrink-0 animate-[softBreathing_2.8s_ease-in-out_infinite]"></div>
-                            <div className="w-[2px] grow my-1 border-l-2 border-dashed border-[#00AEEF]/70"></div>
-                            <div className="w-3.5 h-3.5 rounded-full bg-[#00AEEF] shadow-xs shrink-0"></div>
-                        </div>
+                    {/* Route Timeline Component (Khusus Day Tour hanya menampilkan Pickup Point) */}
+                    {(trip.booking_type === 'Day Tour' || trip.trip_type?.toLowerCase().includes('day tour')) ? (
+                        <div className="flex items-center gap-3.5 my-1">
+                            {/* Kolom Kiri: Indikator Titik */}
+                            <div className="flex flex-col items-center w-4 shrink-0 py-1">
+                                <div className="w-3.5 h-3.5 rounded-full border-2 border-[#00AEEF] bg-white shadow-xs shrink-0 animate-[softBreathing_2.8s_ease-in-out_infinite]"></div>
+                            </div>
 
-                        {/* Kolom Kanan: Detail Teks Lokasi */}
-                        <div className="flex flex-col justify-between grow gap-5">
-                            <div>
+                            {/* Kolom Kanan: Detail Teks Lokasi */}
+                            <div className="flex flex-col justify-center grow">
                                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block leading-tight">
                                     Pickup Point
                                 </span>
@@ -348,17 +346,38 @@ export default function TripDetail({ trip, authDriver }) {
                                     {trip.pickup_location}
                                 </span>
                             </div>
+                        </div>
+                    ) : (
+                        <div className="flex items-stretch gap-3.5 my-1">
+                            {/* Kolom Kiri: Indikator Titik & Garis */}
+                            <div className="flex flex-col items-center w-4 shrink-0 py-1">
+                                <div className="w-3.5 h-3.5 rounded-full border-2 border-[#00AEEF] bg-white shadow-xs shrink-0 animate-[softBreathing_2.8s_ease-in-out_infinite]"></div>
+                                <div className="w-[2px] grow my-1 border-l-2 border-dashed border-[#00AEEF]/70"></div>
+                                <div className="w-3.5 h-3.5 rounded-full bg-[#00AEEF] shadow-xs shrink-0"></div>
+                            </div>
 
-                            <div>
-                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block leading-tight">
-                                    Drop-off Point / Route
-                                </span>
-                                <span className="text-sm sm:text-base font-bold text-[#171C20] leading-snug block mt-0.5">
-                                    {trip.dropoff_location}
-                                </span>
+                            {/* Kolom Kanan: Detail Teks Lokasi */}
+                            <div className="flex flex-col justify-between grow gap-5">
+                                <div>
+                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block leading-tight">
+                                        Pickup Point
+                                    </span>
+                                    <span className="text-sm sm:text-base font-bold text-[#171C20] leading-snug block mt-0.5">
+                                        {trip.pickup_location}
+                                    </span>
+                                </div>
+
+                                <div>
+                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block leading-tight">
+                                        Drop-off Point / Route
+                                    </span>
+                                    <span className="text-sm sm:text-base font-bold text-[#171C20] leading-snug block mt-0.5">
+                                        {trip.dropoff_location}
+                                    </span>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    )}
                 </div>
 
                 {/* Card 2: Detail Tamu & Catatan Khusus */}

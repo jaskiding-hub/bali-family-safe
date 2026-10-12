@@ -296,26 +296,38 @@ export default function Schedule({
                                             </div>
                                         )}
 
-                                        {/* Route Timeline Box */}
-                                        <div className={`w-full ${style.box_bg} border ${style.box_border} rounded-xl sm:rounded-2xl p-3.5 sm:p-4 flex items-stretch gap-3`}>
-                                            {/* Timeline Dots Column */}
-                                            <div className="flex flex-col items-center w-3 shrink-0 py-0.5">
-                                                <div className="w-2.5 h-2.5 rounded-full border-2 bg-white shrink-0" style={{ borderColor: style.dot_color }}></div>
-                                                <div className="w-[2px] grow my-1 bg-slate-200"></div>
-                                                <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: style.dot_color }}></div>
-                                            </div>
-                                            {/* Details Text Column */}
-                                            <div className="flex flex-col justify-between grow gap-2 text-xs sm:text-sm min-w-0">
-                                                <div className="min-w-0">
-                                                    <span className="text-slate-400 font-semibold tracking-wider block uppercase text-[10px]">Pick-up</span>
+                                        {/* Route Timeline Box (Khusus Day Tour hanya menampilkan Pick-up Point) */}
+                                        {(trip.booking_type === 'Day Tour' || trip.trip_type?.toLowerCase().includes('day tour')) ? (
+                                            <div className={`w-full ${style.box_bg} border ${style.box_border} rounded-xl sm:rounded-2xl p-3.5 sm:p-4 flex items-center gap-3`}>
+                                                <div className="flex flex-col items-center w-3 shrink-0 py-0.5">
+                                                    <div className="w-2.5 h-2.5 rounded-full border-2 bg-white shrink-0" style={{ borderColor: style.dot_color }}></div>
+                                                </div>
+                                                <div className="flex flex-col justify-center grow min-w-0">
+                                                    <span className="text-slate-400 font-semibold tracking-wider block uppercase text-[10px]">Pick-up Point</span>
                                                     <span className="text-xs sm:text-sm font-bold text-slate-900 block mt-0.5 truncate">{trip.pickup_location}</span>
                                                 </div>
-                                                <div className="min-w-0">
-                                                    <span className="text-slate-400 font-semibold tracking-wider block uppercase text-[10px]">Drop-off / Route</span>
-                                                    <span className="text-xs sm:text-sm font-bold text-slate-900 block mt-0.5 truncate">{trip.dropoff_location}</span>
+                                            </div>
+                                        ) : (
+                                            <div className={`w-full ${style.box_bg} border ${style.box_border} rounded-xl sm:rounded-2xl p-3.5 sm:p-4 flex items-stretch gap-3`}>
+                                                {/* Timeline Dots Column */}
+                                                <div className="flex flex-col items-center w-3 shrink-0 py-0.5">
+                                                    <div className="w-2.5 h-2.5 rounded-full border-2 bg-white shrink-0" style={{ borderColor: style.dot_color }}></div>
+                                                    <div className="w-[2px] grow my-1 bg-slate-200"></div>
+                                                    <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: style.dot_color }}></div>
+                                                </div>
+                                                {/* Details Text Column */}
+                                                <div className="flex flex-col justify-between grow gap-2 text-xs sm:text-sm min-w-0">
+                                                    <div className="min-w-0">
+                                                        <span className="text-slate-400 font-semibold tracking-wider block uppercase text-[10px]">Pick-up</span>
+                                                        <span className="text-xs sm:text-sm font-bold text-slate-900 block mt-0.5 truncate">{trip.pickup_location}</span>
+                                                    </div>
+                                                    <div className="min-w-0">
+                                                        <span className="text-slate-400 font-semibold tracking-wider block uppercase text-[10px]">Drop-off / Route</span>
+                                                        <span className="text-xs sm:text-sm font-bold text-slate-900 block mt-0.5 truncate">{trip.dropoff_location}</span>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
+                                        )}
 
                                         {/* CTA Button */}
                                         <Link 

@@ -102,7 +102,15 @@ export default function TourPackagesSection({ packages = [] }) {
 
                                 {/* Image */}
                                 <Link href={tourLink} className="img-zoom block" style={{ height: '192px', background: '#EDEEEF', overflow: 'hidden' }}>
-                                    <img src={tourImg} alt={tourTitle} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                    <img 
+                                        src={tourImg} 
+                                        alt={tourTitle} 
+                                        style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                                        onError={(e) => {
+                                            e.currentTarget.onerror = null;
+                                            e.currentTarget.src = 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=1200&q=80';
+                                        }}
+                                    />
                                 </Link>
 
                                 {/* Content */}

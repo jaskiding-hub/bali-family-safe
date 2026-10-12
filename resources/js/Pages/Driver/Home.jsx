@@ -207,19 +207,21 @@ export default function Home({ driver, activeTrip, laterTodayTrips = [] }) {
                                     </div>
                                 </div>
 
-                                {/* Item 4: Drop-off / Route */}
-                                <div className="flex items-start gap-3.5">
-                                    <div className="w-10 h-10 min-w-[40px] bg-[#EAEEF4] rounded-full flex items-center justify-center text-[#00658D] transition-transform duration-300 hover:scale-105 shrink-0 mt-0.5">
-                                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                        </svg>
+                                {/* Item 4: Drop-off / Route (Tidak ditampilkan jika pesanan Day Tour) */}
+                                {!(activeTrip.booking_type === 'Day Tour' || activeTrip.trip_type?.toLowerCase().includes('day tour')) && (
+                                    <div className="flex items-start gap-3.5">
+                                        <div className="w-10 h-10 min-w-[40px] bg-[#EAEEF4] rounded-full flex items-center justify-center text-[#00658D] transition-transform duration-300 hover:scale-105 shrink-0 mt-0.5">
+                                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                            </svg>
+                                        </div>
+                                        <div className="flex flex-col justify-center min-w-0">
+                                            <span className="text-[11px] font-semibold text-[#6E7881] tracking-[0.8px] uppercase leading-tight mb-0.5">DROP-OFF / ROUTE</span>
+                                            <span className="text-base sm:text-lg font-bold text-[#171C20] leading-snug">{activeTrip.dropoff_location}</span>
+                                        </div>
                                     </div>
-                                    <div className="flex flex-col justify-center min-w-0">
-                                        <span className="text-[11px] font-semibold text-[#6E7881] tracking-[0.8px] uppercase leading-tight mb-0.5">DROP-OFF / ROUTE</span>
-                                        <span className="text-base sm:text-lg font-bold text-[#171C20] leading-snug">{activeTrip.dropoff_location}</span>
-                                    </div>
-                                </div>
+                                )}
                             </div>
 
                             {/* Guest Notes Alert if present */}

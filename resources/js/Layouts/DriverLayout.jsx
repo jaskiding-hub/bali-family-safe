@@ -55,6 +55,7 @@ export default function DriverLayout({ children, hideBottomNav = false }) {
 
     const isHome = url === '/driver' || url === '/driver/home' || url.startsWith('/driver/home');
     const isSchedule = url.startsWith('/driver/schedule');
+    const isHistory = url.startsWith('/driver/history');
     const isTripRoute = url.includes('/driver/trips') || url.includes('/driver/expense');
     const shouldShowBottomNav = !hideBottomNav && !isTripRoute;
 
@@ -74,11 +75,11 @@ export default function DriverLayout({ children, hideBottomNav = false }) {
 
                 {/* Bottom Navigation Bar */}
                 {shouldShowBottomNav && (
-                    <nav className="fixed z-50 transition-all duration-200 bottom-0 left-0 right-0 w-full sm:bottom-5 sm:left-1/2 sm:-translate-x-1/2 sm:max-w-xl md:max-w-2xl sm:rounded-2xl sm:border sm:border-slate-200/80 sm:shadow-[0_10px_30px_rgba(0,0,0,0.08)] h-[64px] bg-white/95 backdrop-blur-md border-t border-slate-200/80 px-8 flex items-center justify-around">
+                    <nav className="fixed z-50 transition-all duration-200 bottom-0 left-0 right-0 w-full sm:bottom-5 sm:left-1/2 sm:-translate-x-1/2 sm:max-w-xl md:max-w-2xl sm:rounded-2xl sm:border sm:border-slate-200/80 sm:shadow-[0_10px_30px_rgba(0,0,0,0.08)] h-[64px] bg-white/95 backdrop-blur-md border-t border-slate-200/80 px-6 sm:px-8 flex items-center justify-around">
                         {/* Tab Beranda */}
                         <Link 
                             href="/driver/home" 
-                            className="group relative flex flex-col items-center justify-center w-24 h-full transition-transform duration-200 ease-out active:scale-95"
+                            className="group relative flex flex-col items-center justify-center w-20 sm:w-24 h-full transition-transform duration-200 ease-out active:scale-95"
                         >
                             {isHome ? (
                                 <>
@@ -101,7 +102,7 @@ export default function DriverLayout({ children, hideBottomNav = false }) {
                         {/* Tab Schedule */}
                         <Link 
                             href="/driver/schedule" 
-                            className="group relative flex flex-col items-center justify-center w-24 h-full transition-transform duration-200 ease-out active:scale-95"
+                            className="group relative flex flex-col items-center justify-center w-20 sm:w-24 h-full transition-transform duration-200 ease-out active:scale-95"
                         >
                             {isSchedule ? (
                                 <>
@@ -117,6 +118,29 @@ export default function DriverLayout({ children, hideBottomNav = false }) {
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                     </svg>
                                     <span className="text-[11px] font-medium text-slate-400 group-hover:text-slate-600 mt-0.5 tracking-tight">Schedule</span>
+                                </>
+                            )}
+                        </Link>
+
+                        {/* Tab Riwayat */}
+                        <Link 
+                            href="/driver/history" 
+                            className="group relative flex flex-col items-center justify-center w-20 sm:w-24 h-full transition-transform duration-200 ease-out active:scale-95"
+                        >
+                            {isHistory ? (
+                                <>
+                                    <span className="absolute top-0 h-[2.5px] w-12 rounded-b-full bg-[#00AEEF] transition-all duration-300 ease-out"></span>
+                                    <svg className="w-6 h-6 text-[#00AEEF] transition-transform duration-200 group-active:scale-95" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <span className="text-[11px] font-semibold text-[#00658D] mt-0.5 tracking-tight">Riwayat</span>
+                                </>
+                            ) : (
+                                <>
+                                    <svg className="w-6 h-6 text-slate-400 group-hover:text-slate-600 transition-colors duration-200 group-active:scale-95" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <span className="text-[11px] font-medium text-slate-400 group-hover:text-slate-600 mt-0.5 tracking-tight">Riwayat</span>
                                 </>
                             )}
                         </Link>

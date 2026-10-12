@@ -17,6 +17,7 @@ class Package extends Model
         'subtitle',
         'description',
         'hero_image',
+        'price',
         'package_type',
         'duration_type',
         'regular_price',
@@ -27,6 +28,7 @@ class Package extends Model
     ];
 
     protected $casts = [
+        'price' => 'decimal:2',
         'duration_type' => PackageDurationType::class,
         'regular_price' => 'decimal:2',
         'luxury_price' => 'decimal:2',
