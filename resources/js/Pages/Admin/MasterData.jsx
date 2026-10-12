@@ -1309,10 +1309,6 @@ export default function MasterData({
                                                         <span className="text-[10px] text-slate-400 font-semibold uppercase block">Model / Tahun</span>
                                                         <span className="font-semibold text-slate-800">{v.model}</span>
                                                     </div>
-                                                    <div>
-                                                        <span className="text-[10px] text-slate-400 font-semibold uppercase block">Tarif Harian</span>
-                                                        <span className="font-semibold text-slate-800">{v.daily_rate_formatted}</span>
-                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
