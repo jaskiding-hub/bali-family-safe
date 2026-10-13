@@ -38,6 +38,8 @@ class Booking extends Model
         'driver_id',
         'package_id',
         'created_by_admin_id',
+        'admin_deleted_at',
+        'driver_deleted_at',
     ];
 
     protected $casts = [
@@ -46,7 +48,19 @@ class Booking extends Model
         'status' => BookingStatus::class,
         'booking_type' => BookingType::class,
         'transfer_direction' => TransferDirection::class,
+        'admin_deleted_at' => 'datetime',
+        'driver_deleted_at' => 'datetime',
     ];
+
+    public function scopeForAdmin($query)
+    {
+        return $query->whereNull('admin_deleted_at');
+    }
+
+    public function scopeForDriver($query)
+    {
+        return $query->whereNull('driver_deleted_at');
+    }
 
     public function vehicle(): BelongsTo
     {

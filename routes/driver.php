@@ -12,6 +12,7 @@ Route::prefix('driver')->middleware(['auth:driver'])->name('driver.')->group(fun
     Route::get('/home', [DriverController::class, 'home'])->name('home');
     Route::get('/schedule', [DriverController::class, 'schedule'])->name('schedule');
     Route::get('/history', [DriverController::class, 'history'])->name('history');
+    Route::delete('/history/{id}', [DriverController::class, 'deleteFromHistory'])->name('history.delete');
     Route::get('/trips/{id}', [DriverController::class, 'tripDetail'])->name('trip.detail');
     Route::post('/trips/{id}/complete', [DriverController::class, 'completeTrip'])->name('trip.complete');
     Route::get('/trips/{id}/expense', [DriverController::class, 'expense'])->name('trip.expense');

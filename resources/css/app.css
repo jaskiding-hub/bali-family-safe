@@ -467,6 +467,40 @@ input, select, textarea, button {
         grid-template-columns: 1fr !important;
         gap: 16px !important;
     }
+    .bfs-booking-footer {
+        padding: 16px 16px 20px !important;
+    }
+    .bfs-estimated-card {
+        padding: 18px 16px !important;
+        flex-direction: column !important;
+        justify-content: center !important;
+        align-items: center !important;
+        text-align: center !important;
+        gap: 10px !important;
+    }
+    .bfs-estimated-info {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        text-align: center !important;
+        width: 100% !important;
+    }
+    .bfs-estimated-label {
+        text-align: center !important;
+        font-size: 15px !important;
+    }
+    .bfs-estimated-sub {
+        text-align: center !important;
+        font-size: 12px !important;
+    }
+    .bfs-estimated-price {
+        font-size: 32px !important;
+        text-align: center !important;
+        display: block !important;
+        width: 100% !important;
+        line-height: 1.2 !important;
+        margin-top: 2px !important;
+    }
 
     /* ── ALL SECTIONS — 16px horizontal, 48px vertical padding ── */
     section {
@@ -685,6 +719,32 @@ input, select, textarea, button {
     .bfs-nav-logo { height: 50px !important; }
     section { padding-top: 64px !important; padding-bottom: 64px !important; }
     section > div { padding-left: 24px !important; padding-right: 24px !important; }
+}
+
+/* Custom Dropdown animation & scrollbar */
+@keyframes bfsFadeDown {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.bfs-custom-select-menu::-webkit-scrollbar {
+    width: 6px;
+}
+.bfs-custom-select-menu::-webkit-scrollbar-track {
+    background: transparent;
+}
+.bfs-custom-select-menu::-webkit-scrollbar-thumb {
+    background: #CBD5E1;
+    border-radius: 9999px;
+}
+.bfs-custom-select-menu::-webkit-scrollbar-thumb:hover {
+    background: #94A3B8;
 }
 
 

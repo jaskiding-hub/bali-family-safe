@@ -107,7 +107,8 @@ class FinancialReportController extends Controller
         }
 
         // Base query for bookings table
-        $bookingsQuery = Booking::with(['driver', 'vehicle', 'package', 'tripExpenses', 'pickupHotel', 'dropoffHotel', 'airport'])
+        $bookingsQuery = Booking::whereNull('admin_deleted_at')
+            ->with(['driver', 'vehicle', 'package', 'tripExpenses', 'pickupHotel', 'dropoffHotel', 'airport'])
             ->where('status', BookingStatus::Completed->value);
         if ($startDate && $endDate) {
             $bookingsQuery->whereBetween('booking_date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')]);
@@ -128,7 +129,7 @@ class FinancialReportController extends Controller
         }
 
         // Completed bookings for revenue calculation
-        $revenueQuery = Booking::where('status', BookingStatus::Completed->value);
+        $revenueQuery = Booking::whereNull('admin_deleted_at')->where('status', BookingStatus::Completed->value);
         if ($startDate && $endDate) {
             $revenueQuery->whereBetween('booking_date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')]);
         }
@@ -147,7 +148,8 @@ class FinancialReportController extends Controller
         $trendPercentage = 0;
         $trendIsPositive = true;
         if ($prevStartDate && $prevEndDate) {
-            $prevRevenue = (float) Booking::where('status', BookingStatus::Completed->value)
+            $prevRevenue = (float) Booking::whereNull('admin_deleted_at')
+                ->where('status', BookingStatus::Completed->value)
                 ->whereBetween('booking_date', [$prevStartDate->format('Y-m-d'), $prevEndDate->format('Y-m-d')])
                 ->sum('total_fee');
 
@@ -235,7 +237,8 @@ class FinancialReportController extends Controller
 
         // Available months for quick filter (completed trips only)
         if (DB::connection()->getDriverName() === 'sqlite') {
-            $availableMonths = Booking::where('status', BookingStatus::Completed->value)
+            $availableMonths = Booking::whereNull('admin_deleted_at')
+                ->where('status', BookingStatus::Completed->value)
                 ->whereNotNull('booking_date')
                 ->selectRaw("strftime('%Y-%m', booking_date) as ym")
                 ->groupBy('ym')
@@ -249,7 +252,8 @@ class FinancialReportController extends Controller
                     ];
                 });
         } else {
-            $availableMonths = Booking::where('status', BookingStatus::Completed->value)
+            $availableMonths = Booking::whereNull('admin_deleted_at')
+                ->where('status', BookingStatus::Completed->value)
                 ->whereNotNull('booking_date')
                 ->selectRaw("DATE_FORMAT(booking_date, '%Y-%m') as ym, DATE_FORMAT(booking_date, '%M %Y') as label")
                 ->groupBy('ym', 'label')

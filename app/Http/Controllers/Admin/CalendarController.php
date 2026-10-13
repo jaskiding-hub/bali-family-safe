@@ -49,7 +49,8 @@ class CalendarController extends Controller
         }
 
         // Fetch bookings for the grid date range
-        $bookings = Booking::with(['driver', 'vehicle', 'vehicleUnit', 'package', 'childSeats.childSeatType', 'pickupHotel', 'dropoffHotel', 'airport'])
+        $bookings = Booking::whereNull('admin_deleted_at')
+            ->with(['driver', 'vehicle', 'vehicleUnit', 'package', 'childSeats.childSeatType', 'pickupHotel', 'dropoffHotel', 'airport'])
             ->whereBetween('booking_date', [$startOfGrid->format('Y-m-d'), $endOfGrid->format('Y-m-d')])
             ->orderBy('pickup_time', 'asc')
             ->get();

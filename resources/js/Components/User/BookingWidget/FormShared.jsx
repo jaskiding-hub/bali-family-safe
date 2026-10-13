@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 
 // Minimal design tokens - grayscale + subtle accent
@@ -11,52 +11,58 @@ export const ICON_COLOR = '#94A3B8';
 
 export const labelStyle = {
     fontFamily: 'Inter, sans-serif',
-    fontWeight: 500,
+    fontWeight: 600,
     fontSize: '14px',
     lineHeight: '20px',
     color: LABEL_COLOR,
-    marginBottom: '8px',
+    marginBottom: '10px',
     display: 'block',
 };
 
 export const inputStyle = {
     width: '100%',
-    height: '44px',
+    height: '48px',
     background: INPUT_BG,
-    border: `1px solid ${INPUT_BORDER}`,
-    borderRadius: '8px',
-    padding: '0 14px 0 40px',
+    border: `1.5px solid ${INPUT_BORDER}`,
+    borderRadius: '12px',
+    padding: '0 16px 0 42px',
     fontFamily: 'Inter, sans-serif',
     fontWeight: 400,
-    fontSize: '14px',
+    fontSize: '15px',
     color: '#1E293B',
     outline: 'none',
     boxSizing: 'border-box',
-    transition: 'border-color 0.2s',
+    transition: 'all 0.2s ease',
+    boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
 };
 
 export const selectStyle = {
     ...inputStyle,
     appearance: 'none',
     cursor: 'pointer',
-    paddingRight: '36px',
+    paddingRight: '44px',
+    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%2364748B'%3E%3Cpath fill-rule='evenodd' d='M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z' clip-rule='evenodd'/%3E%3C/svg%3E")`,
+    backgroundRepeat: 'no-repeat',
+    backgroundPosition: 'right 14px center',
+    backgroundSize: '22px 22px',
 };
 
 export const textareaStyle = {
     width: '100%',
-    minHeight: '80px',
+    minHeight: '90px',
     background: INPUT_BG,
-    border: `1px solid ${INPUT_BORDER}`,
-    borderRadius: '8px',
-    padding: '12px 14px',
+    border: `1.5px solid ${INPUT_BORDER}`,
+    borderRadius: '12px',
+    padding: '14px 16px',
     fontFamily: 'Inter, sans-serif',
     fontWeight: 400,
-    fontSize: '14px',
+    fontSize: '15px',
     color: '#1E293B',
     outline: 'none',
     resize: 'vertical',
     boxSizing: 'border-box',
-    transition: 'border-color 0.2s',
+    transition: 'all 0.2s ease',
+    boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
 };
 
 export function FieldWithIcon({ label, icon, isSelect = false, optional = false, children, style = {} }) {
@@ -76,38 +82,305 @@ export function FieldWithIcon({ label, icon, isSelect = false, optional = false,
                 {icon && (
                     <div style={{
                         position: 'absolute',
-                        left: 14,
+                        left: 16,
                         top: '50%',
                         transform: 'translateY(-50%)',
                         display: 'flex',
                         color: ICON_COLOR,
                         pointerEvents: 'none',
-                        zIndex: 1,
+                        zIndex: 10,
                     }}>
                         {icon}
                     </div>
                 )}
                 {children}
-                {isSelect && (
-                    <div style={{
-                        position: 'absolute',
-                        right: 14,
-                        top: '50%',
-                        transform: 'translateY(-50%)',
-                        pointerEvents: 'none',
-                        color: '#94A3B8',
-                    }}>
-                        <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                        </svg>
-                    </div>
-                )}
             </div>
         </div>
     );
 }
 
-export function VehicleSelect({ value, onChange, vehicles = [] }) {
+// Modern Custom Dropdown Component
+export function CustomSelect({
+    value,
+    onChange,
+    options = [],
+    placeholder = 'Select option...',
+    hasIcon = true,
+    disabled = false,
+    error = false,
+    style = {},
+    dropdownStyle = {},
+    name = '',
+    id,
+}) {
+    const [isOpen, setIsOpen] = useState(false);
+    const containerRef = useRef(null);
+
+    // Click outside and escape key handler
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (containerRef.current && !containerRef.current.contains(e.target)) {
+                setIsOpen(false);
+            }
+        };
+        const handleKeyDown = (e) => {
+            if (e.key === 'Escape') setIsOpen(false);
+        };
+        if (isOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+            document.addEventListener('touchstart', handleClickOutside);
+            document.addEventListener('keydown', handleKeyDown);
+        }
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+            document.removeEventListener('touchstart', handleClickOutside);
+            document.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [isOpen]);
+
+    const normalizedOptions = options.map((opt) => {
+        if (typeof opt === 'object' && opt !== null) {
+            return {
+                value: opt.value,
+                label: opt.label !== undefined ? opt.label : (opt.name || opt.value),
+                sublabel: opt.sublabel || null,
+                disabled: !!opt.disabled,
+            };
+        }
+        return {
+            value: opt,
+            label: String(opt),
+            sublabel: null,
+            disabled: false,
+        };
+    });
+
+    const selectedOption = normalizedOptions.find(
+        (opt) => String(opt.value) === String(value) && opt.value !== '' && opt.value !== null && opt.value !== undefined
+    );
+
+    const handleSelect = (optVal) => {
+        if (onChange) {
+            onChange({
+                target: {
+                    value: optVal,
+                    name: name || '',
+                },
+            });
+        }
+        setIsOpen(false);
+    };
+
+    return (
+        <div
+            ref={containerRef}
+            className="bfs-custom-select-wrap"
+            style={{
+                position: 'relative',
+                width: '100%',
+                ...style,
+            }}
+        >
+            <button
+                type="button"
+                id={id}
+                disabled={disabled}
+                onClick={() => !disabled && setIsOpen(!isOpen)}
+                style={{
+                    width: '100%',
+                    height: '48px',
+                    background: disabled ? '#F8FAFC' : '#FFFFFF',
+                    border: error
+                        ? '1.5px solid #F43F5E'
+                        : (isOpen
+                            ? '1.5px solid #00658D'
+                            : (selectedOption ? '1.5px solid #00658D' : '1.5px solid #E2E8F0')),
+                    borderRadius: '12px',
+                    paddingLeft: hasIcon ? '44px' : '16px',
+                    paddingRight: '40px',
+                    fontFamily: 'Inter, sans-serif',
+                    fontWeight: selectedOption ? 500 : 400,
+                    fontSize: '15px',
+                    color: disabled ? '#94A3B8' : (selectedOption ? '#0F172A' : '#94A3B8'),
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    cursor: disabled ? 'not-allowed' : 'pointer',
+                    boxSizing: 'border-box',
+                    transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+                    boxShadow: isOpen
+                        ? '0 0 0 3px rgba(0, 101, 141, 0.12), 0 2px 4px rgba(0, 0, 0, 0.05)'
+                        : '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                    textAlign: 'left',
+                    userSelect: 'none',
+                    outline: 'none',
+                }}
+            >
+                <span
+                    style={{
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        flex: 1,
+                    }}
+                >
+                    {selectedOption ? selectedOption.label : placeholder}
+                </span>
+
+                <span
+                    style={{
+                        position: 'absolute',
+                        right: '14px',
+                        top: '50%',
+                        transform: `translateY(-50%) ${isOpen ? 'rotate(180deg)' : 'rotate(0deg)'}`,
+                        transition: 'transform 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: isOpen ? '#00658D' : '#64748B',
+                        pointerEvents: 'none',
+                    }}
+                >
+                    <svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor">
+                        <path
+                            fillRule="evenodd"
+                            d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                            clipRule="evenodd"
+                        />
+                    </svg>
+                </span>
+            </button>
+
+            {isOpen && (
+                <div
+                    className="bfs-custom-select-menu"
+                    style={{
+                        position: 'absolute',
+                        top: 'calc(100% + 6px)',
+                        left: 0,
+                        right: 0,
+                        zIndex: 9999,
+                        background: '#FFFFFF',
+                        border: '1.5px solid #E2E8F0',
+                        borderRadius: '14px',
+                        boxShadow: '0 12px 32px -4px rgba(15, 23, 42, 0.16), 0 4px 12px -2px rgba(15, 23, 42, 0.08)',
+                        maxHeight: '260px',
+                        overflowY: 'auto',
+                        padding: '6px',
+                        animation: 'bfsFadeDown 0.18s cubic-bezier(0.16, 1, 0.3, 1)',
+                        ...dropdownStyle,
+                    }}
+                >
+                    {normalizedOptions.length === 0 ? (
+                        <div
+                            style={{
+                                padding: '12px 14px',
+                                fontSize: '13.5px',
+                                color: '#94A3B8',
+                                textAlign: 'center',
+                                fontFamily: 'Inter, sans-serif',
+                            }}
+                        >
+                            No options available
+                        </div>
+                    ) : (
+                        normalizedOptions.map((opt) => {
+                            const isSelected =
+                                String(opt.value) === String(value) &&
+                                opt.value !== '' &&
+                                opt.value !== null &&
+                                opt.value !== undefined;
+
+                            return (
+                                <div
+                                    key={String(opt.value)}
+                                    role="button"
+                                    tabIndex={0}
+                                    onClick={() => !opt.disabled && handleSelect(opt.value)}
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'space-between',
+                                        gap: '10px',
+                                        padding: '10px 14px',
+                                        minHeight: '44px',
+                                        borderRadius: '10px',
+                                        margin: '2px 0',
+                                        background: isSelected
+                                            ? 'linear-gradient(135deg, #EFF6FF 0%, #E0F2FE 100%)'
+                                            : 'transparent',
+                                        color: isSelected
+                                            ? '#00658D'
+                                            : (opt.disabled ? '#CBD5E1' : '#1E293B'),
+                                        fontFamily: 'Inter, sans-serif',
+                                        fontWeight: isSelected ? 600 : 400,
+                                        fontSize: '14.5px',
+                                        cursor: opt.disabled ? 'not-allowed' : 'pointer',
+                                        transition: 'background 0.15s ease, color 0.15s ease',
+                                        userSelect: 'none',
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        if (!isSelected && !opt.disabled) e.currentTarget.style.background = '#F8FAFC';
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        if (!isSelected && !opt.disabled) e.currentTarget.style.background = 'transparent';
+                                    }}
+                                >
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', flex: 1, minWidth: 0 }}>
+                                        <span
+                                            style={{
+                                                overflow: 'hidden',
+                                                textOverflow: 'ellipsis',
+                                                whiteSpace: 'nowrap',
+                                                color: isSelected ? '#00658D' : '#1E293B',
+                                            }}
+                                        >
+                                            {opt.label}
+                                        </span>
+                                        {opt.sublabel && (
+                                            <span style={{ fontSize: '12px', color: '#64748B' }}>
+                                                {opt.sublabel}
+                                            </span>
+                                        )}
+                                    </div>
+
+                                    {isSelected && (
+                                        <svg
+                                            width="18"
+                                            height="18"
+                                            viewBox="0 0 20 20"
+                                            fill="#00658D"
+                                            style={{ flexShrink: 0 }}
+                                        >
+                                            <path
+                                                fillRule="evenodd"
+                                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                                clipRule="evenodd"
+                                            />
+                                        </svg>
+                                    )}
+                                </div>
+                            );
+                        })
+                    )}
+                </div>
+            )}
+        </div>
+    );
+}
+
+export function VehicleSelect({ value, onChange, vehicles = [], error = false }) {
+    const vehicleOptions = vehicles && vehicles.length > 0 ? (
+        vehicles.map((v) => ({
+            value: v.id,
+            label: `${v.name} — ${v.passenger_capacity || 6} seats`,
+        }))
+    ) : [
+        { value: 1, label: 'Toyota Avanza — 4 seats' },
+        { value: 2, label: 'Toyota Innova — 6 seats' },
+        { value: 3, label: 'Toyota HiAce — 12 seats' },
+    ];
+
     return (
         <FieldWithIcon
             label="Vehicle"
@@ -118,31 +391,14 @@ export function VehicleSelect({ value, onChange, vehicles = [] }) {
                 </svg>
             }
         >
-            <select
-                style={{
-                    ...selectStyle,
-                    borderColor: value ? INPUT_BORDER_FOCUS : INPUT_BORDER,
-                }}
+            <CustomSelect
                 value={value}
                 onChange={onChange}
-                onFocus={(e) => e.target.style.borderColor = INPUT_BORDER_FOCUS}
-                onBlur={(e) => e.target.style.borderColor = value ? INPUT_BORDER_FOCUS : INPUT_BORDER}
-            >
-                <option value="">Select vehicle</option>
-                {vehicles && vehicles.length > 0 ? (
-                    vehicles.map((v) => (
-                        <option key={v.id} value={v.id}>
-                            {v.name} — {v.passenger_capacity || 6} seats
-                        </option>
-                    ))
-                ) : (
-                    <>
-                        <option value="1">Toyota Avanza — 4 seats</option>
-                        <option value="2">Toyota Innova — 6 seats</option>
-                        <option value="3">Toyota HiAce — 12 seats</option>
-                    </>
-                )}
-            </select>
+                options={vehicleOptions}
+                placeholder="Select vehicle"
+                error={error}
+                hasIcon={true}
+            />
         </FieldWithIcon>
     );
 }
@@ -313,7 +569,7 @@ export function ChildSeatsSelector({ carSeatContent = [], selectedSeats = {}, on
 
 export function BookingFooter({ onWhatsApp, onBook, estimatedFee, loadingEstimate, isSubmitting }) {
     return (
-        <div style={{
+        <div className="bfs-booking-footer" style={{
             display: 'flex',
             flexDirection: 'column',
             gap: '16px',
@@ -322,22 +578,35 @@ export function BookingFooter({ onWhatsApp, onBook, estimatedFee, loadingEstimat
             borderTop: '1px solid #E2E8F0',
         }}>
             {estimatedFee !== undefined && estimatedFee !== null && (
-                <div style={{
+                <div className="bfs-estimated-card" style={{
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
                     padding: '20px 24px',
                     background: 'linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%)',
                     border: '2px solid #3B82F6',
-                    borderRadius: '12px',
+                    borderRadius: '14px',
                     boxShadow: '0 4px 16px rgba(59, 130, 246, 0.15)',
+                    gap: '16px',
+                    flexWrap: 'wrap',
                 }}>
-                    <span style={{ fontSize: '16px', fontWeight: 600, color: '#1E40AF', letterSpacing: '0.01em' }}>
-                        Estimated Total
-                    </span>
+                    <div className="bfs-estimated-info" style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                        <span className="bfs-estimated-label" style={{
+                            fontSize: '15px',
+                            fontWeight: 700,
+                            color: '#1E40AF',
+                            letterSpacing: '0.01em',
+                        }}>
+                            Estimasi Harga (Rp)
+                        </span>
+                        <span className="bfs-estimated-sub" style={{ fontSize: '12px', color: '#2563EB', fontWeight: 500 }}>
+                            Tarif estimasi transparan & ramah keluarga
+                        </span>
+                    </div>
+
                     {loadingEstimate ? (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <svg className="animate-spin" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                            <svg className="animate-spin" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                                 <circle cx="12" cy="12" r="10" strokeWidth="4" className="opacity-25" stroke="#93C5FD" />
                                 <path fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" className="opacity-75" />
                             </svg>
@@ -346,14 +615,17 @@ export function BookingFooter({ onWhatsApp, onBook, estimatedFee, loadingEstimat
                             </span>
                         </div>
                     ) : (
-                        <span style={{
-                            fontSize: '26px',
-                            fontWeight: 700,
-                            background: 'linear-gradient(135deg, #1E40AF 0%, #3B82F6 100%)',
+                        <span className="bfs-estimated-price" style={{
+                            fontSize: 'clamp(26px, 4vw, 34px)',
+                            fontWeight: 800,
+                            background: 'linear-gradient(135deg, #1E40AF 0%, #2563EB 100%)',
                             WebkitBackgroundClip: 'text',
                             WebkitTextFillColor: 'transparent',
                             backgroundClip: 'text',
-                            letterSpacing: '-0.02em'
+                            letterSpacing: '-0.02em',
+                            textAlign: 'right',
+                            wordBreak: 'break-word',
+                            lineHeight: 1.15,
                         }}>
                             Rp {Number(estimatedFee).toLocaleString('id-ID')}
                         </span>

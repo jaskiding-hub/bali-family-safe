@@ -30,8 +30,12 @@ class HomeController extends Controller
     {
         $packages = Package::with(['highlights' => function ($q) {
             $q->orderBy('display_order', 'asc');
-        }, 'tags'])->orderBy('display_order', 'asc')->get()->map(function (Package $p) {
-            $regPrice = (float) $p->regular_price;
+        }, 'tags'])
+            ->where('price', '>', 0)
+            ->orderBy('display_order', 'asc')
+            ->get()
+            ->map(function (Package $p) {
+            $basePrice = (float) $p->price;
 
             return [
                 'id' => (string) $p->id,
@@ -43,9 +47,9 @@ class HomeController extends Controller
                 'package_type' => $p->package_type instanceof \BackedEnum ? $p->package_type->value : (string) $p->package_type,
                 'duration_type' => $p->duration_type instanceof \BackedEnum ? $p->duration_type->value : (string) $p->duration_type,
                 'duration' => $p->duration_type instanceof \BackedEnum ? $p->duration_type->value : (string) $p->duration_type,
-                'regular_price' => $regPrice,
-                'regular_price_formatted' => 'Rp ' . number_format($regPrice, 0, ',', '.'),
-                'price' => 'Rp ' . number_format($regPrice, 0, ',', '.'),
+                'regular_price' => $basePrice,
+                'regular_price_formatted' => 'Rp ' . number_format($basePrice, 0, ',', '.'),
+                'price' => 'Rp ' . number_format($basePrice, 0, ',', '.'),
                 'priceNote' => 'per private vehicle (up to 5 pax)',
                 'hero_image' => $p->hero_image ?: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=1200&q=80',
                 'image' => $p->hero_image ?: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=1200&q=80',
@@ -244,8 +248,12 @@ class HomeController extends Controller
     {
         $packages = Package::with(['highlights' => function ($q) {
             $q->orderBy('display_order', 'asc');
-        }, 'tags'])->orderBy('display_order', 'asc')->get()->map(function (Package $p) {
-            $regPrice = (float) $p->regular_price;
+        }, 'tags'])
+            ->where('price', '>', 0)
+            ->orderBy('display_order', 'asc')
+            ->get()
+            ->map(function (Package $p) {
+            $basePrice = (float) $p->price;
 
             return [
                 'id' => (string) $p->id,
@@ -257,9 +265,9 @@ class HomeController extends Controller
                 'package_type' => $p->package_type instanceof \BackedEnum ? $p->package_type->value : (string) $p->package_type,
                 'duration_type' => $p->duration_type instanceof \BackedEnum ? $p->duration_type->value : (string) $p->duration_type,
                 'duration' => $p->duration_type instanceof \BackedEnum ? $p->duration_type->value : (string) $p->duration_type,
-                'regular_price' => $regPrice,
-                'regular_price_formatted' => 'Rp ' . number_format($regPrice, 0, ',', '.'),
-                'price' => 'Rp ' . number_format($regPrice, 0, ',', '.'),
+                'regular_price' => $basePrice,
+                'regular_price_formatted' => 'Rp ' . number_format($basePrice, 0, ',', '.'),
+                'price' => 'Rp ' . number_format($basePrice, 0, ',', '.'),
                 'hero_image' => $p->hero_image ?: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=1200&q=80',
                 'image' => $p->hero_image ?: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=1200&q=80',
                 'photo_url' => $p->hero_image ?: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=1200&q=80',

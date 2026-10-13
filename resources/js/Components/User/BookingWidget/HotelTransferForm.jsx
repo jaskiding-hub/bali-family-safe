@@ -6,6 +6,7 @@ import {
     BookingSuccessModal,
     CapacityWarningModal,
     ChildSeatsSelector,
+    CustomSelect,
     FieldWithIcon,
     inputStyle,
     selectStyle,
@@ -251,20 +252,17 @@ export default function HotelTransferForm({ vehicles = [], childSeatTypes = [], 
 
                 <div style={{ gridColumn: 'span 2' }}>
                     <FieldWithIcon label="1. Pick-Up Hotel or Resort (Origin) *" isSelect={true} icon={<IconHotel />}>
-                        <select
-                            required
-                            style={{
-                                ...selectStyle,
-                                borderColor: errors.pickup_hotel_id ? '#F43F5E' : (data.pickup_hotel_id ? '#00658D' : '#CBD5E1'),
-                            }}
+                        <CustomSelect
                             value={data.pickup_hotel_id}
                             onChange={handlePickupHotelChange}
-                        >
-                            <option value="">Select Pick-Up Hotel / Resort</option>
-                            {hotels.map((h) => (
-                                <option key={h.id} value={h.id}>{h.nama_hotel}</option>
-                            ))}
-                        </select>
+                            options={hotels.map((h) => ({
+                                value: h.id,
+                                label: h.nama_hotel,
+                            }))}
+                            placeholder="Select Pick-Up Hotel / Resort"
+                            error={!!errors.pickup_hotel_id}
+                            hasIcon={true}
+                        />
                     </FieldWithIcon>
                     {errors.pickup_hotel_id && (
                         <span style={{ fontSize: '11px', color: '#F43F5E', marginTop: '4px' }}>{errors.pickup_hotel_id}</span>
@@ -273,32 +271,24 @@ export default function HotelTransferForm({ vehicles = [], childSeatTypes = [], 
 
                 <div style={{ gridColumn: 'span 2' }}>
                     <FieldWithIcon label="2. Drop-Off Hotel or Resort (Destination) *" isSelect={true} icon={<IconHotel />}>
-                        <select
-                            required
-                            disabled={!data.pickup_hotel_id}
-                            style={{
-                                ...selectStyle,
-                                background: !data.pickup_hotel_id ? '#F8FAFC' : '#FFFFFF',
-                                color: !data.pickup_hotel_id ? '#94A3B8' : '#0F172A',
-                                cursor: !data.pickup_hotel_id ? 'not-allowed' : 'pointer',
-                                borderColor: !data.pickup_hotel_id
-                                    ? '#E2E8F0'
-                                    : (errors.dropoff_hotel_id ? '#F43F5E' : (data.dropoff_hotel_id ? '#00658D' : '#CBD5E1')),
-                            }}
+                        <CustomSelect
                             value={data.dropoff_hotel_id}
                             onChange={handleDropoffHotelChange}
-                        >
-                            <option value="">
-                                {!data.pickup_hotel_id
-                                    ? 'Select Pick-Up Hotel first'
-                                    : 'Select Drop-Off Hotel / Resort'}
-                            </option>
-                            {hotels
+                            disabled={!data.pickup_hotel_id}
+                            options={hotels
                                 .filter((h) => String(h.id) !== String(data.pickup_hotel_id))
-                                .map((h) => (
-                                    <option key={h.id} value={h.id}>{h.nama_hotel}</option>
-                                ))}
-                        </select>
+                                .map((h) => ({
+                                    value: h.id,
+                                    label: h.nama_hotel,
+                                }))}
+                            placeholder={
+                                !data.pickup_hotel_id
+                                    ? 'Select Pick-Up Hotel first'
+                                    : 'Select Drop-Off Hotel / Resort'
+                            }
+                            error={!!errors.dropoff_hotel_id}
+                            hasIcon={true}
+                        />
                     </FieldWithIcon>
 
                     {!data.pickup_hotel_id && (
@@ -443,27 +433,27 @@ export default function HotelTransferForm({ vehicles = [], childSeatTypes = [], 
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                     <FieldWithIcon label="Adults" isSelect={true}>
-                        <select
-                            style={selectStyle}
+                        <CustomSelect
                             value={data.adults}
                             onChange={(e) => setData('adults', parseInt(e.target.value, 10))}
-                        >
-                            {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
-                                <option key={n} value={n}>{n}</option>
-                            ))}
-                        </select>
+                            options={[1, 2, 3, 4, 5, 6, 7, 8].map((n) => ({
+                                value: n,
+                                label: `${n} Adult${n > 1 ? 's' : ''}`,
+                            }))}
+                            hasIcon={false}
+                        />
                     </FieldWithIcon>
 
                     <FieldWithIcon label="Children" isSelect={true}>
-                        <select
-                            style={selectStyle}
+                        <CustomSelect
                             value={data.children}
                             onChange={(e) => setData('children', parseInt(e.target.value, 10))}
-                        >
-                            {[0, 1, 2, 3, 4, 5].map((n) => (
-                                <option key={n} value={n}>{n}</option>
-                            ))}
-                        </select>
+                            options={[0, 1, 2, 3, 4, 5].map((n) => ({
+                                value: n,
+                                label: `${n} Child${n !== 1 ? 'ren' : ''}`,
+                            }))}
+                            hasIcon={false}
+                        />
                     </FieldWithIcon>
                 </div>
                 {(isOverCapacity || errors.adults) && (

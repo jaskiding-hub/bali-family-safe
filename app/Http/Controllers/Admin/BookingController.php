@@ -32,14 +32,14 @@ class BookingController extends Controller
     public function index(Request $request): Response
     {
         // 1. 4 Stat Cards: All Bookings, Airport, Day Tour, Hotel Transfer
-        $allBookingsCount = Booking::count();
-        $airportCount = Booking::where('booking_type', BookingType::AirportTransfer->value)->count();
-        $dayTourCount = Booking::where('booking_type', BookingType::DayTour->value)->count();
-        $hotelTransferCount = Booking::where('booking_type', BookingType::HotelTransfer->value)->count();
-        $airportPickupCount = Booking::where('booking_type', BookingType::AirportTransfer->value)
+        $allBookingsCount = Booking::whereNull('admin_deleted_at')->count();
+        $airportCount = Booking::whereNull('admin_deleted_at')->where('booking_type', BookingType::AirportTransfer->value)->count();
+        $dayTourCount = Booking::whereNull('admin_deleted_at')->where('booking_type', BookingType::DayTour->value)->count();
+        $hotelTransferCount = Booking::whereNull('admin_deleted_at')->where('booking_type', BookingType::HotelTransfer->value)->count();
+        $airportPickupCount = Booking::whereNull('admin_deleted_at')->where('booking_type', BookingType::AirportTransfer->value)
             ->where('transfer_direction', TransferDirection::PickUp->value)
             ->count();
-        $airportDropoffCount = Booking::where('booking_type', BookingType::AirportTransfer->value)
+        $airportDropoffCount = Booking::whereNull('admin_deleted_at')->where('booking_type', BookingType::AirportTransfer->value)
             ->where('transfer_direction', TransferDirection::DropOff->value)
             ->count();
 
@@ -47,7 +47,7 @@ class BookingController extends Controller
         $bookingSearch = $request->input('search_booking');
         $filterType = $request->input('filter_type', 'all');
 
-        $bookingsQuery = Booking::with(['driver', 'pickupHotel', 'dropoffHotel', 'airport', 'package', 'vehicle', 'childSeats.childSeatType']);
+        $bookingsQuery = Booking::whereNull('admin_deleted_at')->with(['driver', 'pickupHotel', 'dropoffHotel', 'airport', 'package', 'vehicle', 'childSeats.childSeatType']);
 
         if ($filterType && $filterType !== 'all') {
             if ($filterType === 'airport' || $filterType === BookingType::AirportTransfer->value) {
@@ -734,16 +734,31 @@ class BookingController extends Controller
 
     public function destroy(Booking $booking): RedirectResponse
     {
-        $statusValue = $booking->status instanceof \BackedEnum ? $booking->status->value : (string) $booking->status;
+        $status = $booking->status instanceof \BackedEnum ? $booking->status->value : (string) $booking->status;
+        $normalizedStatus = strtolower(str_replace([' ', '_', '-'], '', $status));
 
-        if (!in_array($statusValue, ['Pending', 'Cancelled'])) {
+        // 1. Status On Going: tidak dapat dihapus, harus ubah status ke Cancelled terlebih dahulu
+        if ($normalizedStatus === 'ongoing') {
             return back()->withErrors([
-                'delete' => 'Booking dengan status ' . $statusValue . ' tidak bisa dihapus. Ubah status menjadi Cancelled terlebih dahulu jika ingin membatalkan.'
-            ]);
+                'delete' => 'Booking dengan status On Going tidak dapat dihapus. Silakan ubah status menjadi Cancelled terlebih dahulu.',
+            ])->with('error', 'Booking dengan status On Going tidak dapat dihapus. Silakan ubah status menjadi Cancelled terlebih dahulu.');
         }
 
-        $booking->delete();
+        // 2. Status Completed: jika admin menghapus dari admin, maka hanya terhapus di admin (driver tetap memiliki riwayat)
+        if ($normalizedStatus === 'completed') {
+            $booking->update([
+                'admin_deleted_at' => now(),
+            ]);
 
-        return redirect()->route('admin.bookings.index')->with('success', 'Booking berhasil dihapus.');
+            return redirect()->route('admin.bookings.index')->with('success', 'Booking berhasil dihapus dari daftar Admin.');
+        }
+
+        // 3. Status Pending, Confirmed, Assigned, Cancelled: dihapus oleh admin maka di driver juga terhapus
+        $booking->update([
+            'admin_deleted_at' => now(),
+            'driver_deleted_at' => now(),
+        ]);
+
+        return redirect()->route('admin.bookings.index')->with('success', 'Booking berhasil dihapus dari Admin dan Driver.');
     }
 }

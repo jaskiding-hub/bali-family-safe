@@ -20,10 +20,11 @@ class DashboardController extends Controller
         $today = Carbon::today();
         $now = Carbon::now();
 
-        $pendingBookingsCount = Booking::where('status', BookingStatus::Pending->value)->count();
-        $todayTripsCount = Booking::whereDate('booking_date', $today)->count();
+        $pendingBookingsCount = Booking::whereNull('admin_deleted_at')->where('status', BookingStatus::Pending->value)->count();
+        $todayTripsCount = Booking::whereNull('admin_deleted_at')->whereDate('booking_date', $today)->count();
         $availableDriversCount = Driver::where('status', DriverStatus::Active->value)->count();
-        $monthRevenue = (float) Booking::where('status', BookingStatus::Completed->value)
+        $monthRevenue = (float) Booking::whereNull('admin_deleted_at')
+            ->where('status', BookingStatus::Completed->value)
             ->whereMonth('booking_date', $now->month)
             ->whereYear('booking_date', $now->year)
             ->sum('total_fee');
@@ -85,7 +86,8 @@ class DashboardController extends Controller
                 ];
             });
 
-        $todaySchedule = Booking::whereDate('booking_date', $today)
+        $todaySchedule = Booking::whereNull('admin_deleted_at')
+            ->whereDate('booking_date', $today)
             ->with(['driver', 'vehicle', 'vehicleUnit', 'package', 'pickupHotel', 'dropoffHotel', 'airport', 'childSeats.childSeatType'])
             ->orderBy('pickup_time', 'asc')
             ->get()

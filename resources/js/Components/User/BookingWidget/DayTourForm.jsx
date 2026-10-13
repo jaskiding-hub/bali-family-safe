@@ -6,6 +6,7 @@ import {
     BookingSuccessModal,
     CapacityWarningModal,
     ChildSeatsSelector,
+    CustomSelect,
     FieldWithIcon,
     inputStyle,
     selectStyle,
@@ -222,22 +223,17 @@ export default function DayTourForm({ packages = [], vehicles = [], childSeatTyp
             }}>
                 <div style={{ gridColumn: 'span 2' }}>
                     <FieldWithIcon label="Select Family Tour Package *" isSelect={true} icon={<IconTourMap />}>
-                        <select
-                            required
-                            style={{
-                                ...selectStyle,
-                                borderColor: errors.package_id ? '#F43F5E' : (data.package_id ? '#00658D' : '#CBD5E1'),
-                            }}
+                        <CustomSelect
                             value={data.package_id}
                             onChange={(e) => setData('package_id', e.target.value ? parseInt(e.target.value, 10) : '')}
-                        >
-                            <option value="">Choose Tour Itinerary</option>
-                            {packages.map((pkg) => (
-                                <option key={pkg.id} value={pkg.id}>
-                                    {pkg.name} ({pkg.duration_type || 'Full Day'})
-                                </option>
-                            ))}
-                        </select>
+                            options={packages.map((pkg) => ({
+                                value: pkg.id,
+                                label: `${pkg.name} (${pkg.duration_type || 'Full Day'})`,
+                            }))}
+                            placeholder="Choose Tour Itinerary"
+                            error={!!errors.package_id}
+                            hasIcon={true}
+                        />
                     </FieldWithIcon>
                     {errors.package_id && (
                         <span style={{ fontSize: '11px', color: '#F43F5E', marginTop: '4px' }}>{errors.package_id}</span>
@@ -314,7 +310,7 @@ export default function DayTourForm({ packages = [], vehicles = [], childSeatTyp
                         />
                     </FieldWithIcon>
                     {errors.pickup_location && (
-                        <span style={{ fontSize: '11px', color: '#F43F5E' }}>{errors.pickup_location}</span>
+                        <span style={{ fontSize: '11px', color: '#F43F5E', display: 'block', marginTop: '4px' }}>{errors.pickup_location}</span>
                     )}
                 </div>
             </div>
@@ -378,27 +374,27 @@ export default function DayTourForm({ packages = [], vehicles = [], childSeatTyp
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                     <FieldWithIcon label="Adults" isSelect={true}>
-                        <select
-                            style={selectStyle}
+                        <CustomSelect
                             value={data.adults}
                             onChange={(e) => setData('adults', parseInt(e.target.value, 10))}
-                        >
-                            {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
-                                <option key={n} value={n}>{n}</option>
-                            ))}
-                        </select>
+                            options={[1, 2, 3, 4, 5, 6, 7, 8].map((n) => ({
+                                value: n,
+                                label: `${n} Adult${n > 1 ? 's' : ''}`,
+                            }))}
+                            hasIcon={false}
+                        />
                     </FieldWithIcon>
 
                     <FieldWithIcon label="Children" isSelect={true}>
-                        <select
-                            style={selectStyle}
+                        <CustomSelect
                             value={data.children}
                             onChange={(e) => setData('children', parseInt(e.target.value, 10))}
-                        >
-                            {[0, 1, 2, 3, 4, 5].map((n) => (
-                                <option key={n} value={n}>{n}</option>
-                            ))}
-                        </select>
+                            options={[0, 1, 2, 3, 4, 5].map((n) => ({
+                                value: n,
+                                label: `${n} Child${n !== 1 ? 'ren' : ''}`,
+                            }))}
+                            hasIcon={false}
+                        />
                     </FieldWithIcon>
                 </div>
                 {(isOverCapacity || errors.adults) && (

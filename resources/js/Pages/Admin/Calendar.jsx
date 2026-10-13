@@ -245,6 +245,14 @@ export default function Calendar({
                     preserveState: true,
                 }
             );
+        } else {
+            // Scroll to agenda section smoothly
+            setTimeout(() => {
+                const agendaSection = document.getElementById('agenda-section');
+                if (agendaSection) {
+                    agendaSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }, 100);
         }
     };
 
@@ -489,7 +497,17 @@ export default function Calendar({
 
                                         {/* Event indicator dot on mobile */}
                                         {hasEvents && !isSelected && (
-                                            <div className="absolute top-1 right-2.5 w-1.5 h-1.5 rounded-full bg-amber-400 ring-1 ring-white" />
+                                            <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-0.5">
+                                                {dayEvents.slice(0, 3).map((ev, idx) => {
+                                                    const theme = getStatusTheme(ev.status);
+                                                    return (
+                                                        <div
+                                                            key={idx}
+                                                            className={`w-1.5 h-1.5 rounded-full ${theme.dotColor} ring-1 ring-white`}
+                                                        />
+                                                    );
+                                                })}
+                                            </div>
                                         )}
                                     </div>
                                 );
@@ -499,7 +517,7 @@ export default function Calendar({
                 </div>
 
                 {/* 2. BOTTOM SECTION: AGENDA VIEW */}
-                <div className="bg-white rounded-2xl shadow-xs border border-slate-200/80 p-4 sm:p-6 relative overflow-hidden">
+                <div id="agenda-section" className="bg-white rounded-2xl shadow-xs border border-slate-200/80 p-4 sm:p-6 relative overflow-hidden">
                     {/* Agenda Header & Toolbar */}
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-4 border-b border-slate-100 gap-3">
                         <div className="flex items-center gap-2.5">

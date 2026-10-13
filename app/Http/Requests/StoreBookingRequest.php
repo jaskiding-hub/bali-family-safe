@@ -48,6 +48,7 @@ class StoreBookingRequest extends FormRequest
             'vehicle_unit_id' => ['nullable', 'integer', 'exists:vehicle_units,id'],
             'booking_date' => ['required', 'date'],
             'pickup_time' => ['required'],
+            'pickup_location' => ['required_if:booking_type,Day Tour', 'nullable', 'string', 'max:500'],
             'adults' => ['nullable', 'integer', 'min:0'],
             'children' => ['nullable', 'integer', 'min:0'],
             'email' => ['nullable', 'email', 'max:255'],

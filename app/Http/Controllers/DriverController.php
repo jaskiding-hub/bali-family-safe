@@ -116,6 +116,7 @@ class DriverController extends Controller
         $driverId = $driver?->id;
 
         $activeBooking = Booking::with(['vehicle', 'vehicleUnit', 'package', 'pickupHotel', 'dropoffHotel', 'airport', 'tripExpenses', 'childSeats.childSeatType'])
+            ->whereNull('driver_deleted_at')
             ->when($driverId, fn($q) => $q->where('driver_id', $driverId))
             ->whereIn('status', [BookingStatus::OnGoing->value, BookingStatus::Assigned->value])
             ->orderBy('booking_date', 'asc')
@@ -123,6 +124,7 @@ class DriverController extends Controller
             ->first();
 
         $laterTodayBookings = Booking::with(['vehicle', 'vehicleUnit', 'package', 'pickupHotel', 'dropoffHotel', 'airport', 'tripExpenses', 'childSeats.childSeatType'])
+            ->whereNull('driver_deleted_at')
             ->when($driverId, fn($q) => $q->where('driver_id', $driverId))
             ->whereIn('status', [BookingStatus::Confirmed->value, BookingStatus::Assigned->value])
             ->when($activeBooking, fn($q) => $q->where('id', '!=', $activeBooking->id))
@@ -159,6 +161,7 @@ class DriverController extends Controller
         $endOfWeek = $currentMonth->copy()->endOfMonth()->endOfWeek(Carbon::SATURDAY);
 
         $bookings = Booking::with(['vehicle', 'vehicleUnit', 'package', 'pickupHotel', 'dropoffHotel', 'airport', 'tripExpenses', 'childSeats.childSeatType'])
+            ->whereNull('driver_deleted_at')
             ->when($driverId, fn($q) => $q->where('driver_id', $driverId))
             ->whereBetween('booking_date', [$startOfWeek->format('Y-m-d'), $endOfWeek->format('Y-m-d')])
             ->get();
@@ -188,6 +191,7 @@ class DriverController extends Controller
         }
 
         $selectedBookings = Booking::with(['vehicle', 'vehicleUnit', 'package', 'pickupHotel', 'dropoffHotel', 'airport', 'tripExpenses', 'childSeats.childSeatType'])
+            ->whereNull('driver_deleted_at')
             ->when($driverId, fn($q) => $q->where('driver_id', $driverId))
             ->where('booking_date', $selectedDate)
             ->orderBy('pickup_time', 'asc')
@@ -206,6 +210,24 @@ class DriverController extends Controller
             'driver' => $driver,
             'trips' => $trips,
         ]);
+    }
+
+    public function deleteFromHistory($id)
+    {
+        $driver = Auth::guard('driver')->user();
+
+        // Soft delete for driver only - preserves booking record for admin
+        $query = Booking::where('id', $id);
+        if ($driver) {
+            $query->where('driver_id', $driver->id);
+        }
+        $booking = $query->firstOrFail();
+
+        $booking->update([
+            'driver_deleted_at' => now(),
+        ]);
+
+        return redirect()->route('driver.history')->with('success', 'Trip berhasil dihapus dari riwayat Anda.');
     }
 
     public function tripDetail($id)
@@ -299,6 +321,7 @@ class DriverController extends Controller
         $month = $request->query('month');
 
         $query = Booking::with(['vehicle', 'vehicleUnit', 'package', 'pickupHotel', 'dropoffHotel', 'airport', 'tripExpenses', 'childSeats.childSeatType'])
+            ->whereNull('driver_deleted_at')
             ->when($driverId, fn($q) => $q->where('driver_id', $driverId))
             ->where('status', BookingStatus::Completed->value);
 
@@ -337,10 +360,12 @@ class DriverController extends Controller
             ->withQueryString();
 
         $stats = [
-            'total_completed' => Booking::when($driverId, fn($q) => $q->where('driver_id', $driverId))
+            'total_completed' => Booking::whereNull('driver_deleted_at')
+                ->when($driverId, fn($q) => $q->where('driver_id', $driverId))
                 ->where('status', BookingStatus::Completed->value)
                 ->count(),
-            'this_month_completed' => Booking::when($driverId, fn($q) => $q->where('driver_id', $driverId))
+            'this_month_completed' => Booking::whereNull('driver_deleted_at')
+                ->when($driverId, fn($q) => $q->where('driver_id', $driverId))
                 ->where('status', BookingStatus::Completed->value)
                 ->whereBetween('booking_date', [Carbon::now()->startOfMonth()->toDateString(), Carbon::now()->endOfMonth()->toDateString()])
                 ->count(),

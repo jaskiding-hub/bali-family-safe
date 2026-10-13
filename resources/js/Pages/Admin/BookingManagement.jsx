@@ -29,6 +29,7 @@ export default function BookingManagement({
     const [showAssignDriverModal, setShowAssignDriverModal] = useState(false);
     const [showEditBookingModal, setShowEditBookingModal] = useState(false);
     const [showDeleteBookingModal, setShowDeleteBookingModal] = useState(false);
+    const [showOngoingWarningModal, setShowOngoingWarningModal] = useState(false);
     const [selectedBooking, setSelectedBooking] = useState(null);
     const [addSelectedSeats, setAddSelectedSeats] = useState({});
     const [editSelectedSeats, setEditSelectedSeats] = useState({});
@@ -723,15 +724,32 @@ CATATAN / NOTES:`,
 
     const openDeleteBooking = (booking) => {
         setSelectedBooking(booking);
+        const s = (booking?.status || '').toString().toLowerCase().replace(/[\s_-]+/g, '');
+        if (s === 'ongoing') {
+            setShowOngoingWarningModal(true);
+            return;
+        }
         setShowDeleteBookingModal(true);
     };
 
     const handleDeleteBooking = () => {
         if (!selectedBooking) return;
+        const s = (selectedBooking?.status || '').toString().toLowerCase().replace(/[\s_-]+/g, '');
+        if (s === 'ongoing') {
+            setShowDeleteBookingModal(false);
+            setShowOngoingWarningModal(true);
+            return;
+        }
         router.delete(`/admin/bookings/${selectedBooking.raw_id}`, {
             onSuccess: () => {
                 setShowDeleteBookingModal(false);
                 setSelectedBooking(null);
+            },
+            onError: (errs) => {
+                if (errs?.delete) {
+                    setShowDeleteBookingModal(false);
+                    setShowOngoingWarningModal(true);
+                }
             },
         });
     };
@@ -742,23 +760,23 @@ CATATAN / NOTES:`,
         if (s === 'pending') {
             return (
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200/60">
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
                     Pending
                 </span>
             );
         }
-        if (s === 'confirmed' || s === 'completed') {
+        if (s === 'confirmed') {
             return (
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/60">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                    {status}
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200/60">
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                    Confirmed
                 </span>
             );
         }
         if (s === 'assigned') {
             return (
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/60">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200/60">
+                    <span className="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
                     Assigned
                 </span>
             );
@@ -766,8 +784,16 @@ CATATAN / NOTES:`,
         if (s === 'on going' || s === 'ongoing') {
             return (
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-sky-50 text-sky-700 border border-sky-200/60">
-                    <span className="w-1.5 h-1.5 rounded-full bg-sky-500 animate-pulse"></span>
-                    On going
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#00AEEF] animate-pulse"></span>
+                    On Going
+                </span>
+            );
+        }
+        if (s === 'completed') {
+            return (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/60">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                    Completed
                 </span>
             );
         }
@@ -2715,6 +2741,73 @@ CATATAN / NOTES:`,
                     <p className="text-sm text-slate-600">
                         Apakah Anda yakin ingin menghapus booking <strong>{selectedBooking?.booking_code}</strong>?
                     </p>
+                    {selectedBooking?.status?.toString().toLowerCase().replace(/[\s_-]+/g, '') === 'completed' ? (
+                        <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl text-xs text-blue-700 leading-relaxed">
+                            💡 <strong>Catatan:</strong> Karena status booking adalah <strong>Completed</strong>, data hanya akan dihapus dari dashboard Admin. Riwayat di sisi Driver tetap tersimpan.
+                        </div>
+                    ) : (
+                        <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 leading-relaxed">
+                            ⚠️ <strong>Catatan:</strong> Karena status booking adalah <strong>{selectedBooking?.status}</strong>, penghapusan ini juga akan otomatis menghapus data booking di sisi Driver.
+                        </div>
+                    )}
+                </div>
+            </Modal>
+
+            {/* 5. Modal: Peringatan Booking On Going Tidak Dapat Dihapus */}
+            <Modal
+                show={showOngoingWarningModal}
+                onClose={() => setShowOngoingWarningModal(false)}
+                title="Peringatan Status Booking"
+                maxWidth="md"
+                footer={
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-2.5 w-full">
+                        <button
+                            type="button"
+                            onClick={() => setShowOngoingWarningModal(false)}
+                            className="px-4 py-2 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition cursor-pointer"
+                        >
+                            Tutup
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                const target = selectedBooking;
+                                setShowOngoingWarningModal(false);
+                                if (target) {
+                                    openEditBooking(target);
+                                }
+                            }}
+                            className="px-4 py-2 bg-[#00AEEF] hover:bg-[#009cd7] text-white rounded-xl text-sm font-semibold transition cursor-pointer shadow-xs inline-flex items-center justify-center gap-1.5"
+                        >
+                            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+                                <path d="m15 5 4 4" />
+                            </svg>
+                            <span>Ubah Status Booking</span>
+                        </button>
+                    </div>
+                }
+            >
+                <div className="space-y-4 py-1">
+                    <div className="flex items-start gap-3.5 p-4 rounded-xl bg-amber-50 border border-amber-200/90 text-amber-900">
+                        <div className="w-10 h-10 rounded-xl bg-amber-100 border border-amber-300 flex items-center justify-center shrink-0 text-amber-600">
+                            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                            </svg>
+                        </div>
+                        <div className="space-y-1">
+                            <h4 className="text-sm font-bold text-amber-950">
+                                Booking Sedang Berjalan (On Going)
+                            </h4>
+                            <p className="text-xs text-amber-900 leading-relaxed">
+                                Booking <strong className="font-semibold text-slate-900">{selectedBooking?.booking_code}</strong> tidak dapat dihapus saat ini.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200/80 text-xs text-slate-700 leading-relaxed">
+                        Silakan ubah status menjadi <strong className="text-rose-600 font-semibold">Cancelled</strong> terlebih dahulu jika ingin menghapus booking ini.
+                    </div>
                 </div>
             </Modal>
         </AdminLayout>
