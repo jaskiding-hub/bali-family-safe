@@ -28,20 +28,42 @@ export default function TestimonialsSection({ testimonials = [] }) {
             id="reviews"
             style={{
                 background: '#F8F9FA',
-                padding: '96px 40px',
+                padding: '96px 24px',
                 borderTop: '1px solid #E1E3E4',
             }}
         >
             <div style={{
                 maxWidth: '1200px',
                 margin: '0 auto',
-                padding: '0 64px',
+                padding: '0 20px',
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '48px',
             }}>
                 {/* Header */}
-                <div style={{ textAlign: 'center' }}>
+                <div style={{
+                    textAlign: 'center',
+                    margin: '0 auto',
+                    maxWidth: '800px',
+                    width: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                }}>
+                    <p style={{
+                        fontFamily: 'Inter, sans-serif',
+                        fontWeight: 600,
+                        fontSize: '13px',
+                        lineHeight: '20px',
+                        letterSpacing: '1.6px',
+                        textTransform: 'uppercase',
+                        color: '#00658D',
+                        margin: '0 0 12px 0',
+                        textAlign: 'center',
+                        width: '100%',
+                    }}>
+                        TESTIMONIALS
+                    </p>
                     <h2 style={{
                         fontFamily: 'Inter, sans-serif',
                         fontWeight: 700,
@@ -50,6 +72,8 @@ export default function TestimonialsSection({ testimonials = [] }) {
                         color: '#191C1D',
                         margin: 0,
                         marginBottom: '16px',
+                        textAlign: 'center',
+                        width: '100%',
                     }}>
                         What Parents Say
                     </h2>
@@ -59,7 +83,9 @@ export default function TestimonialsSection({ testimonials = [] }) {
                         fontSize: '18px',
                         lineHeight: '28px',
                         color: '#3E4850',
-                        margin: 0,
+                        margin: '0 auto',
+                        textAlign: 'center',
+                        width: '100%',
                     }}>
                         Authentic reviews from families who trusted us for their Bali journey
                     </p>
@@ -71,10 +97,10 @@ export default function TestimonialsSection({ testimonials = [] }) {
                         display: 'flex',
                         flexDirection: 'row',
                         justifyContent: 'center',
+                        alignItems: 'stretch',
                         gap: '32px',
                         maxWidth: '1072px',
-                        marginLeft: 'auto',
-                        marginRight: 'auto',
+                        margin: '0 auto',
                         width: '100%',
                         flexWrap: 'wrap',
                     }}>

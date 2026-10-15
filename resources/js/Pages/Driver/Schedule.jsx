@@ -86,6 +86,14 @@ export default function Schedule({
         const newUrl = new URL(window.location.href);
         newUrl.searchParams.set('date', dateKey);
         window.history.replaceState({}, '', newUrl);
+
+        // Scroll to trip details section
+        setTimeout(() => {
+            const tripSection = document.getElementById('trip-cards-container');
+            if (tripSection) {
+                tripSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }, 100);
     };
 
     return (
@@ -179,9 +187,10 @@ export default function Schedule({
                             const isToday = day.is_today;
                             const isCurr = day.is_current_month;
                             const count = day.trip_count;
+                            const dayTrips = tripsByDate[day.date] || [];
 
                             return (
-                                <button 
+                                <button
                                     key={day.date}
                                     type="button"
                                     onClick={() => handleSelectDate(day.date)}
@@ -193,12 +202,24 @@ export default function Schedule({
                                     `}
                                 >
                                     <span className="text-sm sm:text-base leading-none day-text">{day.day_number}</span>
-                                    
-                                    {/* Trip Dot Indicator */}
-                                    <div className="h-2 flex items-center justify-center gap-1 mt-1 pointer-events-none">
-                                        {count > 0 && (
-                                            <span className="trip-dot w-1.5 h-1.5 rounded-full"></span>
-                                        )}
+
+                                    {/* Trip Dot Indicators with Status Colors */}
+                                    <div className="h-2 flex items-center justify-center gap-0.5 mt-1 pointer-events-none">
+                                        {dayTrips.slice(0, 3).map((trip, idx) => {
+                                            const statusColors = {
+                                                'pending': 'bg-amber-400',
+                                                'confirmed': 'bg-blue-500',
+                                                'assigned': 'bg-indigo-500',
+                                                'on going': 'bg-[#00AEEF]',
+                                                'completed': 'bg-emerald-500',
+                                                'cancelled': 'bg-rose-500',
+                                            };
+                                            const dotColor = statusColors[trip.status?.toLowerCase()] || 'bg-indigo-500';
+
+                                            return (
+                                                <span key={idx} className={`trip-dot w-1.5 h-1.5 rounded-full ${dotColor} ring-1 ring-white`}></span>
+                                            );
+                                        })}
                                     </div>
                                 </button>
                             );

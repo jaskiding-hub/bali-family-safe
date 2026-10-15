@@ -323,7 +323,7 @@ export default function AirportBookingForm({ vehicles = [], childSeatTypes = [],
             )}
 
             {/* 1. Category Switcher — Clean 2-button toggle */}
-            <div style={{ padding: '20px 32px 4px' }}>
+            <div style={{ padding: '32px 32px 4px' }}>
                 <div style={{
                     display: 'grid',
                     gridTemplateColumns: '1fr 1fr',

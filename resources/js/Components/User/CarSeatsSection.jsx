@@ -9,38 +9,40 @@ export default function CarSeatsSection({ carSeatContent = [] }) {
             style={{
                 width: '100%',
                 background: 'linear-gradient(0deg, #F8F9FA, #F8F9FA), #FFFFFF',
-                padding: '64px 40px 0',
+                padding: '48px 20px 0',
             }}
         >
             <div style={{
                 maxWidth: '1200px',
                 margin: '0 auto',
-                padding: '96px 64px 96px',
+                padding: '48px 40px',
             }}>
                 {/* Header Block */}
                 <div style={{
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
-                    paddingBottom: '64px',
+                    paddingBottom: '48px',
+                    margin: '0 auto',
+                    maxWidth: '800px',
                 }}>
                     {/* Eyebrow pill */}
                     <div style={{
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '8px',
+                        gap: '6px',
                         background: '#C6E7FF',
                         borderRadius: '9999px',
-                        padding: '6px 16px',
-                        marginBottom: '24px',
+                        padding: '4px 12px',
+                        marginBottom: '16px',
                     }}>
-                        <svg width="11" height="13" viewBox="0 0 24 24" fill="#003E58"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                        <svg width="10" height="12" viewBox="0 0 24 24" fill="#003E58"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
                         <span style={{
                             fontFamily: 'Inter, sans-serif',
                             fontWeight: 400,
-                            fontSize: '16px',
-                            lineHeight: '24px',
-                            letterSpacing: '0.8px',
+                            fontSize: '13px',
+                            lineHeight: '20px',
+                            letterSpacing: '0.6px',
                             textTransform: 'uppercase',
                             color: '#003E58',
                         }}>
@@ -52,13 +54,13 @@ export default function CarSeatsSection({ carSeatContent = [] }) {
                     <h2 style={{
                         fontFamily: 'Inter, sans-serif',
                         fontWeight: 700,
-                        fontSize: '48px',
-                        lineHeight: '56px',
-                        letterSpacing: '-0.96px',
+                        fontSize: '32px',
+                        lineHeight: '40px',
+                        letterSpacing: '-0.64px',
                         color: '#191C1D',
                         textAlign: 'center',
                         margin: 0,
-                        marginBottom: '24px',
+                        marginBottom: '16px',
                     }}>
                         Certified Child Car Seats – 100% Free
                     </h2>
@@ -67,12 +69,12 @@ export default function CarSeatsSection({ carSeatContent = [] }) {
                     <p style={{
                         fontFamily: 'Inter, sans-serif',
                         fontWeight: 400,
-                        fontSize: '20px',
-                        lineHeight: '32px',
+                        fontSize: '16px',
+                        lineHeight: '26px',
                         color: '#3E4850',
                         textAlign: 'center',
                         margin: 0,
-                        maxWidth: '660px',
+                        maxWidth: '600px',
                     }}>
                         Every Bali Family Safe trip includes complimentary, sanitized certified child seats for all age groups. No extra charges, no hassle.
                     </p>

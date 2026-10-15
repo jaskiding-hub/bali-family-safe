@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import DriverLayout, { useDriverProfile } from '@/Layouts/DriverLayout';
 import Modal from '@/Components/Modal';
+import AlertModal from '@/Components/AlertModal';
 
 function formatDisplayDate(dateStr) {
     if (!dateStr) return '';
@@ -32,6 +33,13 @@ export default function History({
     const [selectedMonthOnly, setSelectedMonthOnly] = useState(filters.month || '');
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [tripToDelete, setTripToDelete] = useState(null);
+    const [showAlertModal, setShowAlertModal] = useState(false);
+    const [alertModalConfig, setAlertModalConfig] = useState({ message: '', type: 'warning', title: 'Perhatian' });
+
+    const showAlert = (message, type = 'warning', title = 'Perhatian') => {
+        setAlertModalConfig({ message, type, title });
+        setShowAlertModal(true);
+    };
 
     // Generate year options (last 3 years to current)
     const currentYear = new Date().getFullYear();
@@ -96,7 +104,7 @@ export default function History({
                 setTripToDelete(null);
             },
             onError: () => {
-                alert('Gagal menghapus trip dari riwayat');
+                showAlert('Gagal menghapus trip dari riwayat', 'error', 'Error');
             }
         });
     };
@@ -555,6 +563,15 @@ export default function History({
                     </div>
                 </div>
             </Modal>
+
+            {/* Alert Modal */}
+            <AlertModal
+                show={showAlertModal}
+                onClose={() => setShowAlertModal(false)}
+                title={alertModalConfig.title}
+                message={alertModalConfig.message}
+                type={alertModalConfig.type}
+            />
         </DriverLayout>
     );
 }

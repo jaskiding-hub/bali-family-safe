@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { router, useForm, usePage } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import Modal from '@/Components/Modal';
+import AlertModal from '@/Components/AlertModal';
 
 const selectClass = "w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-base sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs hover:border-slate-300 transition-colors cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22%2364748b%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M5.22%208.22a.75.75%200%200%201%201.06%200L10%2011.94l3.72-3.72a.75.75%200%201%201%201.06%201.06l-4.25%204.25a.75.75%200%200%201-1.06%200L5.22%209.28a.75.75%200%200%201%200-1.06z%22%20clip-rule%3D%22evenodd%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem_1.25rem] bg-[right_0.75rem_center] bg-no-repeat pr-10";
 
@@ -35,6 +36,13 @@ export default function BookingManagement({
     const [editSelectedSeats, setEditSelectedSeats] = useState({});
     const [showSuccessAlert, setShowSuccessAlert] = useState(false);
     const [successMessage, setSuccessMessage] = useState('');
+    const [showAlertModal, setShowAlertModal] = useState(false);
+    const [alertModalConfig, setAlertModalConfig] = useState({ message: '', type: 'warning', title: 'Perhatian' });
+
+    const showAlert = (message, type = 'warning', title = 'Perhatian') => {
+        setAlertModalConfig({ message, type, title });
+        setShowAlertModal(true);
+    };
 
     // Child seat types
     const childSeatTypes = [
@@ -251,7 +259,7 @@ export default function BookingManagement({
 
         const text = addBookingForm.data.auto_parse_text.trim();
         if (!text) {
-            alert('Tempel teks booking terlebih dahulu');
+            showAlert('Tempel teks booking terlebih dahulu', 'warning', 'Perhatian');
             return;
         }
 
@@ -356,7 +364,7 @@ export default function BookingManagement({
             ...updates,
         }));
 
-        alert('Form berhasil diisi otomatis! Periksa dan sesuaikan jika perlu.');
+        showAlert('Form berhasil diisi otomatis! Periksa dan sesuaikan jika perlu.', 'success', 'Berhasil');
     };
 
     // Template auto-parse untuk WA
@@ -437,39 +445,39 @@ CATATAN / NOTES:`,
         const isDayTour = typeUi === 'Day Tour';
 
         if (!addBookingForm.data.guest_name?.trim()) {
-            alert('Mohon isi nama tamu terlebih dahulu.');
+            showAlert('Mohon isi nama tamu terlebih dahulu.');
             return;
         }
         if (!addBookingForm.data.whatsapp_number?.trim()) {
-            alert('Mohon isi nomor WhatsApp tamu.');
+            showAlert('Mohon isi nomor WhatsApp tamu.');
             return;
         }
         if (!addBookingForm.data.booking_date) {
-            alert('Mohon pilih tanggal booking.');
+            showAlert('Mohon pilih tanggal booking.');
             return;
         }
         if (!addBookingForm.data.vehicle_unit_id) {
-            alert('Mohon pilih kategori unit kendaraan.');
+            showAlert('Mohon pilih kategori unit kendaraan.');
             return;
         }
         if (addBookingForm.data.total_fee === '' || isNaN(Number(addBookingForm.data.total_fee))) {
-            alert('Mohon isi Total Fee dengan nominal yang valid.');
+            showAlert('Mohon isi Total Fee dengan nominal yang valid.');
             return;
         }
         if (isDayTour && !addBookingForm.data.package_id) {
-            alert('Mohon pilih paket tour terlebih dahulu.');
+            showAlert('Mohon pilih paket tour terlebih dahulu.');
             return;
         }
         if (isPickup && !addBookingForm.data.selected_hotel_id) {
-            alert('Mohon pilih hotel tujuan terlebih dahulu.');
+            showAlert('Mohon pilih hotel tujuan terlebih dahulu.');
             return;
         }
         if (isDropoff && !addBookingForm.data.selected_hotel_id) {
-            alert('Mohon pilih hotel penjemputan terlebih dahulu.');
+            showAlert('Mohon pilih hotel penjemputan terlebih dahulu.');
             return;
         }
         if (isHotel && (!addBookingForm.data.hotel_id_pickup || !addBookingForm.data.hotel_id_dropoff)) {
-            alert('Mohon pilih hotel asal dan hotel tujuan terlebih dahulu.');
+            showAlert('Mohon pilih hotel asal dan hotel tujuan terlebih dahulu.');
             return;
         }
 
@@ -2597,9 +2605,9 @@ CATATAN / NOTES:`,
                                                 onClick={() => {
                                                     const allTemplates = Object.values(bookingTemplates).join('\n\n---\n\n');
                                                     navigator.clipboard.writeText(allTemplates).then(() => {
-                                                        alert('Semua template berhasil disalin ke clipboard!');
+                                                        showAlert('Semua template berhasil disalin ke clipboard!', 'success', 'Berhasil');
                                                     }).catch(() => {
-                                                        alert('Gagal menyalin. Silakan copy manual.');
+                                                        showAlert('Gagal menyalin. Silakan copy manual.', 'error', 'Gagal');
                                                     });
                                                     setShowTemplateDropdown(false);
                                                 }}
@@ -2810,6 +2818,15 @@ CATATAN / NOTES:`,
                     </div>
                 </div>
             </Modal>
+
+            {/* Alert Modal */}
+            <AlertModal
+                show={showAlertModal}
+                onClose={() => setShowAlertModal(false)}
+                title={alertModalConfig.title}
+                message={alertModalConfig.message}
+                type={alertModalConfig.type}
+            />
         </AdminLayout>
     );
 }

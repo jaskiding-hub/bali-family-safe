@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, usePage, router } from '@inertiajs/react';
 import DriverLayout, { useDriverProfile } from '../../Layouts/DriverLayout';
+import AlertModal from '../../Components/AlertModal';
 
 function parseAmount(val) {
     if (val === null || val === undefined || val === '') return 0;
@@ -46,6 +47,13 @@ export default function Expense({ trip, authDriver }) {
     const formRef = useRef(null);
     const typeInputRef = useRef(null);
     const fileInputRef = useRef(null);
+    const [showAlertModal, setShowAlertModal] = useState(false);
+    const [alertModalConfig, setAlertModalConfig] = useState({ message: '', type: 'warning', title: 'Perhatian' });
+
+    const showAlert = (message, type = 'warning', title = 'Perhatian') => {
+        setAlertModalConfig({ message, type, title });
+        setShowAlertModal(true);
+    };
 
     const showToast = (msg) => {
         if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
@@ -124,17 +132,17 @@ export default function Expense({ trip, authDriver }) {
                     handleCancelEdit();
                 }
             } else {
-                alert(data.message || 'Failed to delete expense.');
+                showAlert(data.message || 'Failed to delete expense.', 'error', 'Error');
             }
         } catch (err) {
             console.error(err);
-            alert('Failed to delete expense. Please check your connection.');
+            showAlert('Failed to delete expense. Please check your connection.', 'error', 'Error');
         }
     };
 
     const saveExpenseItem = async () => {
         if (!expenseType.trim() || !amount.trim()) {
-            alert('Please fill in both expense type and amount.');
+            showAlert('Please fill in both expense type and amount.');
             return false;
         }
 
@@ -174,13 +182,13 @@ export default function Expense({ trip, authDriver }) {
                 handleCancelEdit();
                 return true;
             } else {
-                alert(data.message || 'Failed to save expense.');
+                showAlert(data.message || 'Failed to save expense.', 'error', 'Error');
                 return false;
             }
         } catch (err) {
             console.error(err);
             setIsSubmitting(false);
-            alert('An error occurred while saving.');
+            showAlert('An error occurred while saving.', 'error', 'Error');
             return false;
         }
     };
@@ -196,7 +204,7 @@ export default function Expense({ trip, authDriver }) {
         // If driver typed an expense in the form without clicking 'Confirm Expense' first, save it
         if (expenseType.trim() || amount.trim()) {
             if (!expenseType.trim() || !amount.trim()) {
-                alert('Please fill in both expense type and amount before saving, or clear the form.');
+                showAlert('Please fill in both expense type and amount before saving, or clear the form.');
                 return;
             }
             const success = await saveExpenseItem();
@@ -553,6 +561,15 @@ export default function Expense({ trip, authDriver }) {
                     </span>
                 </button>
             </div>
+
+            {/* Alert Modal */}
+            <AlertModal
+                show={showAlertModal}
+                onClose={() => setShowAlertModal(false)}
+                title={alertModalConfig.title}
+                message={alertModalConfig.message}
+                type={alertModalConfig.type}
+            />
         </DriverLayout>
     );
 }

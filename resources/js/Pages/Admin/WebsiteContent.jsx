@@ -571,8 +571,8 @@ export default function WebsiteContent({
                         </div>
                     </div>
 
-                    {/* CMS Navigation Tabs */}
-                    <div className="flex items-center gap-2 pt-4 overflow-x-auto no-scrollbar max-w-full">
+                    {/* CMS Navigation Tabs - Grid Layout for Mobile */}
+                    <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-stretch gap-2 pt-4">
                         {[
                             { id: 'services', label: 'Services', count: services.length },
                             { id: 'team', label: 'Our Team', count: team_members.length },
@@ -589,22 +589,24 @@ export default function WebsiteContent({
                                 key={tab.id}
                                 type="button"
                                 onClick={() => switchTab(tab.id)}
-                                className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-2 shrink-0 ${
+                                className={`relative p-3 sm:px-4 sm:py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex flex-col sm:flex-row items-center sm:items-center justify-center sm:justify-start gap-1.5 sm:gap-2 min-h-[70px] sm:min-h-0 ${
                                     activeTab === tab.id
-                                        ? 'bg-slate-900 text-white shadow-xs'
-                                        : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
+                                        ? 'bg-slate-900 text-white shadow-md'
+                                        : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200/80'
                                 }`}
                             >
-                                <span>{tab.label}</span>
-                                {tab.count !== null && (
-                                    <span
-                                        className={`px-2 py-0.5 rounded-full text-[11px] font-bold ${
-                                            activeTab === tab.id ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'
-                                        }`}
-                                    >
-                                        {tab.count}
-                                    </span>
-                                )}
+                                <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2">
+                                    <span className="text-center sm:text-left leading-tight">{tab.label}</span>
+                                    {tab.count !== null && (
+                                        <span
+                                            className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                                                activeTab === tab.id ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'
+                                            }`}
+                                        >
+                                            {tab.count}
+                                        </span>
+                                    )}
+                                </div>
                             </button>
                         ))}
                     </div>

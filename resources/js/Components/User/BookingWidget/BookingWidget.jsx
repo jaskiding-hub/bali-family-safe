@@ -7,6 +7,7 @@ const TABS = [
     {
         id: 'airport',
         label: 'Airport Transfers',
+        shortLabel: 'Airport',
         icon: (
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/>
@@ -16,15 +17,17 @@ const TABS = [
     {
         id: 'daytour',
         label: 'Private Day Tour',
+        shortLabel: 'Day Tour',
         icon: (
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M20.5 3l-.16.03L15 5.1 9 3 3.36 4.9c-.21.07-.36.25-.36.48V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.64-1.9c.21-.07.36-.25.36-.48V3.5c0-.28-.22-.5-.5-.5zM15 19l-6-2.11V5l6 2.11V19z"/>
+                <path d="M20.5 3l-.16.03L15 5.1 9 3 3.36 4.9c-.21.07-.36.25-.36.48V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.64-1.9c.21-.07.36-.25-.36-.48V3.5c0-.28-.22-.5-.5-.5zM15 19l-6-2.11V5l6 2.11V19z"/>
             </svg>
         ),
     },
     {
         id: 'hotel',
         label: 'Hotel Transfers',
+        shortLabel: 'Hotel',
         icon: (
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M7 13c1.66 0 3-1.34 3-3S8.66 7 7 7s-3 1.34-3 3 1.34 3 3 3zm12-6h-8v7H3V5H1v15h2v-3h18v3h2v-9c0-2.21-1.79-4-4-4z"/>
@@ -105,16 +108,15 @@ export default function BookingWidget({ packages = [], childSeatTypes = [], carS
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                gap: '8px',
+                                gap: '6px',
                                 border: 'none',
                                 borderBottom: isActive ? '2.5px solid #00658D' : '2.5px solid transparent',
                                 background: isActive ? '#F8FAFC' : 'transparent',
                                 fontFamily: 'Inter, sans-serif',
                                 fontWeight: isActive ? 700 : 500,
-                                fontSize: '14px',
+                                fontSize: '13px',
                                 color: isActive ? '#00658D' : '#64748B',
-                                padding: '14px 20px',
-                                whiteSpace: 'nowrap',
+                                padding: '12px 8px',
                                 transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
                             }}
                             onMouseEnter={e => {
@@ -133,7 +135,10 @@ export default function BookingWidget({ packages = [], childSeatTypes = [], carS
                             }}>
                                 {tab.icon}
                             </span>
-                            <span>{tab.label}</span>
+                            <span className="hidden xs:inline sm:inline">{tab.shortLabel || tab.label}</span>
+                            <span className="inline xs:hidden sm:hidden" style={{ fontSize: '11px', marginTop: '2px' }}>
+                                {tab.shortLabel || tab.label}
+                            </span>
                         </button>
                     );
                 })}

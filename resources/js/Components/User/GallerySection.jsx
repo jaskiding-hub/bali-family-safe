@@ -46,14 +46,14 @@ export default function GallerySection({ gallery = [] }) {
         >
             <div className="max-w-6xl mx-auto w-full">
                 {/* ── HEADER ── */}
-                <div className="max-w-2xl mb-10 sm:mb-12">
-                    <p className="text-xs font-semibold tracking-widest text-sky-700 uppercase mb-2">
+                <div className="max-w-2xl mx-auto mb-10 sm:mb-12 text-center flex flex-col items-center">
+                    <p className="text-xs font-semibold tracking-widest text-sky-700 uppercase mb-2 text-center w-full">
                         Moments &amp; Safety
                     </p>
-                    <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900 tracking-tight leading-tight m-0">
+                    <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900 tracking-tight leading-tight m-0 text-center w-full">
                         Travel Moments in Bali
                     </h2>
-                    <p className="mt-3 text-slate-600 text-base sm:text-lg leading-relaxed m-0">
+                    <p className="mt-3 text-slate-600 text-base sm:text-lg leading-relaxed m-0 text-center w-full">
                         Real journeys with sanitized car seats, spacious air-conditioned vehicles, and peaceful island destinations.
                     </p>
                 </div>

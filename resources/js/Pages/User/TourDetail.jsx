@@ -203,11 +203,11 @@ export default function TourDetail({ tourId, tour: initialTour = null }) {
                         href="/#tours"
                         style={{
                             position: 'absolute',
-                            top: '32px',
-                            left: '32px',
+                            top: '24px',
+                            left: '24px',
                             zIndex: 10,
-                            width: '48px',
-                            height: '48px',
+                            width: '40px',
+                            height: '40px',
                             borderRadius: '9999px',
                             background: '#FFFFFF',
                             border: '1px solid rgba(189, 200, 209, 0.2)',
@@ -222,7 +222,7 @@ export default function TourDetail({ tourId, tour: initialTour = null }) {
                         onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
                         title="Back to Tours"
                     >
-                        <CaretLeft size={20} weight="bold" color="#191C1D" />
+                        <CaretLeft size={18} weight="bold" color="#191C1D" />
                     </Link>
 
                     {/* Header Content Container */}
@@ -294,14 +294,14 @@ export default function TourDetail({ tourId, tour: initialTour = null }) {
                 </section>
 
                 {/* OVERVIEW SECTION CARD */}
-                <section style={{
+                <section className="bfs-tour-overview-section" style={{
                     maxWidth: '1200px',
-                    margin: '-80px auto 0',
+                    margin: '-100px auto 0',
                     padding: '0 24px 96px',
                     position: 'relative',
                     zIndex: 5,
                 }}>
-                    <div style={{
+                    <div className="bfs-tour-card" style={{
                         maxWidth: '1072px',
                         margin: '0 auto',
                         background: '#F8F9FA',
@@ -310,32 +310,26 @@ export default function TourDetail({ tourId, tour: initialTour = null }) {
                         backdropFilter: 'blur(12px)',
                         WebkitBackdropFilter: 'blur(12px)',
                         borderRadius: '16px',
-                        padding: '48px',
+                        padding: '48px 48px',
                         display: 'flex',
                         flexDirection: 'row',
-                        gap: '48px',
+                        gap: '32px',
                         alignItems: 'center',
                         flexWrap: 'wrap',
                     }}>
                         {/* Left Info Column */}
-                        <div style={{ flex: '1 1 500px', display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                            {/* Accent Bar */}
-                            <div style={{
-                                width: '64px',
-                                height: '4px',
-                                background: '#00658D',
-                                borderRadius: '9999px',
-                                marginBottom: '16px',
-                            }} />
+                        <div style={{ flex: '1 1 500px', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'stretch', textAlign: 'center' }}>
 
                             {/* Heading 2 */}
                             <h2 style={{
                                 fontFamily: "'Inter', sans-serif",
                                 fontWeight: 700,
-                                fontSize: '32px',
-                                lineHeight: '40px',
+                                fontSize: '28px',
+                                lineHeight: '36px',
                                 color: '#191C1D',
-                                margin: '0 0 16px 0',
+                                margin: '0 0 12px 0',
+                                width: '100%',
+                                textAlign: 'center',
                             }}>
                                 {tour?.overviewTitle || 'Immerse Yourself in Balinese Heritage'}
                             </h2>
@@ -344,10 +338,12 @@ export default function TourDetail({ tourId, tour: initialTour = null }) {
                             <p style={{
                                 fontFamily: "'Inter', sans-serif",
                                 fontWeight: 400,
-                                fontSize: '18px',
-                                lineHeight: '29px',
+                                fontSize: '16px',
+                                lineHeight: '26px',
                                 color: '#3E4850',
-                                margin: '0 0 16px 0',
+                                margin: '0 0 12px 0',
+                                width: '100%',
+                                textAlign: 'center',
                             }}>
                                 {tour?.overviewParagraph1 || 'Nestled among lush rice paddies and steep ravines in the central foothills of the Gianyar regency, Ubud is Bali\'s undisputed cultural center.'}
                             </p>
@@ -356,84 +352,92 @@ export default function TourDetail({ tourId, tour: initialTour = null }) {
                             <p style={{
                                 fontFamily: "'Inter', sans-serif",
                                 fontWeight: 400,
-                                fontSize: '16px',
-                                lineHeight: '26px',
+                                fontSize: '15px',
+                                lineHeight: '24px',
                                 color: '#3E4850',
-                                margin: '0 0 24px 0',
+                                margin: '0 0 20px 0',
+                                width: '100%',
+                                textAlign: 'center',
                             }}>
                                 {tour?.overviewParagraph2 || 'From intricate temple architecture and traditional dance performances to world-class yoga retreats and farm-to-table dining, Ubud offers a profound connection to the island\'s soul.'}
                             </p>
 
                             {/* Category Tags */}
-                            <div style={{
-                                display: 'flex',
-                                flexDirection: 'row',
-                                alignItems: 'center',
-                                gap: '12px',
-                                flexWrap: 'wrap',
-                                marginBottom: '32px',
-                            }}>
-                                {tour.overviewTags?.map((tag, idx) => (
-                                    <div key={idx} style={{
-                                        display: 'inline-flex',
-                                        alignItems: 'center',
-                                        padding: '8px 16px',
-                                        gap: '6px',
-                                        background: 'rgba(198, 231, 255, 0.3)',
-                                        borderRadius: '9999px',
-                                    }}>
-                                        {renderTagIcon(tag.icon)}
-                                        <span style={{
-                                            fontFamily: "'Inter', sans-serif",
-                                            fontWeight: 500,
-                                            fontSize: '12px',
-                                            lineHeight: '16px',
-                                            color: '#003E58',
-                                        }}>
-                                            {tag.label}
-                                        </span>
-                                    </div>
-                                ))}
-                            </div>
-
-                            {/* Booking Now Button */}
-                            <button
-                                type="button"
-                                onClick={handleBookingClick}
-                                style={{
-                                    display: 'inline-flex',
+                            {tour.overviewTags && tour.overviewTags.length > 0 && (
+                                <div style={{
+                                    display: 'flex',
                                     flexDirection: 'row',
                                     alignItems: 'center',
                                     justifyContent: 'center',
-                                    padding: '16px 32px',
                                     gap: '12px',
-                                    background: '#00658D',
-                                    borderRadius: '9999px',
-                                    border: 'none',
-                                    cursor: 'pointer',
-                                    boxShadow: '0px 10px 15px -3px rgba(0, 0, 0, 0.1), 0px 4px 6px -4px rgba(0, 0, 0, 0.1)',
-                                    transition: 'background 0.2s ease, transform 0.15s ease',
-                                }}
-                                onMouseEnter={e => {
-                                    e.currentTarget.style.background = '#004f6e';
-                                    e.currentTarget.style.transform = 'translateY(-2px)';
-                                }}
-                                onMouseLeave={e => {
-                                    e.currentTarget.style.background = '#00658D';
-                                    e.currentTarget.style.transform = 'translateY(0)';
-                                }}
-                            >
-                                <span style={{
-                                    fontFamily: "'Inter', sans-serif",
-                                    fontWeight: 500,
-                                    fontSize: '18px',
-                                    lineHeight: '27px',
-                                    color: '#FFFFFF',
+                                    flexWrap: 'wrap',
+                                    marginBottom: '32px',
+                                    width: '100%',
                                 }}>
-                                    Booking Now
-                                </span>
-                                <ArrowRight size={18} weight="bold" color="#FFFFFF" />
-                            </button>
+                                    {tour.overviewTags?.map((tag, idx) => (
+                                        <div key={idx} style={{
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            padding: '8px 16px',
+                                            gap: '6px',
+                                            background: 'rgba(198, 231, 255, 0.3)',
+                                            borderRadius: '9999px',
+                                        }}>
+                                            {renderTagIcon(tag.icon)}
+                                            <span style={{
+                                                fontFamily: "'Inter', sans-serif",
+                                                fontWeight: 500,
+                                                fontSize: '12px',
+                                                lineHeight: '16px',
+                                                color: '#003E58',
+                                            }}>
+                                                {tag.label}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                            {/* Booking Now Button - kept strictly on the left */}
+                            <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-start', marginTop: '12px' }}>
+                                <button
+                                    type="button"
+                                    onClick={handleBookingClick}
+                                    style={{
+                                        display: 'inline-flex',
+                                        flexDirection: 'row',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        padding: '12px 24px',
+                                        gap: '8px',
+                                        background: '#00658D',
+                                        borderRadius: '9999px',
+                                        border: 'none',
+                                        cursor: 'pointer',
+                                        boxShadow: '0px 10px 15px -3px rgba(0, 0, 0, 0.1), 0px 4px 6px -4px rgba(0, 0, 0, 0.1)',
+                                        transition: 'background 0.2s ease, transform 0.15s ease',
+                                    }}
+                                    onMouseEnter={e => {
+                                        e.currentTarget.style.background = '#004f6e';
+                                        e.currentTarget.style.transform = 'translateY(-2px)';
+                                    }}
+                                    onMouseLeave={e => {
+                                        e.currentTarget.style.background = '#00658D';
+                                        e.currentTarget.style.transform = 'translateY(0)';
+                                    }}
+                                >
+                                    <span style={{
+                                        fontFamily: "'Inter', sans-serif",
+                                        fontWeight: 600,
+                                        fontSize: '15px',
+                                        lineHeight: '22px',
+                                        color: '#FFFFFF',
+                                    }}>
+                                        Booking Now
+                                    </span>
+                                    <ArrowRight size={16} weight="bold" color="#FFFFFF" />
+                                </button>
+                            </div>
                         </div>
 
                         {/* Right Image Frame */}

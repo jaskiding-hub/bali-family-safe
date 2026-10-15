@@ -413,7 +413,7 @@ input, select, textarea, button {
         height: 520px !important;
     }
     .bfs-hero-text {
-        padding: 80px 16px 24px !important;
+        padding: 20px 16px 16px !important;
         gap: 16px !important;
     }
     #hero h1 {
@@ -432,7 +432,7 @@ input, select, textarea, button {
         top: auto !important;
         width: 100% !important;
         max-width: 358px !important;
-        margin: -48px auto 0 !important;
+        margin: 12px auto 0 !important;
         z-index: 10 !important;
     }
 
@@ -690,6 +690,17 @@ input, select, textarea, button {
     }
     #tour-detail-hero p {
         font-size: 16px !important;
+    }
+    .bfs-tour-overview-section {
+        margin-top: -60px !important;
+        padding-left: 16px !important;
+        padding-right: 16px !important;
+        padding-bottom: 48px !important;
+    }
+    .bfs-tour-card {
+        padding: 28px 20px !important;
+        border-radius: 20px !important;
+        width: 100% !important;
     }
 
     /* ── OUR TEAM HERO ── */
